@@ -1,0 +1,74 @@
+erDiagram
+    USER ||--o| INVESTOR_PROFILE : "has"
+    USER ||--|| WALLET : "owns"
+    USER ||--o{ LOAN : "requests"
+    USER ||--o{ INVESTMENT : "makes"
+    LOAN ||--o{ INVESTMENT : "funded_by"
+    LOAN ||--o{ REPAYMENT_SCHEDULE : "generates"
+    WALLET ||--o{ TRANSACTION : "logs"
+
+    USER {
+        uuid id PK
+        string email
+        string passwordHash
+        string role
+        string kycStatus
+        datetime createdAt
+    }
+
+    INVESTOR_PROFILE {
+        uuid id PK
+        uuid userId FK
+        float riskTolerance
+        float targetYield
+        int preferredTermMonths
+    }
+
+    WALLET {
+        uuid id PK
+        uuid userId FK
+        decimal availableBalance
+        decimal escrowBalance
+        datetime updatedAt
+    }
+
+    LOAN {
+        uuid id PK
+        uuid borrowerId FK
+        decimal requestedAmount
+        decimal fundedAmount
+        decimal interestRate
+        int termMonths
+        string riskGrade
+        float defaultProbability
+        string status
+        datetime createdAt
+    }
+
+    INVESTMENT {
+        uuid id PK
+        uuid investorId FK
+        uuid loanId FK
+        decimal amount
+        decimal ownershipRatio
+        datetime createdAt
+    }
+
+    REPAYMENT_SCHEDULE {
+        uuid id PK
+        uuid loanId FK
+        datetime dueDate
+        decimal amountDue
+        decimal principalPortion
+        decimal interestPortion
+        string status
+    }
+
+    TRANSACTION {
+        uuid id PK
+        uuid walletId FK
+        string type
+        decimal amount
+        uuid referenceId
+        datetime createdAt
+    }

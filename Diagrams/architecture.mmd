@@ -1,0 +1,27 @@
+graph TD
+    subgraph Client_Layer ["Client Layer (Browser)"]
+        UI["Next.js React UI / Tailwind CSS"]
+    end
+
+    subgraph Application_Layer ["Application & API Layer (Next.js Node.js Server)"]
+        Auth["NextAuth.js (JWT Session & RBAC)"]
+        Actions["Server Actions / Business Logic"]
+        Prisma["Prisma ORM"]
+    end
+
+    subgraph ML_Microservice ["ML Microservice (Python FastAPI)"]
+        FastAPI["FastAPI Endpoints"]
+        SOM["Self-Organizing Map (SOM) Risk Engine"]
+        Cosine["Cosine Similarity Recommender"]
+    end
+
+    subgraph Data_Layer ["Data Layer"]
+        DB[("PostgreSQL Database")]
+    end
+
+    UI -->|HTTPS / Actions| Auth
+    Auth --> Actions
+    Actions -->|Prisma Client| DB
+    Actions -->|HTTP POST JSON| FastAPI
+    FastAPI --> SOM
+    FastAPI --> Cosine

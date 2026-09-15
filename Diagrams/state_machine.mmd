@@ -1,0 +1,29 @@
+stateDiagram-v2
+    [*] --> Draft: Borrower initializes application
+    Draft --> PendingReview: Application submitted
+    PendingReview --> Funding: SOM Risk Model assigns grade & target approved
+    PendingReview --> Rejected: Application fails validation rules
+
+    state Funding {
+        [*] --> CollectingCapital
+        CollectingCapital --> CollectingCapital: Investor commits fractional capital
+    }
+
+    Funding --> Active: Target principal fully reached (100%)
+    Funding --> Cancelled: Campaign duration expires unfulfilled
+
+    state Active {
+        [*] --> Scheduled
+        Scheduled --> PaidInstallment: Monthly payment received
+        PaidInstallment --> Scheduled: Remaining installments exist
+        Scheduled --> Overdue: Payment missed past due date
+        Overdue --> PaidInstallment: Overdue payment resolved
+    }
+
+    Active --> Repaid: All principal & interest balance settled
+    Active --> Defaulted: Non-payment exceeds grace period threshold
+
+    Repaid --> [*]
+    Defaulted --> [*]
+    Cancelled --> [*]
+    Rejected --> [*]

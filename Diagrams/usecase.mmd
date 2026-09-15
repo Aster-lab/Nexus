@@ -1,0 +1,72 @@
+graph TB
+    subgraph Actors ["System Actors"]
+        direction LR
+        B["Borrower"]
+        I["Investor"]
+        A["Admin"]
+        ML["ML"]
+        ENG["Engine"]
+    end
+
+    subgraph System ["Nexus System Boundary"]
+        direction TB
+
+        subgraph Module_Auth ["1. Identity & Governance"]
+            UC1("UC-01: Authenticate & RBAC")
+            UC2("UC-02: Submit KYC Docs")
+            UC14("UC-14: Approve / Reject KYC")
+        end
+
+        subgraph Module_Borrower ["2. Borrower Portal"]
+            UC3("UC-03: Apply for Micro-Loan")
+            UC4("UC-04: View Active Debts")
+            UC5("UC-05: Submit Repayment")
+        end
+
+        subgraph Module_Investor ["3. Investor Portal"]
+            UC6("UC-06: Browse Marketplace")
+            UC7("UC-07: View Loan Matches")
+            UC8("UC-08: Invest Fractional Amount")
+            UC9("UC-09: Track Portfolio ROI")
+        end
+
+        subgraph Module_Engine ["4. ML & Automated Engine"]
+            UC10("UC-10: Predict Default Grade")
+            UC11("UC-11: Compute Match Scores")
+            UC12("UC-12: Execute Escrow Disbursement")
+            UC13("UC-13: Process Proportional Payouts")
+        end
+
+        subgraph Module_Admin ["5. Administration"]
+            UC15("UC-15: Audit Ledger & Liquidity")
+        end
+    end
+
+    %% Actor Relationships
+    B --> UC1
+    B --> UC2
+    B --> UC3
+    B --> UC4
+    B --> UC5
+
+    I --> UC1
+    I --> UC2
+    I --> UC6
+    I --> UC7
+    I --> UC8
+    I --> UC9
+
+    A --> UC1
+    A --> UC14
+    A --> UC15
+
+    ML --> UC10
+    ML --> UC11
+    ENG --> UC12
+    ENG --> UC13
+
+    %% Relationships
+    UC3 -.->|"<<include>>"| UC10
+    UC6 -.->|"<<include>>"| UC11
+    UC8 -.->|"<<extend>>"| UC12
+    UC5 -.->|"<<include>>"| UC13

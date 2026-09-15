@@ -1,0 +1,23 @@
+sequenceDiagram
+    autonumber
+    actor Borrower
+    participant Client as Next.js Debts UI
+    participant Server as Next.js Server Action
+    participant DB as PostgreSQL Transaction
+
+    Borrower->>Client: Pay Monthly Installment ($100)
+    Client->>Server: processRepayment(loanId, scheduleId)
+    Server->>DB: BEGIN TRANSACTION
+    Server->>DB: SELECT * FROM Wallet WHERE userId = borrowerId FOR UPDATE
+    Server->>DB: Verify availableBalance >= $100
+    Server->>DB: UPDATE Wallet SET availableBalance -= 100 WHERE userId = borrowerId
+    Server->>DB: SELECT * FROM Investment WHERE loanId = loanId
+    loop For Each Investor Investment Record
+        Server->>Server: Compute payout = installment * ownershipRatio
+        Server->>DB: UPDATE Wallet SET availableBalance += payout WHERE userId = investorId
+        Server->>DB: INSERT INTO Transaction (type = 'PAYOUT', amount = payout)
+    end
+    Server->>DB: UPDATE RepaymentSchedule SET status = 'PAID' WHERE id = scheduleId
+    Server->>DB: COMMIT TRANSACTION
+    DB-->>Server: Transaction Committed
+    Server-->>Client: Payment Confirmation

@@ -1,0 +1,56 @@
+# ==========================================
+# Root & General Exclusions
+# ==========================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+
+# ==========================================
+# Python / FastAPI (ML Directory)
+# ==========================================
+ML/__pycache__/
+ML/**/__pycache__/
+ML/*.py[cod]
+ML/venv/
+ML/.venv/
+ML/env/
+ML/data/
+*.csv
+*.csv.gz
+*.npy
+#ML/outputs/
+
+# Machine Learning Artifacts
+#ML/models/*.pkl
+ML/models/*.joblib
+ML/models/*.npy
+
+# ==========================================
+# Next.js & Prisma (Web Directory)
+# ==========================================
+web/node_modules/
+web/.next/
+web/out/
+web/build/
+web/dist/
+web/.turbo/
+
+# Prisma local database files (if using SQLite for dev)
+web/prisma/*.db
+web/prisma/*.db-journal
+
+# Logs & Cache
+web/npm-debug.log*
+web/yarn-debug.log*
+web/pnpm-debug.log*
+
+# ==========================================
+# Environment Variables & Secrets (CRITICAL)
+# ==========================================
+web/.env
+web/.env.local
+web/.env.*
+!.env.example
+!web/.env.example

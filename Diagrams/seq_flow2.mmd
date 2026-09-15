@@ -1,0 +1,29 @@
+sequenceDiagram
+    autonumber
+    actor Investor
+    participant Client as Next.js Marketplace UI
+    participant Server as Next.js Server Action
+    participant DB as PostgreSQL Transaction
+
+    Investor->>Client: Commit Capital ($500)
+    Client->>Server: executeInvestment(loanId, $500)
+    Server->>DB: BEGIN TRANSACTION (prisma.$transaction)
+    Server->>DB: SELECT * FROM Loan WHERE id = loanId FOR UPDATE
+    Note over DB: Pessimistic Row Lock Acquired
+    Server->>DB: Check Wallet Balance >= $500 & Funded + $500 <= Target
+    alt Validation Passed
+        Server->>DB: UPDATE Wallet SET availableBalance -= 500, escrowBalance += 500
+        Server->>DB: INSERT INTO Investment (amount, ownershipRatio)
+        Server->>DB: UPDATE Loan SET fundedAmount += 500
+        alt Campaign Reaches 100% Target
+            Server->>DB: UPDATE Loan SET status = 'ACTIVE'
+            Server->>DB: Disburse Escrow Funds -> Borrower Wallet
+            Server->>DB: GENERATE RepaymentSchedule Items
+        end
+        Server->>DB: COMMIT TRANSACTION
+        DB-->>Server: Transaction Complete
+        Server-->>Client: Investment Success
+    else Validation Failed / Overfunded
+        Server->>DB: ROLLBACK TRANSACTION
+        Server-->>Client: Investment Failed Error
+    end

@@ -1,0 +1,72 @@
+classDiagram
+    class User {
+        +UUID id
+        +String email
+        +String passwordHash
+        +UserRole role
+        +KycStatus kycStatus
+        +authenticate()
+    }
+
+    class Wallet {
+        +UUID id
+        +UUID userId
+        +Decimal availableBalance
+        +Decimal escrowBalance
+        +credit(amount)
+        +debit(amount)
+        +lockEscrow(amount)
+        +releaseEscrow(amount)
+    }
+
+    class Loan {
+        +UUID id
+        +UUID borrowerId
+        +Decimal requestedAmount
+        +Decimal fundedAmount
+        +Decimal interestRate
+        +RiskGrade riskGrade
+        +LoanStatus status
+        +updateStatus(status)
+        +isFullyFunded() Boolean
+    }
+
+    class Investment {
+        +UUID id
+        +UUID investorId
+        +UUID loanId
+        +Decimal amount
+        +Decimal ownershipRatio
+        +calculateYield(repaymentAmount) Decimal
+    }
+
+    class RepaymentSchedule {
+        +UUID id
+        +UUID loanId
+        +Date dueDate
+        +Decimal amountDue
+        +RepaymentStatus status
+        +markPaid()
+    }
+
+    class Transaction {
+        +UUID id
+        +UUID walletId
+        +TransactionType type
+        +Decimal amount
+        +UUID referenceId
+        +logTransaction()
+    }
+
+    class MLService {
+        +predictDefaultGrade(applicantData) RiskGrade
+        +computeMatchScores(investorVector, loanVectors) List~MatchScore~
+    }
+
+    User "1" -- "1" Wallet : owns
+    User "1" -- "0..*" Loan : requests
+    User "1" -- "0..*" Investment : makes
+    Loan "1" -- "0..*" Investment : funded_by
+    Loan "1" -- "0..*" RepaymentSchedule : generates
+    Wallet "1" -- "0..*" Transaction : logs
+    Loan ..> MLService : evaluates

@@ -1,0 +1,21 @@
+sequenceDiagram
+    autonumber
+    actor Borrower
+    participant Client as Next.js Client UI
+    participant Server as Next.js Server Action
+    participant ML as FastAPI ML Service (SOM)
+    participant DB as PostgreSQL (Prisma)
+
+    Borrower->>Client: Submit Application Data
+    Client->>Server: submitLoanApplication(payload)
+    Server->>Server: Validate JWT Session & Zod Schema
+    Server->>ML: POST /api/v1/predict-risk (Applicant Vector)
+    alt ML Service Online
+        ML->>ML: Map vector onto SOM Grid & calculate cluster distance
+        ML-->>Server: 200 OK { riskGrade: "B", defaultProb: 0.042, interestRate: 0.085 }
+    else ML Service Offline / Timeout
+        Server->>Server: Execute deterministic credit fallback rules
+    end
+    Server->>DB: INSERT INTO Loan (status = 'FUNDING', riskGrade, interestRate)
+    DB-->>Server: Loan Record Created
+    Server-->>Client: Application Approved & Listed
