@@ -122,8 +122,8 @@ class RiskEngine:
                     "default_probability": probs,
                     'tier' : tier_info,
                     'spatial_metrics':{
-                    "macro_cluster": cluster_list,
-                    "quantization_distance": [round(q,4) for q in q_dist_list],
+                    "macro_cluster": cluster_list[i],
+                    "quantization_distance": round(q_dist_list[i], 4),
                     }
                 }
             results.append(record)

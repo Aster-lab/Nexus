@@ -5,7 +5,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.metrics import precision_score, recall_score, roc_auc_score, f1_score
 from sklearn.model_selection import train_test_split
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 data_path = BASE_DIR / "data" / "processed" / "cleaned_data.csv"
 
 

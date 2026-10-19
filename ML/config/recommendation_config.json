@@ -1,0 +1,113 @@
+{
+    "version" : "1.0",
+
+    "Algorithm" : {
+        "name" : "content_based_cosine_similarity",
+        "score_range" : [0,100]
+    },
+
+    "features": {
+        "risk_tier": {
+        "type": "categorical",
+        "weight": 0.35,
+        "mapping": {
+            "TIER_A": 1.0,
+            "TIER_B": 0.67,
+            "TIER_C": 0.33,
+            "TIER_D": 0.0
+        }
+        },
+
+        "interest_rate": {
+        "type" : "numeric",
+        "weight": 0.25,
+        "min": 0,
+        "max": 30
+        },
+
+        "loan_duration": {
+        "type" : "numeric",
+        "weight": 0.15,
+        "min": 1,
+        "max": 60
+        },
+
+        "loan_amount": {
+        "type" : "numeric",
+        "weight": 0.10,
+        "min": 500,
+        "max": 50000
+        },
+
+        "investment_amount": {
+            "type" : "numeric",
+            "min" : 100,
+            "max" : 50000
+        },
+
+        "loan_purpose": {
+        "type": "categorical",
+        "weight": 0.15
+        }
+    },
+
+    "categories": {
+        "loan_purpose": [
+        "business",
+        "education",
+        "medical",
+        "personal",
+        "home",
+        "other"
+        ],
+
+        "loan_status": [
+        "DRAFT",
+        "OPEN",
+        "FUNDED",
+        "CANCELLED",
+        "EXPIRED"
+        ],
+
+        "investor_status": [
+        "ACTIVE",
+        "SUSPENDED",
+        "CLOSED",
+        "PENDING",
+        "RESTRICTED"
+        ],
+
+        "investor_types": [
+        "INDIVIDUAL",
+        "INSTITUTIONAL"
+        ]
+    },
+
+    "eligibility": {
+        "required_loan_status": "OPEN",
+
+        "investment": {
+        "require_range_overlap": true,
+        "require_remaining_funding": true
+        },
+
+        "investor": {
+        "require_active_account": true,
+        "require_verification": true,
+        "require_onboarding": true
+        },
+
+        "exposure": {
+        "check_total": true,
+        "check_per_loan": true,
+        "check_per_borrower": true,
+        "check_per_purpose": true
+        },
+
+        "timing": {
+        "check_open_time": true,
+        "check_close_time": true
+        }
+    }
+
+}
