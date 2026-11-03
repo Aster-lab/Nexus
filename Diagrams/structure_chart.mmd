@@ -1,0 +1,80 @@
+
+flowchart TB
+    A(["NEXUS<br/>P2P LENDING PLATFORM"])
+
+    A --> B
+    A --> C
+    A --> D
+    A --> E
+
+    subgraph UI["USER INTERFACE"]
+        direction TB
+        B["Borrower Interface"]
+        B2["Investor Marketplace"]
+        B3["Administrator Interface"]
+    end
+
+    subgraph CORE["CORE APPLICATION"]
+        direction TB
+        C["Authentication & Access Control"]
+        C2["Loan Application Management"]
+        C3["Investment Management"]
+        C4["Repayment Management"]
+        C5["Marketplace & Loan Listings"]
+    end
+
+    subgraph ML["MACHINE LEARNING SERVICE"]
+        direction TB
+        D["Default Risk Prediction"]
+        D2["Loan Recommendation System"]
+
+        D --> D1["Risk Classification"]
+
+        D2 --> D21["Load & Validate Configuration"]
+        D2 --> D22["Validate Investor Preferences"]
+        D2 --> D23["Load & Validate Loan Data"]
+        D2 --> D24["Calculate Recommendation Scores"]
+        D2 --> D25["Rank Recommended Loans"]
+
+        D21 --> D22
+        D22 --> D23
+        D23 --> D24
+        D24 --> D25
+    end
+
+    subgraph DATA["DATA MANAGEMENT"]
+        direction TB
+        E["Application Database"]
+        E2["ML Configuration & Test Data"]
+        E --> E1["PostgreSQL + Prisma"]
+        E2 --> E21["recommendation_config.json"]
+        E2 --> E22["investor.json"]
+        E2 --> E23["loan.json"]
+    end
+
+    B ~~~ C
+    C ~~~ D
+    D ~~~ E
+
+    classDef root fill:#14213D,color:#FFFFFF,stroke:#0B132B,stroke-width:3px
+    classDef ui fill:#DCEBFA,color:#17365D,stroke:#477DB3,stroke-width:1.5px
+    classDef core fill:#E5E7FB,color:#312E81,stroke:#7774C9,stroke-width:1.5px
+    classDef ml fill:#D1FAE5,color:#065F46,stroke:#10B981,stroke-width:1.5px
+    classDef data fill:#FEF3C7,color:#92400E,stroke:#D97706,stroke-width:1.5px
+    classDef process fill:#FFFFFF,color:#065F46,stroke:#34A77A,stroke-width:1px
+    classDef file fill:#FFFBEB,color:#92400E,stroke:#D97706,stroke-dasharray:4 3
+
+    class A root
+    class B,B2,B3 ui
+    class C,C2,C3,C4,C5 core
+    class D,D2,D1 ml
+    class D21,D22,D23,D24,D25 process
+    class E,E1,E2 data
+    class E21,E22,E23 file
+
+    style UI fill:#EFF6FF,stroke:#477DB3,stroke-width:2px,color:#17365D
+    style CORE fill:#F1F0FF,stroke:#7774C9,stroke-width:2px,color:#312E81
+    style ML fill:#ECFDF5,stroke:#10B981,stroke-width:2px,color:#065F46
+    style DATA fill:#FFFBEB,stroke:#D97706,stroke-width:2px,color:#92400E
+
+    linkStyle default stroke:#64748B,stroke-width:1.5px

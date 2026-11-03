@@ -22,11 +22,12 @@ async def lifespan(app: FastAPI):
     try:
         engine = RiskEngine(model_dir=model_dir,anchor_threshold=0.48)
         print('All ^ models are loaded into memory successfully')
+        yield
     except Exception as e:
         print(f"[NEXUS ERROR] Engine initialization failed: {e}")
         raise e
-    yield
-    engine = None
+    finally:
+        engine = None
 
 #setup
 app = FastAPI(
@@ -47,17 +48,17 @@ app.add_middleware(
 class LoanApplicationSchema(BaseModel):
     model_config = ConfigDict(extra="forbid",allow_inf_nan = False, strict = True,)
 
-    annual_income: float = Field(...,gt=0,example = 75000.0, description = 'Annual Income')
-    dti: float = Field(...,ge=0,example= 16.5, description = 'Debt-to-income ratio percentage')
-    loan_amount: float = Field(...,gt=0,example = 12000,description='Requested loan amount')
-    acc_open_past_24mths: float = Field(...,ge=0,example = 2.0,description='Bank account openings in past 24 months')
-    bc_util : float = Field(...,ge=0,example = 19.5,description='Bank card utilization percentage')
-    lti : float = Field (...,ge=0,example = 0.16,description='Loan to income ration')
-    interest_burden: float = Field(...,ge=0,example = 1800.0,description='Estimate annual interest obligation')
-    sub_grade_num : float = Field(...,ge=1,le=35,example = 12,description='Numeric subgrade identifier')
-    int_rate: float = Field(...,ge=0,le=1.0,example=0.115,description="Interest rate expressed as a decimal")
-    revol_util: float = Field(...,ge=0,example=38.2,description="Total revolving balance utilization percentage")
-    term_months: float = Field(...,ge=0,example=36.0,description="Repayment term length in months (36.0 or 60.0)",)
+    annual_income: float = Field(...,gt=0,json_schema_extra={"example": 75000.0, "description": "Annual Income"})
+    dti: float = Field(...,ge=0,json_schema_extra={"example": 16.5, "description": "Debt-to-income ratio percentage"})
+    loan_amount: float = Field(...,gt=0,json_schema_extra={"example": 12000, "description": "Requested loan amount"})
+    acc_open_past_24mths: float = Field(...,ge=0,json_schema_extra={"example": 2.0, "description": "Bank account openings in past 24 months"})
+    bc_util : float = Field(...,ge=0,json_schema_extra={"example": 19.5, "description": "Bank card utilization percentage"})
+    lti : float = Field (...,ge=0,json_schema_extra={"example": 0.16, "description": "Loan to income ration"})
+    interest_burden: float = Field(...,ge=0,json_schema_extra={"example": 1800.0, "description": "Estimate annual interest obligation"})
+    sub_grade_num : float = Field(...,ge=1,le=35,json_schema_extra={"example": 12, "description": "Numeric subgrade identifier"})
+    int_rate: float = Field(...,ge=0,le=1.0,json_schema_extra={"example": 0.115, "description": "Interest rate expressed as a decimal"})
+    revol_util: float = Field(...,ge=0,json_schema_extra={"example": 38.2, "description": "Total revolving balance utilization percentage"})
+    term_months: float = Field(...,gt=0,json_schema_extra={"example": 36.0, "description": "Repayment term length in months (36.0 or 60.0)"})
 
     @field_validator("annual_income", "dti", "loan_amount", "acc_open_past_24mths",
                      "bc_util", "lti", "interest_burden", "sub_grade_num", "int_rate",
@@ -154,7 +155,7 @@ def predict_credit_risk(
 
     if not valid_items:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail={
                 "error_code": "BATCH_VALIDATION_FAILED",
                 "errors": validation_errors,
@@ -205,7 +206,7 @@ def recommend_credit_loans(current_time: str) -> Dict[str, Any]:
         )
     except (TypeError, ValueError):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail={
                 "error_code": "INVALID_CURRENT_TIME",
                 "message": (
@@ -217,7 +218,7 @@ def recommend_credit_loans(current_time: str) -> Dict[str, Any]:
 
     if parsed_current_time.tzinfo is None or parsed_current_time.utcoffset() is None:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail={
                 "error_code": "TIMEZONE_REQUIRED",
                 "message": "current_time must include a timezone offset.",

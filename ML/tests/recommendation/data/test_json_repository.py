@@ -42,9 +42,26 @@ def test_load_json_raises_for_invalid_json(tmp_path):
 
 
 def test_load_recommendation_data_loads_all_files(tmp_path):
-    investor = {"investor_id": 1}
+    investor = {
+    "investor_id": 1,
+    "exposure": {
+        "proposed_amount": 2000,
+        "limits": {
+            "total": 50000,
+            "per_loan": 5000,
+            "per_borrower": 10000,
+            "per_purpose": 20000,
+        },
+        "current": {
+            "total": 20000,
+            "per_loan": 4000,
+            "per_borrower": 7000,
+            "per_purpose": 12000,
+        },
+    },
+}
     loans = [{"loan_id": 10}]
-    investments = [{"investor_id": 1, "loan_id": 10}]
+    investments = [{"investor_id": 1, "loan_id": 10,"amount": 1000,}]
     config = {"features": {}}
 
     investor_path = write_json(tmp_path / "investor.json", investor)
@@ -68,7 +85,24 @@ def test_load_recommendation_data_loads_all_files(tmp_path):
 
 
 def test_load_recommendation_data_does_not_modify_source_files(tmp_path):
-    investor = {"investor_id": 1}
+    investor = {
+        "investor_id": 1,
+        "exposure": {
+            "proposed_amount": 2000,
+            "limits": {
+                "total": 50000,
+                "per_loan": 5000,
+                "per_borrower": 10000,
+                "per_purpose": 20000,
+            },
+            "current": {
+                "total": 20000,
+                "per_loan": 4000,
+                "per_borrower": 7000,
+                "per_purpose": 12000,
+            },
+        },
+    }
     loans = [{"loan_id": 10}]
     investments = []
     config = {"features": {}}

@@ -27,7 +27,9 @@ class SOMConfig:
     config_path: Path = BASE_DIR/'config'/'grid_config.json'
     data_path: Path = BASE_DIR/'data'/'processed'/'som_features_scaled.npy'
     save_path : Path = BASE_DIR/'models'/'trained_credit_som.pkl'
+    minmax_scaler_path : Path = BASE_DIR/'models'/'som_scaler.pkl'
     scaler_path : Path = BASE_DIR/'models'/'som_quantile_scaler.pkl'
+    imputer_path : Path = BASE_DIR/'models'/'som_imputer.pkl'
     map_path: Path = BASE_DIR /'models'/'node_risk_map.pkl'
     kmeans_path : Path = BASE_DIR /'models'/ 'som_kmeans_clusters.pkl'
     classifier_path : Path = BASE_DIR /'models'/'hybrid_credit_classifier.pkl'
@@ -276,6 +278,7 @@ class SOMPipeline:
 
         self.cfg.save_path.parent.mkdir(parents=True, exist_ok =True)
 
+        joblib.dump(imputer,self.cfg.imputer_path)
         joblib.dump(som, self.cfg.save_path)
         joblib.dump(prod_scaler,self.cfg.scaler_path)
         joblib.dump(risk_map,self.cfg.map_path)
