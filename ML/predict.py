@@ -4,20 +4,7 @@ import joblib
 import math
 import numpy as np 
 import pandas as pd
-
-FEATURE_NAMES = [
-    "annual_income",
-    "dti",
-    "loan_amount",
-    "acc_open_past_24mths",
-    "bc_util",
-    "lti",
-    "interest_burden",
-    "sub_grade_num",
-    "int_rate",
-    "revol_util",
-    "term_months",
-]
+from feature_contract import FEATURE_NAMES
 
 class RiskEngine:
     def __init__ (self,model_dir:str = 'models', anchor_threshold: float = 0.20):

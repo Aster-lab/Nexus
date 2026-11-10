@@ -1,0 +1,1772 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum AccountStatus {
+  ACTIVE
+  RESTRICTED
+  DEACTIVATION_PENDING
+  DEACTIVATED
+
+  @@map("account_status")
+}
+
+enum InvestorStatus {
+  ACTIVE
+  RESTRICTED
+  INACTIVE
+
+  @@map("investor_status")
+}
+
+enum SecuritySeverity {
+  INFO
+  LOW
+  HIGH
+  CRITICAL
+
+  @@map("security_severity")
+}
+
+enum LoanApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  INFORMATION_REQUESTED
+  APPROVED
+  REJECTED
+  WITHDRAWN
+  CLOSED
+
+  @@map("loan_application_status")
+}
+
+enum ApplicationReviewDecision {
+  APPROVED
+  REJECTED
+  REQUEST_INFORMATION
+  PENDING
+
+  @@map("application_review_decision")
+}
+
+enum InformationRequestStatus {
+  OPEN
+  RESPONDED
+  EXTENDED
+  CLOSED
+
+  @@map("information_request_status")
+}
+
+enum LoanOfferStatus {
+  ISSUED
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  CANCELLED
+
+  @@map("loan_offer_status")
+}
+
+enum RepaymentFrequency {
+  MONTHLY
+
+  @@map("repayment_frequency")
+}
+
+enum LoanStatus {
+  FUNDING
+  FUNDED
+  ACTIVE
+  DELINQUENT
+  DEFAULTED
+  REPAID
+  CANCELLED
+
+  @@map("loan_status")
+}
+
+enum WalletStatus {
+  ACTIVE
+  RESTRICTED
+  CLOSED
+
+  @@map("wallet_status")
+}
+
+enum PlatformAccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  INCOME
+  EXPENSE
+
+  @@map("platform_account_type")
+}
+
+enum PlatformAccountStatus {
+  ACTIVE
+  INACTIVE
+
+  @@map("platform_account_status")
+}
+
+enum LedgerTransactionStatus {
+  DRAFT
+  POSTED
+  REVERSED
+
+  @@map("ledger_transaction_status")
+}
+
+enum LedgerEntryType {
+  DEBIT
+  CREDIT
+
+  @@map("ledger_entry_type")
+}
+
+enum InvestmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+
+  @@map("investment_status")
+}
+
+enum EscrowAccountStatus {
+  OPEN
+  FULLY_FUNDED
+  DISBURSED
+  REFUNDING
+  CLOSED
+
+  @@map("escrow_account_status")
+}
+
+enum EscrowTransactionType {
+  DEPOSIT
+  DISBURSEMENT
+  REFUND
+
+  @@map("escrow_transaction_type")
+}
+
+enum InstallmentStatus {
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+
+  @@map("installment_status")
+}
+
+enum RepaymentStatus {
+  POSTED
+  REVERSED
+
+  @@map("repayment_status")
+}
+
+enum InvestorPayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+
+  @@map("investor_payout_status")
+}
+
+enum ModelVersionStatus {
+  REGISTERED
+  APPROVED
+  REJECTED
+  RETIRED
+
+  @@map("model_version_status")
+}
+
+enum ModelActivationAction {
+  APPROVED
+  ACTIVATED
+  ROLLED_BACK
+  DEACTIVATED
+
+  @@map("model_activation_action")
+}
+
+enum PredictionType {
+  PRELIMINARY
+  OFFICIAL
+  DIAGNOSTIC
+
+  @@map("prediction_type")
+}
+
+enum RiskAssessmentStatus {
+  CURRENT
+  SUPERSEDED
+
+  @@map("risk_assessment_status")
+}
+
+enum PolicyVersionStatus {
+  PROPOSED
+  APPROVED
+  SCHEDULED
+  ACTIVE
+  SUPERSEDED
+  FAILED
+
+  @@map("policy_version_status")
+}
+
+enum AlertPriority {
+  INFORMATIONAL
+  LOW
+  HIGH
+  CRITICAL
+
+  @@map("alert_priority")
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  ASSIGNED
+  OVERDUE
+  RESOLVED
+
+  @@map("alert_status")
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+
+  @@map("notification_status")
+}
+
+enum NotificationChannel {
+  EMAIL
+  IN_APP
+
+  @@map("notification_channel")
+}
+
+enum NotificationDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+
+  @@map("notification_delivery_status")
+}
+
+enum SupportRequestStatus {
+  SUBMITTED
+  IN_PROGRESS
+  RESOLVED
+
+  @@map("support_request_status")
+}
+
+enum WithdrawalRequestStatus {
+  REQUESTED
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+
+  @@map("withdrawal_request_status")
+}
+
+enum IdempotencyStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+
+  @@map("idempotency_status")
+}
+
+enum OutboxEventStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+
+  @@map("outbox_event_status")
+}
+
+enum ApplicationDocumentType {
+  IDENTITY
+  INCOME
+  BANK_STATEMENT
+  SUPPORTING
+
+  @@map("application_document_type")
+}
+
+enum DocumentScanStatus {
+  QUARANTINED
+  PENDING
+  CLEAN
+  INFECTED
+  FAILED
+
+  @@map("document_scan_status")
+}
+
+enum DocumentStatus {
+  ACTIVE
+  REJECTED
+  DELETED
+
+  @@map("document_status")
+}
+
+enum DocumentScanResult {
+  CLEAN
+  INFECTED
+  ERROR
+
+  @@map("document_scan_result")
+}
+
+enum DocumentAccessAction {
+  VIEW
+  DOWNLOAD
+
+  @@map("document_access_action")
+}
+
+enum DataAccessRequestStatus {
+  SUBMITTED
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+
+  @@map("data_access_request_status")
+}
+
+enum DataCorrectionRequestStatus {
+  SUBMITTED
+  REVIEWING
+  APPROVED
+  REJECTED
+  COMPLETED
+
+  @@map("data_correction_request_status")
+}
+
+enum SavedLoanAction {
+  SAVED
+  UNSAVED
+
+  @@map("saved_loan_action")
+}
+
+enum RetentionPolicyAction {
+  DELETE
+  ANONYMIZE
+  REVIEW
+
+  @@map("retention_policy_action")
+}
+
+enum RetentionPolicyStatus {
+  PROPOSED
+  APPROVED
+  ACTIVE
+  SUPERSEDED
+
+  @@map("retention_policy_status")
+}
+
+enum RetentionExecutionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  DEFERRED
+  FAILED
+
+  @@map("retention_execution_status")
+}
+
+enum BackupStatus {
+  CREATED
+  VERIFIED
+  FAILED
+  RESTORED
+
+  @@map("backup_status")
+}
+
+// ==========================================
+// 1. USER
+// ==========================================
+
+model User {
+  id              String        @id @default(uuid()) @db.Uuid
+  email           String        @db.VarChar(255)
+  passwordHash    String?       @map("password_hash") @db.VarChar(255)
+  emailVerifiedAt DateTime?     @map("email_verified_at") @db.Timestamptz(6)
+  accountStatus   AccountStatus @default(ACTIVE) @map("account_status")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deactivatedAt   DateTime?     @map("deactivated_at") @db.Timestamptz(6)
+  lastLoginAt     DateTime?     @map("last_login_at") @db.Timestamptz(6)
+
+  roles               UserRole[]
+  borrowerProfile     BorrowerProfile?
+  investorProfile     InvestorProfile?
+  sessions            Session[]
+  oauthAccounts       OAuthAccount[]
+  securityEvents      SecurityEvent[]
+  accountRestrictions AccountRestriction[] @relation("RestrictedUser")
+  createdRestrictions AccountRestriction[] @relation("RestrictionCreator")
+  liftedRestrictions  AccountRestriction[] @relation("RestrictionLifter")
+  grantedUserRoles    UserRole[]           @relation("RoleGrantor")
+
+  createdApplicationVersions ApplicationVersion[]     @relation("ApplicationVersionCreator")
+  applicationReviews         ApplicationReview[]      @relation("ApplicationReviewer")
+  requestedInformation       InformationRequest[]     @relation("InformationRequester")
+  createdLoanOffers          LoanOffer[]              @relation("LoanOfferCreator")
+  loanStatusChanges          LoanStatusHistory[]
+  wallets                    Wallet[]                 @relation("UserWalletOwner")
+  modelActivationHistories   ModelActivationHistory[]
+  auditLogs                  AuditLog[]
+  approvedPolicyVersions     PolicyVersion[]
+  assignedAlerts             Alert[]
+  alertHistory               AlertHistory[]
+  notifications              Notification[]
+  notificationPreferences    NotificationPreference[]
+  supportRequests            SupportRequest[]
+  feedback                   Feedback[]
+  supportHistories           SupportHistory[]
+  withdrawalRequests         WithdrawalRequest[]
+  idempotencyRecords         IdempotencyRecord[]
+  uploadedDocuments          ApplicationDocument[]
+  documentAccessLogs         DocumentAccessLog[]
+  dataAccessRequests         DataAccessRequest[]
+  dataCorrectionRequests     DataCorrectionRequest[]
+  reviewedCorrectionRequests DataCorrectionRequest[]  @relation("CorrectionReviewer")
+  createdLegalHolds          LegalHold[]              @relation("LegalHoldCreator")
+  releasedLegalHolds         LegalHold[]              @relation("LegalHoldReleaser")
+  approvedRetentionPolicies  RetentionPolicy[]
+
+  @@index([accountStatus])
+  @@map("users")
+}
+
+// ==========================================
+// 2. ROLE
+// ==========================================
+
+model Role {
+  id          String  @id @default(uuid()) @db.Uuid
+  code        String  @unique @db.VarChar(30)
+  name        String  @db.VarChar(100)
+  description String?
+
+  users UserRole[]
+
+  @@map("roles")
+}
+
+// ==========================================
+// 3. USER ROLE
+// ==========================================
+
+model UserRole {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  roleId          String    @map("role_id") @db.Uuid
+  grantedByUserId String?   @map("granted_by_user_id") @db.Uuid
+  grantedAt       DateTime  @default(now()) @map("granted_at") @db.Timestamptz(6)
+  revokedAt       DateTime? @map("revoked_at") @db.Timestamptz(6)
+  grantReason     String?   @map("grant_reason")
+
+  user      User  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role      Role  @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  grantedBy User? @relation("RoleGrantor", fields: [grantedByUserId], references: [id], onDelete: Restrict)
+
+  // Active assignment uniqueness is enforced by a partial index in SQL migration.
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+// ==========================================
+// 4. BORROWER PROFILE
+// ==========================================
+
+model BorrowerProfile {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @unique @map("user_id") @db.Uuid
+  legalName        String   @map("legal_name") @db.VarChar(255)
+  phone            String?  @db.VarChar(30)
+  address          Json
+  employmentStatus String?  @map("employment_status") @db.VarChar(50)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user             User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  loanApplications LoanApplication[]
+  loans            Loan[]
+
+  @@map("borrower_profiles")
+}
+
+// ==========================================
+// 5. INVESTOR PROFILE
+// ==========================================
+
+model InvestorProfile {
+  id             String         @id @default(uuid()) @db.Uuid
+  userId         String         @unique @map("user_id") @db.Uuid
+  displayName    String         @map("display_name") @db.VarChar(100)
+  investorStatus InvestorStatus @default(ACTIVE) @map("investor_status")
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user               User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+  investments        Investment[]
+  investorPayouts    InvestorPayout[]
+  preferences        InvestorPreference?
+  behaviors          InvestorBehavior[]
+  recommendationRuns RecommendationRun[]
+  savedLoans         SavedLoan[]
+
+  @@index([investorStatus])
+  @@map("investor_profiles")
+}
+
+// ==========================================
+// 6. SESSION
+// ==========================================
+
+model Session {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  sessionTokenHash String    @unique @map("session_token_hash") @db.VarChar(255)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt        DateTime  @map("expires_at") @db.Timestamptz(6)
+  lastUsedAt       DateTime? @map("last_used_at") @db.Timestamptz(6)
+  revokedAt        DateTime? @map("revoked_at") @db.Timestamptz(6)
+  revokeReason     String?   @map("revoke_reason") @db.VarChar(255)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// ==========================================
+// 7. OAUTH ACCOUNT
+// ==========================================
+
+model OAuthAccount {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  provider          String   @db.VarChar(50)
+  providerAccountId String   @map("provider_account_id") @db.VarChar(255)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("oauth_accounts")
+}
+
+// ==========================================
+// 8. SECURITY EVENT
+// ==========================================
+
+model SecurityEvent {
+  id              String           @id @default(uuid()) @db.Uuid
+  userId          String?          @map("user_id") @db.Uuid
+  eventType       String           @map("event_type") @db.VarChar(80)
+  severity        SecuritySeverity
+  sourceReference String?          @map("source_reference") @db.VarChar(255)
+  outcome         String           @db.VarChar(50)
+  metadata        Json
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@index([severity, createdAt])
+  @@map("security_events")
+}
+
+// ==========================================
+// 9. ACCOUNT RESTRICTION
+// ==========================================
+
+model AccountRestriction {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  restrictionType String    @map("restriction_type") @db.VarChar(80)
+  scope           Json
+  reason          String
+  createdByUserId String?   @map("created_by_user_id") @db.Uuid
+  startsAt        DateTime  @default(now()) @map("starts_at") @db.Timestamptz(6)
+  expiresAt       DateTime? @map("expires_at") @db.Timestamptz(6)
+  liftedAt        DateTime? @map("lifted_at") @db.Timestamptz(6)
+  liftedByUserId  String?   @map("lifted_by_user_id") @db.Uuid
+
+  user      User  @relation("RestrictedUser", fields: [userId], references: [id], onDelete: Restrict)
+  createdBy User? @relation("RestrictionCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  liftedBy  User? @relation("RestrictionLifter", fields: [liftedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([restrictionType])
+  @@map("account_restrictions")
+}
+
+// Borrower domain
+model LoanApplication {
+  id                String                @id @default(uuid()) @db.Uuid
+  borrowerProfileId String                @map("borrower_profile_id") @db.Uuid
+  currentVersionId  String?               @unique @map("current_version_id") @db.Uuid
+  status            LoanApplicationStatus @default(DRAFT)
+  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+  submittedAt       DateTime?             @map("submitted_at") @db.Timestamptz(6)
+  closedAt          DateTime?             @map("closed_at") @db.Timestamptz(6)
+
+  borrowerProfile BorrowerProfile @relation(fields: [borrowerProfileId], references: [id], onDelete: Restrict)
+
+  versions            ApplicationVersion[]  @relation("ApplicationVersions")
+  currentVersion      ApplicationVersion?   @relation("CurrentApplicationVersion", fields: [id, currentVersionId], references: [applicationId, id], onDelete: Restrict, map: "loan_applications_current_version_same_app_fkey")
+  financialReviews    ApplicationReview[]
+  informationRequests InformationRequest[]
+  loanOffers          LoanOffer[]
+  loans               Loan[]
+  riskAssessments     RiskAssessment[]
+  documents           ApplicationDocument[]
+
+  // Active-application uniqueness is enforced by a partial SQL index.
+  @@unique([id, currentVersionId], map: "loan_applications_id_current_version_id_key")
+  @@unique([id, borrowerProfileId], map: "loan_applications_id_borrower_profile_id_key")
+  @@index([borrowerProfileId, status])
+  @@index([status, createdAt])
+  @@map("loan_applications")
+}
+
+model ApplicationVersion {
+  id                       String    @id @default(uuid()) @db.Uuid
+  applicationId            String    @map("application_id") @db.Uuid
+  versionNumber            Int       @map("version_number")
+  submittedData            Json      @map("submitted_data")
+  requestedPrincipalSatang BigInt    @map("requested_principal_satang")
+  requestedTermMonths      Int       @map("requested_term_months")
+  submittedAt              DateTime? @map("submitted_at") @db.Timestamptz(6)
+  createdAt                DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdByUserId          String    @map("created_by_user_id") @db.Uuid
+
+  application LoanApplication  @relation("ApplicationVersions", fields: [applicationId], references: [id], onDelete: Restrict)
+  currentFor  LoanApplication? @relation("CurrentApplicationVersion")
+
+  createdBy User @relation("ApplicationVersionCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  financialInformation BorrowerFinancialInformation[]
+  reviews              ApplicationReview[]
+  loanOffers           LoanOffer[]
+  featureSnapShots     FeatureSnapshot[]
+  riskAssessments      RiskAssessment[]
+  documents            ApplicationDocument[]
+
+  @@unique([applicationId, versionNumber])
+  @@unique([applicationId, id], map: "application_versions_application_id_id_key")
+  // Positive values and submitted-version immutability are enforced by SQL migration.
+  @@index([applicationId, createdAt])
+  @@map("application_versions")
+}
+
+model BorrowerFinancialInformation {
+  id                   String   @id @default(uuid()) @db.Uuid
+  applicationVersionId String   @map("application_version_id") @db.Uuid
+  incomeData           Json     @map("income_data")
+  expenseData          Json     @map("expense_data")
+  debtData             Json     @map("debt_data")
+  creditData           Json     @map("credit_data")
+  sourceMetadata       Json     @map("source_metadata")
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  applicationVersion ApplicationVersion @relation(fields: [applicationVersionId], references: [id], onDelete: Restrict)
+
+  @@index([applicationVersionId])
+  @@map("borrower_financial_information")
+}
+
+model ApplicationReview {
+  id                   String                    @id @default(uuid()) @db.Uuid
+  applicationId        String                    @map("application_id") @db.Uuid
+  applicationVersionId String                    @map("application_version_id") @db.Uuid
+  reviewerUserId       String                    @map("reviewer_user_id") @db.Uuid
+  decision             ApplicationReviewDecision
+  notes                String?
+  reason               String
+  createdAt            DateTime                  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  application        LoanApplication    @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  applicationVersion ApplicationVersion @relation(fields: [applicationId, applicationVersionId], references: [applicationId, id], onDelete: Restrict, map: "application_reviews_application_version_same_app_fkey")
+  reviewer           User               @relation("ApplicationReviewer", fields: [reviewerUserId], references: [id], onDelete: Restrict)
+
+  @@index([applicationId, createdAt])
+  @@index([reviewerUserId, createdAt])
+  @@map("application_reviews")
+}
+
+model InformationRequest {
+  id                String                   @id @default(uuid()) @db.Uuid
+  applicationId     String                   @map("application_id") @db.Uuid
+  requestedByUserId String                   @map("requested_by_user_id") @db.Uuid
+  requestDetails    Json                     @map("request_details")
+  status            InformationRequestStatus @default(OPEN)
+  dueAt             DateTime                 @map("due_at") @db.Timestamptz(6)
+  extensionCount    Int                      @default(0) @map("extension_count")
+  closedAt          DateTime?                @map("closed_at") @db.Timestamptz(6)
+  createdAt         DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  application LoanApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  requestedBy User            @relation("InformationRequester", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([applicationId, status])
+  @@index([status, dueAt])
+  @@map("information_requests")
+}
+
+model LoanOffer {
+  id                   String             @id @default(uuid()) @db.Uuid
+  applicationId        String             @map("application_id") @db.Uuid
+  applicationVersionId String             @map("application_version_id") @db.Uuid
+  principalSatang      BigInt             @map("principal_satang")
+  annualInterestRate   Decimal            @map("annual_interest_rate") @db.Decimal(8, 6)
+  termMonths           Int                @map("term_months")
+  repaymentFrequency   RepaymentFrequency @default(MONTHLY) @map("repayment_frequency")
+  expiresAt            DateTime           @map("expires_at") @db.Timestamptz(6)
+  status               LoanOfferStatus    @default(ISSUED)
+  createdByUserId      String             @map("created_by_user_id") @db.Uuid
+  acceptedAt           DateTime?          @map("accepted_at") @db.Timestamptz(6)
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  application        LoanApplication    @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  applicationVersion ApplicationVersion @relation(fields: [applicationId, applicationVersionId], references: [applicationId, id], onDelete: Restrict, map: "loan_offers_application_version_same_app_fkey")
+  createdBy          User               @relation("LoanOfferCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  loan               Loan?
+
+  // Positive-value checks and accepted-offer uniqueness are enforced by SQL migration.
+  @@unique([applicationId, id], map: "loan_offers_application_id_id_key")
+  @@index([applicationId, status])
+  @@index([status, expiresAt])
+  @@map("loan_offers")
+}
+
+// Loan Lifecycle
+model Loan {
+  id                String @id @default(uuid()) @db.Uuid
+  borrowerProfileId String @map("borrower_profile_id") @db.Uuid
+  applicationId     String @map("application_id") @db.Uuid
+  acceptedOfferId   String @unique @map("accepted_offer_id") @db.Uuid
+
+  principalSatang    BigInt  @map("principal_satang")
+  fundedSatang       BigInt  @default(0) @map("funded_satang")
+  annualInterestRate Decimal @map("annual_interest_rate") @db.Decimal(8, 6)
+  termMonths         Int     @map("term_months")
+
+  status          LoanStatus @default(FUNDING)
+  fundingDeadline DateTime   @map("funding_deadline") @db.Timestamptz(6)
+  fundedAt        DateTime?  @map("funded_at") @db.Timestamptz(6)
+  disbursedAt     DateTime?  @map("disbursed_at") @db.Timestamptz(6)
+  createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  borrowerProfile   BorrowerProfile    @relation(fields: [borrowerProfileId], references: [id], onDelete: Restrict)
+  application       LoanApplication    @relation(fields: [applicationId, borrowerProfileId], references: [id, borrowerProfileId], onDelete: Restrict, map: "loans_application_borrower_same_owner_fkey")
+  acceptedOffer     LoanOffer          @relation(fields: [applicationId, acceptedOfferId], references: [applicationId, id], onDelete: Restrict, map: "loans_accepted_offer_same_application_fkey")
+  investments       Investment[]
+  escrowAccount     EscrowAccount?
+  repaymentSchedule RepaymentSchedule?
+  repayments        Repayment[]
+
+  statusHistory         LoanStatusHistory[]
+  investorBehaviors     InvestorBehavior[]
+  recommendationResults RecommendationResult[]
+  savedLoans            SavedLoan[]
+
+  @@index([borrowerProfileId])
+  @@index([applicationId])
+  @@index([status, fundingDeadline])
+  @@unique([applicationId, acceptedOfferId], map: "loans_application_id_accepted_offer_id_key")
+  @@map("loans")
+}
+
+model LoanStatusHistory {
+  id              String    @id @default(uuid()) @db.Uuid
+  loanId          String    @map("loan_id") @db.Uuid
+  previousStatus  String?   @map("previous_status") @db.VarChar(40)
+  newStatus       String    @map("new_status") @db.VarChar(40)
+  reason          String?
+  changedByUserId String?   @map("changed_by_user_id") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  loan      Loan  @relation(fields: [loanId], references: [id], onDelete: Restrict)
+  changedBy User? @relation(fields: [changedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([loanId, createdAt])
+  @@index([changedByUserId])
+  @@map("loan_status_history")
+}
+
+// wallet and financial Ledger
+model Wallet {
+  id                     String       @id @default(uuid()) @db.Uuid
+  ownerUserId            String?      @map("owner_user_id") @db.Uuid
+  ownerPlatformAccountId String?      @map("owner_platform_account_id") @db.Uuid
+  currency               String       @default("THB") @db.Char(3)
+  balanceSatang          BigInt       @default(0) @map("balance_satang")
+  status                 WalletStatus @default(ACTIVE)
+  createdAt              DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  ownerUser            User?               @relation("UserWalletOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  ownerPlatformAccount PlatformAccount?    @relation(fields: [ownerPlatformAccountId], references: [id], onDelete: Restrict)
+  ledgerEntries        LedgerEntry[]
+  escrowAccounts       EscrowAccount[]     @relation("EscrowPlatformWallet")
+  investorPayouts      InvestorPayout[]
+  withdrawalRequests   WithdrawalRequest[]
+
+  // Exactly-one ownership and posted-ledger balance reconciliation are enforced by SQL constraints/triggers.
+  @@index([ownerUserId])
+  @@index([ownerPlatformAccountId])
+  @@index([status])
+  @@map("wallets")
+}
+
+model PlatformAccount {
+  id          String                @id @default(uuid()) @db.Uuid
+  accountCode String                @unique @map("account_code") @db.VarChar(60)
+  accountName String                @map("account_name") @db.VarChar(150)
+  accountType PlatformAccountType   @map("account_type")
+  currency    String                @default("THB") @db.Char(3)
+  status      PlatformAccountStatus @default(ACTIVE)
+  createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  wallets       Wallet[]
+  ledgerEntries LedgerEntry[]
+
+  @@index([accountType, status])
+  @@map("platform_accounts")
+}
+
+model LedgerTransaction {
+  id                    String                  @id @default(uuid()) @db.Uuid
+  transactionType       String                  @map("transaction_type") @db.VarChar(60)
+  status                LedgerTransactionStatus @default(DRAFT)
+  idempotencyKey        String?                 @unique @map("idempotency_key") @db.VarChar(255)
+  referenceType         String?                 @map("reference_type") @db.VarChar(80)
+  referenceId           String?                 @map("reference_id") @db.Uuid
+  description           String
+  createdAt             DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  postedAt              DateTime?               @map("posted_at") @db.Timestamptz(6)
+  reversedTransactionId String?                 @map("reversed_transaction_id") @db.Uuid
+
+  entries                 LedgerEntry[]
+  reversedTransaction     LedgerTransaction?       @relation("TransactionReversal", fields: [reversedTransactionId], references: [id], onDelete: Restrict)
+  reversalTransactions    LedgerTransaction[]      @relation("TransactionReversal")
+  investmentContributions InvestmentContribution[]
+  escrowTransactions      EscrowTransaction[]
+  repayments              Repayment[]
+  investorPayouts         InvestorPayout[]
+  withdrawalRequests      WithdrawalRequest[]
+
+  // Posted headers are immutable; reversals use a separate compensating transaction linked here.
+  @@index([status, createdAt])
+  @@index([referenceType, referenceId])
+  @@map("ledger_transactions")
+}
+
+model LedgerEntry {
+  id                  String          @id @default(uuid()) @db.Uuid
+  ledgerTransactionId String          @map("ledger_transaction_id") @db.Uuid
+  walletId            String?         @map("wallet_id") @db.Uuid
+  platformAccountId   String?         @map("platform_account_id") @db.Uuid
+  entryType           LedgerEntryType @map("entry_type")
+  amountSatang        BigInt          @map("amount_satang")
+  currency            String          @default("THB") @db.Char(3)
+  createdAt           DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  ledgerTransaction LedgerTransaction @relation(fields: [ledgerTransactionId], references: [id], onDelete: Restrict)
+  wallet            Wallet?           @relation(fields: [walletId], references: [id], onDelete: Restrict)
+  platformAccount   PlatformAccount?  @relation(fields: [platformAccountId], references: [id], onDelete: Restrict)
+
+  // Account XOR, positive amounts, posted transaction balance, and posted-entry immutability are enforced by SQL.
+  @@index([ledgerTransactionId])
+  @@index([walletId, createdAt])
+  @@index([platformAccountId, createdAt])
+  @@map("ledger_entries")
+}
+
+// Investment and Escrow
+
+model Investment {
+  id                String           @id @default(uuid()) @db.Uuid
+  investorProfileId String           @map("investor_profile_id") @db.Uuid
+  loanId            String           @map("loan_id") @db.Uuid
+  status            InvestmentStatus @default(ACTIVE)
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  investorProfile  InvestorProfile          @relation(fields: [investorProfileId], references: [id], onDelete: Restrict)
+  loan             Loan                     @relation(fields: [loanId], references: [id], onDelete: Restrict)
+  contributions    InvestmentContribution[]
+  payoutAllocation PayoutAllocation[]
+
+  @@unique([investorProfileId, loanId])
+  @@index([loanId, status])
+  @@index([investorProfileId, status])
+  @@map("investments")
+}
+
+model InvestmentContribution {
+  id                  String   @id @default(uuid()) @db.Uuid
+  investmentId        String   @map("investment_id") @db.Uuid
+  amountSatang        BigInt   @map("amount_satang")
+  ledgerTransactionId String   @map("ledger_transaction_id") @db.Uuid
+  idempotencyKey      String   @unique @map("idempotency_key") @db.VarChar(255)
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  investment        Investment        @relation(fields: [investmentId], references: [id], onDelete: Restrict)
+  ledgerTransaction LedgerTransaction @relation(fields: [ledgerTransactionId], references: [id], onDelete: Restrict)
+
+  // Positive amount, funding cap, and immutable history are enforced by SQL migration.
+  @@index([investmentId, createdAt])
+  @@index([ledgerTransactionId])
+  @@map("investment_contributions")
+}
+
+model EscrowAccount {
+  id               String              @id @default(uuid()) @db.Uuid
+  loanId           String              @unique @map("loan_id") @db.Uuid
+  platformWalletId String              @map("platform_wallet_id") @db.Uuid
+  heldSatang       BigInt              @default(0) @map("held_satang")
+  status           EscrowAccountStatus @default(OPEN)
+  createdAt        DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  loan           Loan                @relation(fields: [loanId], references: [id], onDelete: Restrict)
+  platformWallet Wallet              @relation("EscrowPlatformWallet", fields: [platformWalletId], references: [id], onDelete: Restrict)
+  transactions   EscrowTransaction[]
+
+  // Held balance, loan cap, and platform-wallet ownership are enforced by SQL migration.
+  @@index([platformWalletId])
+  @@index([status])
+  @@map("escrow_accounts")
+}
+
+model EscrowTransaction {
+  id                  String                @id @default(uuid()) @db.Uuid
+  escrowAccountId     String                @map("escrow_account_id") @db.Uuid
+  ledgerTransactionId String                @map("ledger_transaction_id") @db.Uuid
+  type                EscrowTransactionType @map("transaction_type")
+  amountSatang        BigInt                @map("amount_satang")
+  createdAt           DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  escrowAccount     EscrowAccount     @relation(fields: [escrowAccountId], references: [id], onDelete: Restrict)
+  ledgerTransaction LedgerTransaction @relation(fields: [ledgerTransactionId], references: [id], onDelete: Restrict)
+
+  // Positive amounts and held-balance reconciliation are enforced by SQL migration.
+  @@index([escrowAccountId, createdAt])
+  @@index([ledgerTransactionId])
+  @@map("escrow_transactions")
+}
+
+//Repayment and Investor Payouts
+model RepaymentSchedule {
+  id               String   @id @default(uuid()) @db.Uuid
+  loanId           String   @unique @map("loan_id") @db.Uuid
+  currentVersionId String?  @unique @map("current_version_id") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  loan           Loan              @relation(fields: [loanId], references: [id], onDelete: Restrict)
+  currentVersion ScheduleVersion?  @relation("CurrentScheduleVersion", fields: [id, currentVersionId], references: [scheduleId, id], onDelete: Restrict, map: "repayment_schedules_current_version_same_schedule_fkey")
+  versions       ScheduleVersion[] @relation("ScheduleVersions")
+
+  @@unique([id, currentVersionId], map: "repayment_schedules_id_current_version_id_key")
+  @@map("repayment_schedules")
+}
+
+model ScheduleVersion {
+  id                 String   @id @default(uuid()) @db.Uuid
+  scheduleId         String   @map("schedule_id") @db.Uuid
+  versionNumber      Int      @map("version_number")
+  calculationMethod  String   @default("REDUCING_BALANCE") @map("calculation_method") @db.VarChar(40)
+  interestRateType   String   @default("FIXED") @map("interest_rate_type") @db.VarChar(20)
+  dayCountConvention String   @default("ACTUAL_365") @map("day_count_convention") @db.VarChar(20)
+  paymentFrequency   String   @default("MONTHLY") @map("payment_frequency") @db.VarChar(20)
+  annualInterestRate Decimal  @map("annual_interest_rate") @db.Decimal(8, 6)
+  roundingMethod     String   @map("rounding_method") @db.VarChar(50)
+  scheduleInputs     Json     @map("schedule_inputs")
+  scheduleSnapshot   Json     @map("schedule_snapshot")
+  effectiveFrom      DateTime @map("effective_from") @db.Timestamptz(6)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  schedule     RepaymentSchedule  @relation("ScheduleVersions", fields: [scheduleId], references: [id], onDelete: Restrict)
+  currentFor   RepaymentSchedule? @relation("CurrentScheduleVersion")
+  installments Installment[]
+
+  @@unique([scheduleId, versionNumber])
+  @@unique([scheduleId, id], map: "schedule_versions_schedule_id_id_key")
+  @@index([scheduleId])
+  @@map("schedule_versions")
+}
+
+model Installment {
+  id                     String            @id @default(uuid()) @db.Uuid
+  scheduleVersionId      String            @map("schedule_version_id") @db.Uuid
+  installmentNumber      Int               @map("installment_number")
+  dueDate                DateTime          @map("due_date") @db.Date
+  openingPrincipalSatang BigInt            @map("opening_principal_satang")
+  principalDueSatang     BigInt            @map("principal_due_satang")
+  interestDueSatang      BigInt            @map("interest_due_satang")
+  paidPrincipalSatang    BigInt            @default(0) @map("paid_principal_satang")
+  paidInterestSatang     BigInt            @default(0) @map("paid_interest_satang")
+  status                 InstallmentStatus @default(PENDING)
+
+  scheduleVersion ScheduleVersion @relation(fields: [scheduleVersionId], references: [id], onDelete: Restrict)
+  repayments      Repayment[]
+
+  @@unique([scheduleVersionId, installmentNumber])
+  // Schedule amounts and payment bounds are enforced by SQL constraints/triggers.
+  @@index([dueDate, status])
+  @@map("installments")
+}
+
+model Repayment {
+  id                  String          @id @default(uuid()) @db.Uuid
+  loanId              String          @map("loan_id") @db.Uuid
+  installmentId       String          @map("installment_id") @db.Uuid
+  ledgerTransactionId String          @map("ledger_transaction_id") @db.Uuid
+  reversalOfRepaymentId String?        @map("reversal_of_repayment_id") @db.Uuid
+  principalSatang     BigInt          @default(0) @map("principal_satang")
+  interestSatang      BigInt          @default(0) @map("interest_satang")
+  feeSatang           BigInt          @default(0) @map("fee_satang")
+  totalSatang         BigInt          @map("total_satang")
+  status              RepaymentStatus
+  receivedAt          DateTime        @map("received_at") @db.Timestamptz(6)
+  createdAt           DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  loan              Loan               @relation(fields: [loanId], references: [id], onDelete: Restrict)
+  installment       Installment        @relation(fields: [installmentId], references: [id], onDelete: Restrict)
+  ledgerTransaction LedgerTransaction  @relation(fields: [ledgerTransactionId], references: [id], onDelete: Restrict)
+  reversalOf       Repayment?          @relation("RepaymentReversal", fields: [reversalOfRepaymentId], references: [id], onDelete: Restrict)
+  compensatingRepayments Repayment[]   @relation("RepaymentReversal")
+  payoutAllocations PayoutAllocation[]
+
+  @@index([loanId, receivedAt])
+  @@index([installmentId])
+  @@index([ledgerTransactionId])
+  @@index([reversalOfRepaymentId])
+  // Component totals and immutable repayment history are enforced by SQL migration.
+  @@map("repayments")
+}
+
+model PayoutAllocation {
+  id               String   @id @default(uuid()) @db.Uuid
+  repaymentId      String   @map("repayment_id") @db.Uuid
+  investmentId     String   @map("investment_id") @db.Uuid
+  principalSatang  BigInt   @default(0) @map("principal_satang")
+  interestSatang   BigInt   @default(0) @map("interest_satang")
+  recoverySatang   BigInt   @default(0) @map("recovery_satang")
+  allocationMethod String   @map("allocation_method") @db.VarChar(50)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  repayment      Repayment       @relation(fields: [repaymentId], references: [id], onDelete: Restrict)
+  investment     Investment      @relation(fields: [investmentId], references: [id], onDelete: Restrict)
+  investorPayout InvestorPayout?
+
+  @@unique([repaymentId, investmentId])
+  // Principal/interest allocation totals and investment-loan consistency are enforced by SQL.
+  @@index([investmentId])
+  @@map("payout_allocations")
+}
+
+model InvestorPayout {
+  id                  String               @id @default(uuid()) @db.Uuid
+  investorProfileId   String               @map("investor_profile_id") @db.Uuid
+  walletId            String               @map("wallet_id") @db.Uuid
+  payoutAllocationId  String               @unique @map("payout_allocation_id") @db.Uuid
+  principalSatang     BigInt               @default(0) @map("principal_satang")
+  interestSatang      BigInt               @default(0) @map("interest_satang")
+  status              InvestorPayoutStatus @default(PENDING)
+  idempotencyKey      String               @unique @map("idempotency_key") @db.VarChar(255)
+  attemptCount        Int                  @default(0) @map("attempt_count")
+  nextRetryAt         DateTime?            @map("next_retry_at") @db.Timestamptz(6)
+  lastError           String?              @map("last_error")
+  ledgerTransactionId String?              @map("ledger_transaction_id") @db.Uuid
+  completedAt         DateTime?            @map("completed_at") @db.Timestamptz(6)
+  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  investorProfile   InvestorProfile    @relation(fields: [investorProfileId], references: [id], onDelete: Restrict)
+  wallet            Wallet             @relation(fields: [walletId], references: [id], onDelete: Restrict)
+  payoutAllocation  PayoutAllocation   @relation(fields: [payoutAllocationId], references: [id], onDelete: Restrict)
+  ledgerTransaction LedgerTransaction? @relation(fields: [ledgerTransactionId], references: [id], onDelete: Restrict)
+
+  @@index([status, nextRetryAt])
+  @@index([investorProfileId, createdAt])
+  // Payout amounts, wallet ownership, allocation consistency, and completion linkage are enforced by SQL.
+  @@map("investor_payouts")
+}
+
+// ML and model
+
+model ModelVersion {
+  id                   String             @id @default(uuid()) @db.Uuid
+  modelName            String             @map("model_name") @db.VarChar(100)
+  version              String             @db.VarChar(50)
+  artifactLocation     String             @map("artifact_location") @db.VarChar(500)
+  artifactChecksum     String             @map("artifact_checksum") @db.VarChar(128)
+  featureSchemaVersion String             @map("feature_schema_version") @db.VarChar(50)
+  status               ModelVersionStatus @default(REGISTERED)
+  isActive             Boolean            @default(false) @map("is_active")
+  registeredAt         DateTime           @default(now()) @map("registered_at") @db.Timestamptz(6)
+
+  activationHistory  ModelActivationHistory[]
+  predictionRecords  PredictionRecord[]
+  recommendationRuns RecommendationRun[]
+
+  @@unique([modelName, version])
+  @@index([status])
+  @@map("model_versions")
+}
+
+model ModelActivationHistory {
+  id                String                @id @default(uuid()) @db.Uuid
+  modelVersionId    String                @map("model_version_id") @db.Uuid
+  action            ModelActivationAction
+  performedByUserId String                @map("performed_by_user_id") @db.Uuid
+  reason            String
+  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  modelVersion ModelVersion @relation(fields: [modelVersionId], references: [id], onDelete: Restrict)
+  performedBy  User         @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([modelVersionId, createdAt])
+  @@index([performedByUserId])
+  // Activation history is append-only; activation policy is left for the approved governance rule.
+  @@map("model_activation_history")
+}
+
+model FeatureSnapshot {
+  id                       String   @id @default(uuid()) @db.Uuid
+  applicationVersionId     String   @map("application_version_id") @db.Uuid
+  featureSchemaVersion     String   @map("feature_schema_version") @db.VarChar(50)
+  featureGenerationVersion String   @map("feature_generation_version") @db.VarChar(50)
+  featureValues            Json     @map("feature_values")
+  featureUnits             Json     @map("feature_units")
+  sourceMapping            Json     @map("source_mapping")
+  createdAt                DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  applicationVersion ApplicationVersion @relation(fields: [applicationVersionId], references: [id], onDelete: Restrict)
+  predictionRecords  PredictionRecord[]
+
+  @@index([applicationVersionId, createdAt])
+  // Feature snapshots are immutable records of the exact model inputs.
+  @@map("feature_snapshots")
+}
+
+model PredictionRecord {
+  id                String         @id @default(uuid()) @db.Uuid
+  featureSnapshotId String         @map("feature_snapshot_id") @db.Uuid
+  modelVersionId    String         @map("model_version_id") @db.Uuid
+  predictionType    PredictionType @map("prediction_type")
+  predictionOutput  Json           @map("prediction_output")
+  explanation       Json?
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  featureSnapshot FeatureSnapshot @relation(fields: [featureSnapshotId], references: [id], onDelete: Restrict)
+  modelVersion    ModelVersion    @relation(fields: [modelVersionId], references: [id], onDelete: Restrict)
+  riskAssessment  RiskAssessment?
+
+  @@index([featureSnapshotId, createdAt])
+  @@index([modelVersionId, createdAt])
+  @@index([predictionType, createdAt])
+  // Prediction history is immutable.
+  @@map("prediction_records")
+}
+
+model RiskAssessment {
+  id                   String               @id @default(uuid()) @db.Uuid
+  applicationId        String               @map("application_id") @db.Uuid
+  applicationVersionId String               @map("application_version_id") @db.Uuid
+  predictionRecordId   String               @unique @map("prediction_record_id") @db.Uuid
+  defaultProbability   Decimal              @map("default_probability") @db.Decimal(7, 6)
+  riskGrade            String               @map("risk_grade") @db.VarChar(20)
+  assessmentStatus     RiskAssessmentStatus @default(CURRENT) @map("assessment_status")
+  createdAt            DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  application        LoanApplication    @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  applicationVersion ApplicationVersion @relation(fields: [applicationVersionId], references: [id], onDelete: Restrict)
+  predictionRecord   PredictionRecord   @relation(fields: [predictionRecordId], references: [id], onDelete: Restrict)
+
+  @@index([applicationId, createdAt])
+  @@index([applicationVersionId, assessmentStatus])
+  // Current-official uniqueness, prediction linkage, and probability bounds are enforced by SQL.
+  @@map("risk_assessments")
+}
+
+// Administration and Governance
+model AuditLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  actorUserId   String?  @map("actor_user_id") @db.Uuid
+  action        String   @db.VarChar(100)
+  targetType    String   @map("target_type") @db.VarChar(80)
+  targetId      String?  @map("target_id") @db.Uuid
+  reason        String?
+  oldValues     Json?    @map("old_values")
+  newValues     Json?    @map("new_values")
+  outcome       String   @db.VarChar(30)
+  correlationId String?  @map("correlation_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  // Append-only; database trigger also protects audit history from mutation.
+  @@index([actorUserId, createdAt])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model PlatformPolicy {
+  id          String   @id @default(uuid()) @db.Uuid
+  policyCode  String   @unique @map("policy_code") @db.VarChar(80)
+  name        String   @db.VarChar(150)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  versions PolicyVersion[]
+
+  @@map("platform_policies")
+}
+
+model PolicyVersion {
+  id               String              @id @default(uuid()) @db.Uuid
+  policyId         String              @map("policy_id") @db.Uuid
+  versionNumber    Int                 @map("version_number")
+  policyValues     Json                @map("policy_values")
+  status           PolicyVersionStatus @default(PROPOSED)
+  approvedByUserId String?             @map("approved_by_user_id") @db.Uuid
+  effectiveAt      DateTime?           @map("effective_at") @db.Timestamptz(6)
+  createdAt        DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  policy     PlatformPolicy @relation(fields: [policyId], references: [id], onDelete: Restrict)
+  approvedBy User?          @relation(fields: [approvedByUserId], references: [id], onDelete: Restrict)
+
+  // Positive version numbers and one ACTIVE row per policy are enforced in SQL.
+  @@unique([policyId, versionNumber])
+  @@index([policyId, status])
+  @@index([status, effectiveAt])
+  @@map("policy_versions")
+}
+
+model Alert {
+  id               String        @id @default(uuid()) @db.Uuid
+  alertType        String        @map("alert_type") @db.VarChar(80)
+  priority         AlertPriority
+  status           AlertStatus   @default(OPEN)
+  targetType       String?       @map("target_type") @db.VarChar(80)
+  targetId         String?       @map("target_id") @db.Uuid
+  assignedToUserId String?       @map("assigned_to_user_id") @db.Uuid
+  dueAt            DateTime?     @map("due_at") @db.Timestamptz(6)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  resolvedAt       DateTime?     @map("resolved_at") @db.Timestamptz(6)
+
+  assignedTo User?          @relation(fields: [assignedToUserId], references: [id], onDelete: Restrict)
+  history    AlertHistory[]
+
+  @@index([status, priority])
+  @@index([assignedToUserId, status])
+  @@index([dueAt, status])
+  @@map("alerts")
+}
+
+model AlertHistory {
+  id          String   @id @default(uuid()) @db.Uuid
+  alertId     String   @map("alert_id") @db.Uuid
+  action      String   @db.VarChar(80)
+  oldValue    Json?    @map("old_value")
+  newValue    Json?    @map("new_value")
+  actorUserId String?  @map("actor_user_id") @db.Uuid
+  reason      String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  alert Alert @relation(fields: [alertId], references: [id], onDelete: Restrict)
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  // Append-only status/action history is enforced in SQL.
+  @@index([alertId, createdAt])
+  @@index([actorUserId])
+  @@map("alert_history")
+}
+
+// communciatons and support
+model Notification {
+  id        String             @id @default(uuid()) @db.Uuid
+  userId    String             @map("user_id") @db.Uuid
+  category  String             @db.VarChar(60)
+  title     String             @db.VarChar(255)
+  content   String
+  status    NotificationStatus @default(UNREAD)
+  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user       User                   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  deliveries NotificationDelivery[]
+
+  @@index([userId, status, createdAt])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  category     String   @db.VarChar(60)
+  inAppEnabled Boolean  @map("in_app_enabled")
+  emailEnabled Boolean  @map("email_enabled")
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, category])
+  @@map("notification_preferences")
+}
+
+model NotificationDelivery {
+  id             String                     @id @default(uuid()) @db.Uuid
+  notificationId String                     @map("notification_id") @db.Uuid
+  channel        NotificationChannel
+  status         NotificationDeliveryStatus @default(PENDING)
+  attemptCount   Int                        @default(0) @map("attempt_count")
+  nextRetryAt    DateTime?                  @map("next_retry_at") @db.Timestamptz(6)
+  lastError      String?                    @map("last_error")
+  sentAt         DateTime?                  @map("sent_at") @db.Timestamptz(6)
+  createdAt      DateTime                   @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Restrict)
+
+  @@index([status, nextRetryAt])
+  @@index([notificationId])
+  @@map("notification_deliveries")
+}
+
+model SupportRequest {
+  id         String               @id @default(uuid()) @db.Uuid
+  userId     String               @map("user_id") @db.Uuid
+  category   String               @db.VarChar(80)
+  subject    String               @db.VarChar(255)
+  message    String
+  status     SupportRequestStatus @default(SUBMITTED)
+  createdAt  DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+  resolvedAt DateTime?            @map("resolved_at") @db.Timestamptz(6)
+
+  user    User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  history SupportHistory[]
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@map("support_requests")
+}
+
+model SupportHistory {
+  id               String   @id @default(uuid()) @db.Uuid
+  supportRequestId String   @map("support_request_id") @db.Uuid
+  action           String   @db.VarChar(80)
+  previousStatus   String?  @map("previous_status") @db.VarChar(30)
+  newStatus        String?  @map("new_status") @db.VarChar(30)
+  oldValue         Json?    @map("old_value")
+  newValue         Json?    @map("new_value")
+  actorUserId      String?  @map("actor_user_id") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  supportRequest SupportRequest @relation(fields: [supportRequestId], references: [id], onDelete: Restrict)
+  actor          User?          @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([supportRequestId, createdAt])
+  @@index([actorUserId])
+  @@map("support_history")
+}
+
+model Feedback {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@map("feedback")
+}
+
+//finanical operations
+model WithdrawalRequest {
+  id                            String                  @id @default(uuid()) @db.Uuid
+  userId                        String                  @map("user_id") @db.Uuid
+  walletId                      String                  @map("wallet_id") @db.Uuid
+  amountSatang                  BigInt                  @map("amount_satang")
+  simulatedDestinationReference String?                 @map("simulated_destination_reference") @db.VarChar(255)
+  status                        WithdrawalRequestStatus @default(REQUESTED)
+  idempotencyKey                String                  @unique @map("idempotency_key") @db.VarChar(255)
+  ledgerTransactionId           String?                 @map("ledger_transaction_id") @db.Uuid
+  createdAt                     DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  completedAt                   DateTime?               @map("completed_at") @db.Timestamptz(6)
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  wallet            Wallet             @relation(fields: [walletId], references: [id], onDelete: Restrict)
+  ledgerTransaction LedgerTransaction? @relation(fields: [ledgerTransactionId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@index([walletId, status])
+  @@index([status, createdAt])
+  // Positive amount, owner consistency, and completed-ledger requirements are enforced in SQL.
+  @@map("withdrawal_requests")
+}
+
+model IdempotencyRecord {
+  id               String            @id @default(uuid()) @db.Uuid
+  idempotencyKey   String            @unique @map("idempotency_key") @db.VarChar(255)
+  userId           String?           @map("user_id") @db.Uuid
+  operationType    String            @map("operation_type") @db.VarChar(80)
+  requestHash      String            @map("request_hash") @db.VarChar(128)
+  status           IdempotencyStatus @default(PROCESSING)
+  responseSnapshot Json?             @map("response_snapshot")
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  completedAt      DateTime?         @map("completed_at") @db.Timestamptz(6)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  // Completion timestamp consistency is enforced in SQL; request-hash semantics belong to the command handler.
+  @@map("idempotency_records")
+}
+
+model OutboxEvent {
+  id            String            @id @default(uuid()) @db.Uuid
+  eventType     String            @map("event_type") @db.VarChar(100)
+  aggregateType String            @map("aggregate_type") @db.VarChar(80)
+  aggregateId   String            @map("aggregate_id") @db.Uuid
+  payload       Json
+  status        OutboxEventStatus @default(PENDING)
+  attemptCount  Int               @default(0) @map("attempt_count")
+  nextAttemptAt DateTime?         @map("next_attempt_at") @db.Timestamptz(6)
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  completedAt   DateTime?         @map("completed_at") @db.Timestamptz(6)
+
+  @@index([status, nextAttemptAt])
+  @@index([aggregateType, aggregateId])
+  @@index([createdAt])
+  // Nonnegative attempts and completion timestamp consistency are enforced in SQL.
+  @@map("outbox_events")
+}
+
+model SystemEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  eventType String   @map("event_type") @db.VarChar(100)
+  source    String   @db.VarChar(100)
+  status    String   @db.VarChar(30)
+  metadata  Json
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([eventType, createdAt])
+  @@index([source, createdAt])
+  @@index([status, createdAt])
+  @@map("system_events")
+}
+
+//Document
+model ApplicationDocument {
+  id                   String                  @id @default(uuid()) @db.Uuid
+  applicationId        String                  @map("application_id") @db.Uuid
+  applicationVersionId String                  @map("application_version_id") @db.Uuid
+  uploadedByUserId     String                  @map("uploaded_by_user_id") @db.Uuid
+  documentType         ApplicationDocumentType @map("document_type")
+  objectKey            String                  @map("object_key") @db.VarChar(500)
+  originalFilename     String                  @map("original_filename") @db.VarChar(255)
+  detectedMimeType     String                  @map("detected_mime_type") @db.VarChar(150)
+  fileSizeBytes        BigInt                  @map("file_size_bytes")
+  checksum             String                  @db.VarChar(128)
+  versionNumber        Int                     @map("version_number")
+  scanStatus           DocumentScanStatus      @default(QUARANTINED) @map("scan_status")
+  documentStatus       DocumentStatus          @default(ACTIVE) @map("document_status")
+  createdAt            DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  deletedAt            DateTime?               @map("deleted_at") @db.Timestamptz(6)
+
+  application        LoanApplication        @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  applicationVersion ApplicationVersion     @relation(fields: [applicationId, applicationVersionId], references: [applicationId, id], onDelete: Restrict)
+  uploadedBy         User                   @relation(fields: [uploadedByUserId], references: [id], onDelete: Restrict)
+  securityScans      DocumentSecurityScan[]
+  accessLogs         DocumentAccessLog[]
+
+  @@unique([applicationVersionId, documentType, versionNumber])
+  @@index([applicationId])
+  @@index([applicationVersionId, scanStatus])
+  @@index([uploadedByUserId])
+  @@map("application_documents")
+}
+
+model DocumentSecurityScan {
+  id             String             @id @default(uuid()) @db.Uuid
+  documentId     String             @map("document_id") @db.Uuid
+  scannerVersion String             @map("scanner_version") @db.VarChar(100)
+  result         DocumentScanResult
+  details        Json?
+  scannedAt      DateTime           @default(now()) @map("scanned_at") @db.Timestamptz(6)
+
+  document ApplicationDocument @relation(fields: [documentId], references: [id], onDelete: Restrict)
+
+  @@index([documentId, scannedAt])
+  @@index([result, scannedAt])
+  @@map("document_security_scans")
+}
+
+model DocumentAccessLog {
+  id               String               @id @default(uuid()) @db.Uuid
+  documentId       String               @map("document_id") @db.Uuid
+  accessedByUserId String               @map("accessed_by_user_id") @db.Uuid
+  action           DocumentAccessAction
+  accessReason     String?              @map("access_reason")
+  outcome          String               @db.VarChar(30)
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  document   ApplicationDocument @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  accessedBy User                @relation(fields: [accessedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([documentId, createdAt])
+  @@index([accessedByUserId, createdAt])
+  @@map("document_access_logs")
+}
+
+model DataAccessRequest {
+  id                 String                  @id @default(uuid()) @db.Uuid
+  userId             String                  @map("user_id") @db.Uuid
+  requestType        String                  @map("request_type") @db.VarChar(40)
+  status             DataAccessRequestStatus @default(SUBMITTED)
+  verificationStatus String                  @map("verification_status") @db.VarChar(30)
+  exportObjectKey    String?                 @map("export_object_key") @db.VarChar(500)
+  expiresAt          DateTime?               @map("expires_at") @db.Timestamptz(6)
+  createdAt          DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  completedAt        DateTime?               @map("completed_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@map("data_access_requests")
+}
+
+model DataCorrectionRequest {
+  id               String                      @id @default(uuid()) @db.Uuid
+  userId           String                      @map("user_id") @db.Uuid
+  targetType       String                      @map("target_type") @db.VarChar(80)
+  targetId         String                      @map("target_id") @db.Uuid
+  requestedChange  Json                        @map("requested_change")
+  reason           String
+  status           DataCorrectionRequestStatus @default(SUBMITTED)
+  reviewedByUserId String?                     @map("reviewed_by_user_id") @db.Uuid
+  createdAt        DateTime                    @default(now()) @map("created_at") @db.Timestamptz(6)
+  completedAt      DateTime?                   @map("completed_at") @db.Timestamptz(6)
+
+  user       User  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  reviewedBy User? @relation("CorrectionReviewer", fields: [reviewedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+  @@map("data_correction_requests")
+}
+
+model LegalHold {
+  id               String    @id @default(uuid()) @db.Uuid
+  targetType       String    @map("target_type") @db.VarChar(80)
+  targetId         String    @map("target_id") @db.Uuid
+  reason           String
+  createdByUserId  String    @map("created_by_user_id") @db.Uuid
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  releasedByUserId String?   @map("released_by_user_id") @db.Uuid
+  releasedAt       DateTime? @map("released_at") @db.Timestamptz(6)
+
+  createdBy  User  @relation("LegalHoldCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  releasedBy User? @relation("LegalHoldReleaser", fields: [releasedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([targetType, targetId])
+  @@index([releasedAt])
+  @@map("legal_holds")
+}
+
+// recommedation & marketplace
+model InvestorPreference {
+  id                String   @id @default(uuid()) @db.Uuid
+  investorProfileId String   @unique @map("investor_profile_id") @db.Uuid
+  preferenceData    Json     @map("preference_data")
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  investorProfile InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Restrict)
+
+  @@map("investor_preferences")
+}
+
+model InvestorBehavior {
+  id                String   @id @default(uuid()) @db.Uuid
+  investorProfileId String   @map("investor_profile_id") @db.Uuid
+  eventType         String   @map("event_type") @db.VarChar(50)
+  loanId            String?  @map("loan_id") @db.Uuid
+  eventData         Json     @map("event_data")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  investorProfile InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Restrict)
+  loan            Loan?           @relation(fields: [loanId], references: [id], onDelete: Restrict)
+
+  @@index([investorProfileId, createdAt])
+  @@index([loanId, createdAt])
+  @@index([eventType, createdAt])
+  @@map("investor_behaviors")
+}
+
+model RecommendationRun {
+  id                   String   @id @default(uuid()) @db.Uuid
+  investorProfileId    String   @map("investor_profile_id") @db.Uuid
+  modelVersionId       String?  @map("model_version_id") @db.Uuid
+  preferenceSnapshot   Json     @map("preference_snapshot")
+  candidateSetSnapshot Json     @map("candidate_set_snapshot")
+  inputVersion         String   @map("input_version") @db.VarChar(50)
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  latencyMs            Int?     @map("latency_ms")
+
+  investorProfile InvestorProfile        @relation(fields: [investorProfileId], references: [id], onDelete: Restrict)
+  modelVersion    ModelVersion?          @relation(fields: [modelVersionId], references: [id], onDelete: Restrict)
+  results         RecommendationResult[]
+
+  @@index([investorProfileId, createdAt])
+  @@index([modelVersionId, createdAt])
+  // Nonnegative latency is enforced in SQL.
+  @@map("recommendation_runs")
+}
+
+model RecommendationResult {
+  id                  String  @id @default(uuid()) @db.Uuid
+  recommendationRunId String  @map("recommendation_run_id") @db.Uuid
+  loanId              String  @map("loan_id") @db.Uuid
+  matchScore          Decimal @map("match_score") @db.Decimal(30, 12)
+  rankingPosition     Int     @map("ranking_position")
+  explanation         Json?
+
+  recommendationRun RecommendationRun @relation(fields: [recommendationRunId], references: [id], onDelete: Restrict)
+  loan              Loan              @relation(fields: [loanId], references: [id], onDelete: Restrict)
+
+  @@unique([recommendationRunId, rankingPosition])
+  @@unique([recommendationRunId, loanId])
+  @@index([loanId])
+  // Positive ranking positions are enforced in SQL.
+  @@map("recommendation_results")
+}
+
+model SavedLoan {
+  id                String    @id @default(uuid()) @db.Uuid
+  investorProfileId String    @map("investor_profile_id") @db.Uuid
+  loanId            String    @map("loan_id") @db.Uuid
+  savedAt           DateTime  @default(now()) @map("saved_at") @db.Timestamptz(6)
+  unsavedAt         DateTime? @map("unsaved_at") @db.Timestamptz(6)
+
+  investorProfile InvestorProfile    @relation(fields: [investorProfileId], references: [id], onDelete: Restrict)
+  loan            Loan               @relation(fields: [loanId], references: [id], onDelete: Restrict)
+  history         SavedLoanHistory[]
+
+  @@index([investorProfileId, savedAt])
+  @@index([loanId])
+  // One currently saved row per investor/loan pair is enforced by a partial SQL index.
+  @@map("saved_loans")
+}
+
+model SavedLoanHistory {
+  id          String          @id @default(uuid()) @db.Uuid
+  savedLoanId String          @map("saved_loan_id") @db.Uuid
+  action      SavedLoanAction
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  savedLoan SavedLoan @relation(fields: [savedLoanId], references: [id], onDelete: Restrict)
+
+  @@index([savedLoanId, createdAt])
+  @@map("saved_loan_history")
+}
+
+//retention and backup
+model RetentionPolicy {
+  id                String                  @id @default(uuid()) @db.Uuid
+  policyCode        String                  @map("policy_code") @db.VarChar(80)
+  dataCategory      String                  @map("data_category") @db.VarChar(80)
+  retentionDuration Unsupported("interval") @map("retention_duration")
+  retentionTrigger  String                  @map("retention_trigger") @db.VarChar(80)
+  action            RetentionPolicyAction
+  versionNumber     Int                     @map("version_number")
+  status            RetentionPolicyStatus   @default(PROPOSED)
+  approvedByUserId  String?                 @map("approved_by_user_id") @db.Uuid
+  effectiveAt       DateTime?               @map("effective_at") @db.Timestamptz(6)
+  createdAt         DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  approvedBy User?                @relation(fields: [approvedByUserId], references: [id], onDelete: Restrict)
+  executions RetentionExecution[]
+
+  @@unique([policyCode, versionNumber])
+  @@index([status, effectiveAt])
+  // Positive version numbers and approval prerequisites are enforced in SQL.
+  @@map("retention_policies")
+}
+
+model RetentionExecution {
+  id                String                   @id @default(uuid()) @db.Uuid
+  retentionPolicyId String                   @map("retention_policy_id") @db.Uuid
+  targetType        String                   @map("target_type") @db.VarChar(80)
+  targetId          String                   @map("target_id") @db.Uuid
+  action            String                   @db.VarChar(30)
+  status            RetentionExecutionStatus @default(PENDING)
+  reason            String?
+  executedAt        DateTime?                @map("executed_at") @db.Timestamptz(6)
+  createdAt         DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  retentionPolicy RetentionPolicy @relation(fields: [retentionPolicyId], references: [id], onDelete: Restrict)
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+  // A completed execution must carry its execution timestamp; enforced in SQL.
+  @@map("retention_executions")
+}
+
+model BackupRecord {
+  id                     String       @id @default(uuid()) @db.Uuid
+  backupType             String       @map("backup_type") @db.VarChar(50)
+  storageReference       String       @map("storage_reference") @db.VarChar(500)
+  checksum               String       @db.VarChar(128)
+  encryptionKeyReference String       @map("encryption_key_reference") @db.VarChar(255)
+  status                 BackupStatus @default(CREATED)
+  createdAt              DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  verifiedAt             DateTime?    @map("verified_at") @db.Timestamptz(6)
+
+  @@index([status, createdAt])
+  // Verified backups require verifiedAt; enforced in SQL. Store only a key reference, never key material.
+  @@map("backup_records")
+}

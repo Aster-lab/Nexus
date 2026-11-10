@@ -1,5 +1,6 @@
 
 import math
+import os
 import statistics
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -11,12 +12,12 @@ from main import app
 
 VALID_APPLICATION = {
     "annual_income": 75000,
-    "dti": 0.25,
+    "dti": 25.0,
     "loan_amount": 15000,
     "acc_open_past_24mths": 4,
     "bc_util": 0.35,
     "lti": 0.20,
-    "interest_burden": 0.08,
+    "interest_burden": 0.021,
     "sub_grade_num": 5,
     "int_rate": 0.105,
     "revol_util": 0.40,
@@ -24,11 +25,13 @@ VALID_APPLICATION = {
 }
 
 P95_LIMIT_MS = 250.0
+SERVICE_TOKEN = "test-ml-service-token-32-bytes-minimum"
 
 
 @pytest.fixture(scope="module")
 def api_client():
-    with TestClient(app) as client:
+    os.environ["ML_SERVICE_TOKEN"] = SERVICE_TOKEN
+    with TestClient(app, headers={"X-ML-Service-Token": SERVICE_TOKEN}) as client:
         yield client
 
 

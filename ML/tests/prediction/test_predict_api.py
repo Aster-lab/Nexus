@@ -13,14 +13,15 @@ VALID_APPLICATION = {
     "dti": 16.5,
     "loan_amount": 12000.0,
     "acc_open_past_24mths": 2.0,
-    "bc_util": 19.5,
+    "bc_util": 0.195,
     "lti": 0.16,
-    "interest_burden": 1800.0,
+    "interest_burden": 0.0184,
     "sub_grade_num": 12.0,
     "int_rate": 0.115,
-    "revol_util": 38.2,
+    "revol_util": 0.382,
     "term_months": 36.0,
 }
+SERVICE_TOKEN = "test-ml-service-token-32-bytes-minimum"
 
 
 def mock_prediction(probability=0.10):
@@ -43,6 +44,7 @@ def mock_prediction(probability=0.10):
 
 @pytest.fixture
 def client(monkeypatch):
+    monkeypatch.setenv("ML_SERVICE_TOKEN", SERVICE_TOKEN)
     mock_engine = MagicMock()
 
     mock_engine.predict_risk.side_effect = (
@@ -59,7 +61,7 @@ def client(monkeypatch):
     monkeypatch.setattr(main.app.router, "lifespan_context", test_lifespan)
     monkeypatch.setattr(main, "engine", mock_engine)
 
-    with TestClient(main.app) as test_client:
+    with TestClient(main.app, headers={"X-ML-Service-Token": SERVICE_TOKEN}) as test_client:
         yield test_client, mock_engine
 
 
@@ -204,7 +206,47 @@ def test_non_whole_term_is_rejected(client):
     mock_engine.predict_risk.assert_not_called()
 
 
+@pytest.mark.parametrize("field", ["bc_util", "revol_util"])
+def test_utilization_above_proportion_range_is_rejected(client, field):
+    test_client, mock_engine = client
+    invalid = VALID_APPLICATION.copy()
+    invalid[field] = 19.5
+
+    response = test_client.post("/predict", json=invalid)
+
+    assert response.status_code == 422
+    mock_engine.predict_risk.assert_not_called()
+
+
+def test_missing_feature_is_rejected(client):
+    test_client, mock_engine = client
+    invalid = VALID_APPLICATION.copy()
+    del invalid["lti"]
+
+    response = test_client.post("/predict", json=invalid)
+
+    assert response.status_code == 422
+    mock_engine.predict_risk.assert_not_called()
+
+
+@pytest.mark.parametrize("field", [
+    "annual_income", "dti", "loan_amount", "acc_open_past_24mths",
+    "bc_util", "lti", "interest_burden", "sub_grade_num", "int_rate",
+    "revol_util", "term_months",
+])
+def test_numeric_strings_are_rejected(client, field):
+    test_client, mock_engine = client
+    invalid = VALID_APPLICATION.copy()
+    invalid[field] = str(invalid[field])
+
+    response = test_client.post("/predict", json=invalid)
+
+    assert response.status_code == 422
+    mock_engine.predict_risk.assert_not_called()
+
+
 def test_engine_unavailable_returns_500(monkeypatch):
+    monkeypatch.setenv("ML_SERVICE_TOKEN", SERVICE_TOKEN)
     @asynccontextmanager
     async def test_lifespan(app):
         yield
@@ -216,7 +258,7 @@ def test_engine_unavailable_returns_500(monkeypatch):
     )
     monkeypatch.setattr(main, "engine", None)
 
-    with TestClient(main.app) as test_client:
+    with TestClient(main.app, headers={"X-ML-Service-Token": SERVICE_TOKEN}) as test_client:
         response = test_client.post(
             "/predict",
             json=VALID_APPLICATION,
@@ -288,10 +330,50 @@ def test_lifespan_initializes_engine(monkeypatch):
     async def run_lifespan():
         async with main.lifespan(main.app):
             assert main.engine is fake_engine
-
         assert main.engine is None
 
     asyncio.run(run_lifespan())
+
+
+def test_predict_requires_service_token(monkeypatch):
+    monkeypatch.setenv("ML_SERVICE_TOKEN", SERVICE_TOKEN)
+    with TestClient(main.app) as test_client:
+        response = test_client.post("/predict", json=VALID_APPLICATION)
+    assert response.status_code == 401
+
+
+def test_predict_fails_closed_when_service_token_is_unconfigured(monkeypatch):
+    monkeypatch.delenv("ML_SERVICE_TOKEN", raising=False)
+    with TestClient(main.app) as test_client:
+        response = test_client.post(
+            "/predict",
+            json=VALID_APPLICATION,
+            headers={"X-ML-Service-Token": SERVICE_TOKEN},
+        )
+    assert response.status_code == 503
+
+
+def test_service_token_dependency_accepts_configured_token(monkeypatch):
+    monkeypatch.setenv("ML_SERVICE_TOKEN", SERVICE_TOKEN)
+    assert main.require_ml_service_token(SERVICE_TOKEN) is None
+
+
+def test_service_token_dependency_rejects_invalid_token(monkeypatch):
+    from fastapi import HTTPException
+
+    monkeypatch.setenv("ML_SERVICE_TOKEN", SERVICE_TOKEN)
+    with pytest.raises(HTTPException) as error:
+        main.require_ml_service_token("wrong-token")
+    assert error.value.status_code == 401
+
+
+def test_service_token_dependency_fails_closed_without_configuration(monkeypatch):
+    from fastapi import HTTPException
+
+    monkeypatch.delenv("ML_SERVICE_TOKEN", raising=False)
+    with pytest.raises(HTTPException) as error:
+        main.require_ml_service_token(SERVICE_TOKEN)
+    assert error.value.status_code == 503
 
 def test_lifespan_initialization_failure(monkeypatch):
     def raise_initialization_error(**kwargs):

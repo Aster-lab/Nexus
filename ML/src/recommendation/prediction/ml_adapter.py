@@ -1,18 +1,5 @@
 from recommendation.prediction.integration import attach_predictions
-
-FEATURE_NAMES = [
-    "annual_income",
-    "dti",
-    "loan_amount",
-    "acc_open_past_24mths",
-    "bc_util",
-    "lti",
-    "interest_burden",
-    "sub_grade_num",
-    "int_rate",
-    "revol_util",
-    "term_months",
-]
+from feature_contract import FEATURE_NAMES
 
 
 def build_feature_rows(loans):

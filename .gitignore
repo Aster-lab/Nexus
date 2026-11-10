@@ -15,6 +15,8 @@ ML/**/__pycache__/
 ML/*.py[cod]
 ML/venv/
 ML/.venv/
+ML/.env
+ML/.env.example
 ML/env/
 ML/data/
 *.csv

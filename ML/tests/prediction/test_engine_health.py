@@ -10,6 +10,8 @@ from contextlib import asynccontextmanager
 
 @pytest.fixture
 def client_with_engine_state(monkeypatch):
+    service_token = "test-ml-service-token-32-bytes-minimum"
+    monkeypatch.setenv("ML_SERVICE_TOKEN", service_token)
     @asynccontextmanager
     async def test_lifespan(app):
         yield
@@ -22,7 +24,7 @@ def client_with_engine_state(monkeypatch):
 
     def make_client(engine):
         monkeypatch.setattr(main, "engine", engine)
-        return TestClient(main.app)
+        return TestClient(main.app, headers={"X-ML-Service-Token": service_token})
 
     return make_client
 
@@ -62,12 +64,12 @@ def test_predict_returns_engine_unavailable_when_engine_is_none(
             "/predict",
             json={
                 "annual_income": 75000,
-                "dti": 0.25,
+                "dti": 25.0,
                 "loan_amount": 15000,
                 "acc_open_past_24mths": 4,
                 "bc_util": 0.35,
                 "lti": 0.20,
-                "interest_burden": 0.08,
+                "interest_burden": 0.021,
                 "sub_grade_num": 5,
                 "int_rate": 0.105,
                 "revol_util": 0.40,

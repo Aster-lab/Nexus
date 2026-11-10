@@ -3,10 +3,12 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 import logging
 import math
-from typing import Any, Dict, List, Optional,Union
-from fastapi import Body,FastAPI,HTTPException,status
+import hmac
+from typing import Any, Dict, List, Optional,Union,Literal
+from fastapi import Body,Depends,FastAPI,Header,HTTPException,status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, ConfigDict, Field,field_validator
+from pydantic import BaseModel, ConfigDict, Field,field_validator,model_validator
+from feature_contract import FEATURE_SCHEMA_VERSION, PREDICTION_OUTPUT_SCHEMA_VERSION, PREDICTION_RESPONSE_SCHEMA_VERSION
 from predict import FEATURE_NAMES,RiskEngine
 from recommendation.recommendation_service import get_recommendations
 
@@ -48,16 +50,16 @@ app.add_middleware(
 class LoanApplicationSchema(BaseModel):
     model_config = ConfigDict(extra="forbid",allow_inf_nan = False, strict = True,)
 
-    annual_income: float = Field(...,gt=0,json_schema_extra={"example": 75000.0, "description": "Annual Income"})
-    dti: float = Field(...,ge=0,json_schema_extra={"example": 16.5, "description": "Debt-to-income ratio percentage"})
-    loan_amount: float = Field(...,gt=0,json_schema_extra={"example": 12000, "description": "Requested loan amount"})
+    annual_income: float = Field(...,gt=0,json_schema_extra={"example": 75000.0, "description": "Annual income in the training dataset's native amount units"})
+    dti: float = Field(...,ge=0,json_schema_extra={"example": 16.5, "description": "Debt-to-income percentage points, matching preprocessing"})
+    loan_amount: float = Field(...,gt=0,json_schema_extra={"example": 12000, "description": "Loan amount in the training dataset's native amount units"})
     acc_open_past_24mths: float = Field(...,ge=0,json_schema_extra={"example": 2.0, "description": "Bank account openings in past 24 months"})
-    bc_util : float = Field(...,ge=0,json_schema_extra={"example": 19.5, "description": "Bank card utilization percentage"})
-    lti : float = Field (...,ge=0,json_schema_extra={"example": 0.16, "description": "Loan to income ration"})
-    interest_burden: float = Field(...,ge=0,json_schema_extra={"example": 1800.0, "description": "Estimate annual interest obligation"})
+    bc_util : float = Field(...,ge=0,le=1,json_schema_extra={"example": 0.195, "description": "Bank card utilization proportion from 0 to 1"})
+    lti : float = Field (...,ge=0,json_schema_extra={"example": 0.16, "description": "Loan-to-income ratio"})
+    interest_burden: float = Field(...,ge=0,json_schema_extra={"example": 0.0184, "description": "Dimensionless ratio: loan amount times interest rate divided by annual income plus 1"})
     sub_grade_num : float = Field(...,ge=1,le=35,json_schema_extra={"example": 12, "description": "Numeric subgrade identifier"})
     int_rate: float = Field(...,ge=0,le=1.0,json_schema_extra={"example": 0.115, "description": "Interest rate expressed as a decimal"})
-    revol_util: float = Field(...,ge=0,json_schema_extra={"example": 38.2, "description": "Total revolving balance utilization percentage"})
+    revol_util: float = Field(...,ge=0,le=1,json_schema_extra={"example": 0.382, "description": "Revolving utilization proportion from 0 to 1"})
     term_months: float = Field(...,gt=0,json_schema_extra={"example": 36.0, "description": "Repayment term length in months (36.0 or 60.0)"})
 
     @field_validator("annual_income", "dti", "loan_amount", "acc_open_past_24mths",
@@ -82,6 +84,97 @@ class LoanApplicationSchema(BaseModel):
     def to_feature_list(self) -> List[float]:
         return [getattr(self,feature) for feature in FEATURE_NAMES]
 
+
+class PredictionRequestSchema(BaseModel):
+    """Versioned request envelope; raw feature objects remain v1-compatible."""
+    model_config = ConfigDict(extra="forbid", strict=True)
+    schema_version: Literal["nexus_risk_features.v1"]
+    features: LoanApplicationSchema
+
+
+class PredictionTierSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    tier_code: str
+    tier_name: str
+    risk_level: str
+    action_code: str
+    rate_markup: float = Field(allow_inf_nan=False)
+    ui_badge_color: str
+
+
+class PredictionSpatialMetricsSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    macro_cluster: int
+    quantization_distance: float = Field(ge=0, allow_inf_nan=False)
+
+
+class PredictionOutputSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    default_probability: float = Field(ge=0, le=1, allow_inf_nan=False)
+    tier: PredictionTierSchema
+    spatial_metrics: PredictionSpatialMetricsSchema
+
+
+class PersistedPredictionOutputSchema(PredictionOutputSchema):
+    """Versioned shape for the JSON document stored in PredictionRecord."""
+    schema_version: Literal[PREDICTION_OUTPUT_SCHEMA_VERSION]
+
+
+class PredictionItemSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    index: int = Field(ge=0)
+    prediction: PredictionOutputSchema
+
+
+class PredictionErrorDetailSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    field: str | None
+    message: str
+
+
+class PredictionItemErrorSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    index: int = Field(ge=0)
+    error_code: str
+    details: list[PredictionErrorDetailSchema]
+
+
+class PredictionBatchResponseSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    schema_version: Literal["nexus_prediction_batch.v1"]
+    status: Literal["success", "partial_success"]
+    processed_count: int = Field(ge=0)
+    data: list[PredictionItemSchema]
+    errors: list[PredictionItemErrorSchema]
+
+    @model_validator(mode="after")
+    def validate_batch_consistency(self):
+        if self.processed_count != len(self.data):
+            raise ValueError("processed_count must equal the number of prediction data items")
+        successful_indices = [item.index for item in self.data]
+        error_indices = [item.index for item in self.errors]
+        if len(successful_indices) != len(set(successful_indices)):
+            raise ValueError("prediction data indices must be unique")
+        if len(error_indices) != len(set(error_indices)):
+            raise ValueError("error indices must be unique")
+        if set(successful_indices) & set(error_indices):
+            raise ValueError("an input index cannot appear in both data and errors")
+        if self.status == "success" and self.errors:
+            raise ValueError("success response cannot contain validation errors")
+        if self.status == "partial_success" and not self.errors:
+            raise ValueError("partial_success response must contain validation errors")
+        return self
+
+
+def parse_prediction_item(item: Any) -> LoanApplicationSchema:
+    if not isinstance(item, dict):
+        raise ValueError("Each application must be a JSON object")
+    if "schema_version" in item or "features" in item:
+        request = PredictionRequestSchema.model_validate(item)
+        return request.features
+    # Compatibility path: existing raw v1 feature objects are interpreted as v1.
+    return LoanApplicationSchema.model_validate(item)
+
 #health check
 @app.get('/health',status_code = status.HTTP_200_OK)
 def health_check() -> Dict[str,str]:
@@ -93,9 +186,26 @@ def health_check() -> Dict[str,str]:
     return {'status':'healthy','model_engine': 'online'}
 
 #algorithm
+def require_ml_service_token(x_ml_service_token: Optional[str] = Header(default=None)) -> None:
+    configured_token = os.getenv("ML_SERVICE_TOKEN", "")
+    if len(configured_token) < 32:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"error_code": "PREDICTION_AUTH_NOT_CONFIGURED"},
+        )
+    if x_ml_service_token is None or not hmac.compare_digest(
+        x_ml_service_token, configured_token
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"error_code": "UNAUTHORIZED"},
+        )
+
+
 @app.post('/predict',status_code = status.HTTP_200_OK)
 def predict_credit_risk(
-    application : Any= Body(...)
+    application : Any= Body(...),
+    _: None = Depends(require_ml_service_token),
 ) -> Dict[str,Any]:
     if engine is None:
         raise HTTPException(
@@ -123,10 +233,7 @@ def predict_credit_risk(
 
     for index, item in enumerate(raw_items):
         try:
-            if not isinstance(item,dict):
-                raise ValueError("Each application must be a JSON object")
-
-            validated = LoanApplicationSchema.model_validate(item)
+            validated = parse_prediction_item(item)
             valid_items.append(
                 {
                     "index": index,
@@ -189,12 +296,14 @@ def predict_credit_risk(
     else:
         response_status = "success"
 
-    return {
+    response = {
+        "schema_version": PREDICTION_RESPONSE_SCHEMA_VERSION,
         "status": response_status,
         "processed_count": len(data),
         "data": data,
         "errors": validation_errors,
     }
+    return PredictionBatchResponseSchema.model_validate(response).model_dump(mode="json")
 
 #Recommendation
 @app.get('/recommendations', status_code=status.HTTP_200_OK)
