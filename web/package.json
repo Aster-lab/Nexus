@@ -16,7 +16,22 @@
     "db:studio:dev": "prisma studio",
     "db:studio:test": "dotenv run -f .env.test -- prisma studio",
     "db:seed:dev": "dotenv run -f .env -- tsx prisma/seed/index.ts",
-    "db:seed:test": "dotenv run -f .env.test -- tsx prisma/seed/index.ts"
+    "db:seed:test": "dotenv run -f .env.test -- tsx prisma/seed/index.ts",
+    "db:reset:dev": "dotenv run -f .env -- tsx scripts/reset-database.ts development",
+    "db:reset:test": "dotenv run -f .env.test -- tsx scripts/reset-database.ts test",
+    "db:deploy:dev" : "prisma migrate deploy",
+
+    "predb:deploy:dev" : "dotenv run -f .env -- tsx scripts/assert-db-environment.ts development",
+    "predb:status:dev": "dotenv run -f .env -- tsx scripts/assert-db-environment.ts development",
+    "predb:status:test": "dotenv run -f .env.test -- tsx scripts/assert-db-environment.ts test",
+    "predb:migrate:dev": "dotenv run -f .env -- tsx scripts/assert-db-environment.ts development",
+    "predb:migrate:test": "dotenv run -f .env.test -- tsx scripts/assert-db-environment.ts test",
+    "predb:studio:dev": "dotenv run -f .env -- tsx scripts/assert-db-environment.ts development",
+    "predb:studio:test": "dotenv run -f .env.test -- tsx scripts/assert-db-environment.ts test",
+    "predb:seed:dev": "dotenv run -f .env -- tsx scripts/assert-db-environment.ts development",
+    "predb:seed:test": "dotenv run -f .env.test -- tsx scripts/assert-db-environment.ts test",
+    "predb:reset:dev": "dotenv run -f .env -- tsx scripts/assert-db-environment.ts development",
+    "predb:reset:test": "dotenv run -f .env.test -- tsx scripts/assert-db-environment.ts test"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

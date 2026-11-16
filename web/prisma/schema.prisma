@@ -807,21 +807,21 @@ model Loan {
   recommendationResults RecommendationResult[]
   savedLoans            SavedLoan[]
 
+  @@unique([applicationId, acceptedOfferId], map: "loans_application_id_accepted_offer_id_key")
   @@index([borrowerProfileId])
   @@index([applicationId])
   @@index([status, fundingDeadline])
-  @@unique([applicationId, acceptedOfferId], map: "loans_application_id_accepted_offer_id_key")
   @@map("loans")
 }
 
 model LoanStatusHistory {
-  id              String    @id @default(uuid()) @db.Uuid
-  loanId          String    @map("loan_id") @db.Uuid
-  previousStatus  String?   @map("previous_status") @db.VarChar(40)
-  newStatus       String    @map("new_status") @db.VarChar(40)
+  id              String   @id @default(uuid()) @db.Uuid
+  loanId          String   @map("loan_id") @db.Uuid
+  previousStatus  String?  @map("previous_status") @db.VarChar(40)
+  newStatus       String   @map("new_status") @db.VarChar(40)
   reason          String?
-  changedByUserId String?   @map("changed_by_user_id") @db.Uuid
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  changedByUserId String?  @map("changed_by_user_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   loan      Loan  @relation(fields: [loanId], references: [id], onDelete: Restrict)
   changedBy User? @relation(fields: [changedByUserId], references: [id], onDelete: Restrict)
@@ -850,8 +850,8 @@ model Wallet {
   withdrawalRequests   WithdrawalRequest[]
 
   // Exactly-one ownership and posted-ledger balance reconciliation are enforced by SQL constraints/triggers.
-  @@index([ownerUserId])
-  @@index([ownerPlatformAccountId])
+  @@unique([ownerUserId], map: "wallets_owner_user_id_key")
+  @@unique([ownerPlatformAccountId], map: "wallets_owner_platform_account_id_key")
   @@index([status])
   @@map("wallets")
 }
@@ -1055,25 +1055,25 @@ model Installment {
 }
 
 model Repayment {
-  id                  String          @id @default(uuid()) @db.Uuid
-  loanId              String          @map("loan_id") @db.Uuid
-  installmentId       String          @map("installment_id") @db.Uuid
-  ledgerTransactionId String          @map("ledger_transaction_id") @db.Uuid
-  reversalOfRepaymentId String?        @map("reversal_of_repayment_id") @db.Uuid
-  principalSatang     BigInt          @default(0) @map("principal_satang")
-  interestSatang      BigInt          @default(0) @map("interest_satang")
-  feeSatang           BigInt          @default(0) @map("fee_satang")
-  totalSatang         BigInt          @map("total_satang")
-  status              RepaymentStatus
-  receivedAt          DateTime        @map("received_at") @db.Timestamptz(6)
-  createdAt           DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  id                    String          @id @default(uuid()) @db.Uuid
+  loanId                String          @map("loan_id") @db.Uuid
+  installmentId         String          @map("installment_id") @db.Uuid
+  ledgerTransactionId   String          @map("ledger_transaction_id") @db.Uuid
+  reversalOfRepaymentId String?         @map("reversal_of_repayment_id") @db.Uuid
+  principalSatang       BigInt          @default(0) @map("principal_satang")
+  interestSatang        BigInt          @default(0) @map("interest_satang")
+  feeSatang             BigInt          @default(0) @map("fee_satang")
+  totalSatang           BigInt          @map("total_satang")
+  status                RepaymentStatus
+  receivedAt            DateTime        @map("received_at") @db.Timestamptz(6)
+  createdAt             DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  loan              Loan               @relation(fields: [loanId], references: [id], onDelete: Restrict)
-  installment       Installment        @relation(fields: [installmentId], references: [id], onDelete: Restrict)
-  ledgerTransaction LedgerTransaction  @relation(fields: [ledgerTransactionId], references: [id], onDelete: Restrict)
-  reversalOf       Repayment?          @relation("RepaymentReversal", fields: [reversalOfRepaymentId], references: [id], onDelete: Restrict)
-  compensatingRepayments Repayment[]   @relation("RepaymentReversal")
-  payoutAllocations PayoutAllocation[]
+  loan                   Loan               @relation(fields: [loanId], references: [id], onDelete: Restrict)
+  installment            Installment        @relation(fields: [installmentId], references: [id], onDelete: Restrict)
+  ledgerTransaction      LedgerTransaction  @relation(fields: [ledgerTransactionId], references: [id], onDelete: Restrict)
+  reversalOf             Repayment?         @relation("RepaymentReversal", fields: [reversalOfRepaymentId], references: [id], onDelete: Restrict)
+  compensatingRepayments Repayment[]        @relation("RepaymentReversal")
+  payoutAllocations      PayoutAllocation[]
 
   @@index([loanId, receivedAt])
   @@index([installmentId])
