@@ -186,6 +186,7 @@ export type InvestmentWhereInput = {
   loan?: Prisma.XOR<Prisma.LoanScalarRelationFilter, Prisma.LoanWhereInput>
   contributions?: Prisma.InvestmentContributionListRelationFilter
   payoutAllocation?: Prisma.PayoutAllocationListRelationFilter
+  refunds?: Prisma.InvestmentRefundListRelationFilter
 }
 
 export type InvestmentOrderByWithRelationInput = {
@@ -198,6 +199,7 @@ export type InvestmentOrderByWithRelationInput = {
   loan?: Prisma.LoanOrderByWithRelationInput
   contributions?: Prisma.InvestmentContributionOrderByRelationAggregateInput
   payoutAllocation?: Prisma.PayoutAllocationOrderByRelationAggregateInput
+  refunds?: Prisma.InvestmentRefundOrderByRelationAggregateInput
 }
 
 export type InvestmentWhereUniqueInput = Prisma.AtLeast<{
@@ -214,6 +216,7 @@ export type InvestmentWhereUniqueInput = Prisma.AtLeast<{
   loan?: Prisma.XOR<Prisma.LoanScalarRelationFilter, Prisma.LoanWhereInput>
   contributions?: Prisma.InvestmentContributionListRelationFilter
   payoutAllocation?: Prisma.PayoutAllocationListRelationFilter
+  refunds?: Prisma.InvestmentRefundListRelationFilter
 }, "id" | "investorProfileId_loanId">
 
 export type InvestmentOrderByWithAggregationInput = {
@@ -246,6 +249,7 @@ export type InvestmentCreateInput = {
   loan: Prisma.LoanCreateNestedOneWithoutInvestmentsInput
   contributions?: Prisma.InvestmentContributionCreateNestedManyWithoutInvestmentInput
   payoutAllocation?: Prisma.PayoutAllocationCreateNestedManyWithoutInvestmentInput
+  refunds?: Prisma.InvestmentRefundCreateNestedManyWithoutInvestmentInput
 }
 
 export type InvestmentUncheckedCreateInput = {
@@ -256,6 +260,7 @@ export type InvestmentUncheckedCreateInput = {
   createdAt?: Date | string
   contributions?: Prisma.InvestmentContributionUncheckedCreateNestedManyWithoutInvestmentInput
   payoutAllocation?: Prisma.PayoutAllocationUncheckedCreateNestedManyWithoutInvestmentInput
+  refunds?: Prisma.InvestmentRefundUncheckedCreateNestedManyWithoutInvestmentInput
 }
 
 export type InvestmentUpdateInput = {
@@ -266,6 +271,7 @@ export type InvestmentUpdateInput = {
   loan?: Prisma.LoanUpdateOneRequiredWithoutInvestmentsNestedInput
   contributions?: Prisma.InvestmentContributionUpdateManyWithoutInvestmentNestedInput
   payoutAllocation?: Prisma.PayoutAllocationUpdateManyWithoutInvestmentNestedInput
+  refunds?: Prisma.InvestmentRefundUpdateManyWithoutInvestmentNestedInput
 }
 
 export type InvestmentUncheckedUpdateInput = {
@@ -276,6 +282,7 @@ export type InvestmentUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   contributions?: Prisma.InvestmentContributionUncheckedUpdateManyWithoutInvestmentNestedInput
   payoutAllocation?: Prisma.PayoutAllocationUncheckedUpdateManyWithoutInvestmentNestedInput
+  refunds?: Prisma.InvestmentRefundUncheckedUpdateManyWithoutInvestmentNestedInput
 }
 
 export type InvestmentCreateManyInput = {
@@ -446,6 +453,20 @@ export type InvestmentUpdateOneRequiredWithoutContributionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.InvestmentUpdateToOneWithWhereWithoutContributionsInput, Prisma.InvestmentUpdateWithoutContributionsInput>, Prisma.InvestmentUncheckedUpdateWithoutContributionsInput>
 }
 
+export type InvestmentCreateNestedOneWithoutRefundsInput = {
+  create?: Prisma.XOR<Prisma.InvestmentCreateWithoutRefundsInput, Prisma.InvestmentUncheckedCreateWithoutRefundsInput>
+  connectOrCreate?: Prisma.InvestmentCreateOrConnectWithoutRefundsInput
+  connect?: Prisma.InvestmentWhereUniqueInput
+}
+
+export type InvestmentUpdateOneRequiredWithoutRefundsNestedInput = {
+  create?: Prisma.XOR<Prisma.InvestmentCreateWithoutRefundsInput, Prisma.InvestmentUncheckedCreateWithoutRefundsInput>
+  connectOrCreate?: Prisma.InvestmentCreateOrConnectWithoutRefundsInput
+  upsert?: Prisma.InvestmentUpsertWithoutRefundsInput
+  connect?: Prisma.InvestmentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.InvestmentUpdateToOneWithWhereWithoutRefundsInput, Prisma.InvestmentUpdateWithoutRefundsInput>, Prisma.InvestmentUncheckedUpdateWithoutRefundsInput>
+}
+
 export type InvestmentCreateNestedOneWithoutPayoutAllocationInput = {
   create?: Prisma.XOR<Prisma.InvestmentCreateWithoutPayoutAllocationInput, Prisma.InvestmentUncheckedCreateWithoutPayoutAllocationInput>
   connectOrCreate?: Prisma.InvestmentCreateOrConnectWithoutPayoutAllocationInput
@@ -467,6 +488,7 @@ export type InvestmentCreateWithoutInvestorProfileInput = {
   loan: Prisma.LoanCreateNestedOneWithoutInvestmentsInput
   contributions?: Prisma.InvestmentContributionCreateNestedManyWithoutInvestmentInput
   payoutAllocation?: Prisma.PayoutAllocationCreateNestedManyWithoutInvestmentInput
+  refunds?: Prisma.InvestmentRefundCreateNestedManyWithoutInvestmentInput
 }
 
 export type InvestmentUncheckedCreateWithoutInvestorProfileInput = {
@@ -476,6 +498,7 @@ export type InvestmentUncheckedCreateWithoutInvestorProfileInput = {
   createdAt?: Date | string
   contributions?: Prisma.InvestmentContributionUncheckedCreateNestedManyWithoutInvestmentInput
   payoutAllocation?: Prisma.PayoutAllocationUncheckedCreateNestedManyWithoutInvestmentInput
+  refunds?: Prisma.InvestmentRefundUncheckedCreateNestedManyWithoutInvestmentInput
 }
 
 export type InvestmentCreateOrConnectWithoutInvestorProfileInput = {
@@ -522,6 +545,7 @@ export type InvestmentCreateWithoutLoanInput = {
   investorProfile: Prisma.InvestorProfileCreateNestedOneWithoutInvestmentsInput
   contributions?: Prisma.InvestmentContributionCreateNestedManyWithoutInvestmentInput
   payoutAllocation?: Prisma.PayoutAllocationCreateNestedManyWithoutInvestmentInput
+  refunds?: Prisma.InvestmentRefundCreateNestedManyWithoutInvestmentInput
 }
 
 export type InvestmentUncheckedCreateWithoutLoanInput = {
@@ -531,6 +555,7 @@ export type InvestmentUncheckedCreateWithoutLoanInput = {
   createdAt?: Date | string
   contributions?: Prisma.InvestmentContributionUncheckedCreateNestedManyWithoutInvestmentInput
   payoutAllocation?: Prisma.PayoutAllocationUncheckedCreateNestedManyWithoutInvestmentInput
+  refunds?: Prisma.InvestmentRefundUncheckedCreateNestedManyWithoutInvestmentInput
 }
 
 export type InvestmentCreateOrConnectWithoutLoanInput = {
@@ -566,6 +591,7 @@ export type InvestmentCreateWithoutContributionsInput = {
   investorProfile: Prisma.InvestorProfileCreateNestedOneWithoutInvestmentsInput
   loan: Prisma.LoanCreateNestedOneWithoutInvestmentsInput
   payoutAllocation?: Prisma.PayoutAllocationCreateNestedManyWithoutInvestmentInput
+  refunds?: Prisma.InvestmentRefundCreateNestedManyWithoutInvestmentInput
 }
 
 export type InvestmentUncheckedCreateWithoutContributionsInput = {
@@ -575,6 +601,7 @@ export type InvestmentUncheckedCreateWithoutContributionsInput = {
   status?: $Enums.InvestmentStatus
   createdAt?: Date | string
   payoutAllocation?: Prisma.PayoutAllocationUncheckedCreateNestedManyWithoutInvestmentInput
+  refunds?: Prisma.InvestmentRefundUncheckedCreateNestedManyWithoutInvestmentInput
 }
 
 export type InvestmentCreateOrConnectWithoutContributionsInput = {
@@ -600,6 +627,7 @@ export type InvestmentUpdateWithoutContributionsInput = {
   investorProfile?: Prisma.InvestorProfileUpdateOneRequiredWithoutInvestmentsNestedInput
   loan?: Prisma.LoanUpdateOneRequiredWithoutInvestmentsNestedInput
   payoutAllocation?: Prisma.PayoutAllocationUpdateManyWithoutInvestmentNestedInput
+  refunds?: Prisma.InvestmentRefundUpdateManyWithoutInvestmentNestedInput
 }
 
 export type InvestmentUncheckedUpdateWithoutContributionsInput = {
@@ -608,6 +636,63 @@ export type InvestmentUncheckedUpdateWithoutContributionsInput = {
   loanId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumInvestmentStatusFieldUpdateOperationsInput | $Enums.InvestmentStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  payoutAllocation?: Prisma.PayoutAllocationUncheckedUpdateManyWithoutInvestmentNestedInput
+  refunds?: Prisma.InvestmentRefundUncheckedUpdateManyWithoutInvestmentNestedInput
+}
+
+export type InvestmentCreateWithoutRefundsInput = {
+  id?: string
+  status?: $Enums.InvestmentStatus
+  createdAt?: Date | string
+  investorProfile: Prisma.InvestorProfileCreateNestedOneWithoutInvestmentsInput
+  loan: Prisma.LoanCreateNestedOneWithoutInvestmentsInput
+  contributions?: Prisma.InvestmentContributionCreateNestedManyWithoutInvestmentInput
+  payoutAllocation?: Prisma.PayoutAllocationCreateNestedManyWithoutInvestmentInput
+}
+
+export type InvestmentUncheckedCreateWithoutRefundsInput = {
+  id?: string
+  investorProfileId: string
+  loanId: string
+  status?: $Enums.InvestmentStatus
+  createdAt?: Date | string
+  contributions?: Prisma.InvestmentContributionUncheckedCreateNestedManyWithoutInvestmentInput
+  payoutAllocation?: Prisma.PayoutAllocationUncheckedCreateNestedManyWithoutInvestmentInput
+}
+
+export type InvestmentCreateOrConnectWithoutRefundsInput = {
+  where: Prisma.InvestmentWhereUniqueInput
+  create: Prisma.XOR<Prisma.InvestmentCreateWithoutRefundsInput, Prisma.InvestmentUncheckedCreateWithoutRefundsInput>
+}
+
+export type InvestmentUpsertWithoutRefundsInput = {
+  update: Prisma.XOR<Prisma.InvestmentUpdateWithoutRefundsInput, Prisma.InvestmentUncheckedUpdateWithoutRefundsInput>
+  create: Prisma.XOR<Prisma.InvestmentCreateWithoutRefundsInput, Prisma.InvestmentUncheckedCreateWithoutRefundsInput>
+  where?: Prisma.InvestmentWhereInput
+}
+
+export type InvestmentUpdateToOneWithWhereWithoutRefundsInput = {
+  where?: Prisma.InvestmentWhereInput
+  data: Prisma.XOR<Prisma.InvestmentUpdateWithoutRefundsInput, Prisma.InvestmentUncheckedUpdateWithoutRefundsInput>
+}
+
+export type InvestmentUpdateWithoutRefundsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumInvestmentStatusFieldUpdateOperationsInput | $Enums.InvestmentStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  investorProfile?: Prisma.InvestorProfileUpdateOneRequiredWithoutInvestmentsNestedInput
+  loan?: Prisma.LoanUpdateOneRequiredWithoutInvestmentsNestedInput
+  contributions?: Prisma.InvestmentContributionUpdateManyWithoutInvestmentNestedInput
+  payoutAllocation?: Prisma.PayoutAllocationUpdateManyWithoutInvestmentNestedInput
+}
+
+export type InvestmentUncheckedUpdateWithoutRefundsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  investorProfileId?: Prisma.StringFieldUpdateOperationsInput | string
+  loanId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumInvestmentStatusFieldUpdateOperationsInput | $Enums.InvestmentStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  contributions?: Prisma.InvestmentContributionUncheckedUpdateManyWithoutInvestmentNestedInput
   payoutAllocation?: Prisma.PayoutAllocationUncheckedUpdateManyWithoutInvestmentNestedInput
 }
 
@@ -618,6 +703,7 @@ export type InvestmentCreateWithoutPayoutAllocationInput = {
   investorProfile: Prisma.InvestorProfileCreateNestedOneWithoutInvestmentsInput
   loan: Prisma.LoanCreateNestedOneWithoutInvestmentsInput
   contributions?: Prisma.InvestmentContributionCreateNestedManyWithoutInvestmentInput
+  refunds?: Prisma.InvestmentRefundCreateNestedManyWithoutInvestmentInput
 }
 
 export type InvestmentUncheckedCreateWithoutPayoutAllocationInput = {
@@ -627,6 +713,7 @@ export type InvestmentUncheckedCreateWithoutPayoutAllocationInput = {
   status?: $Enums.InvestmentStatus
   createdAt?: Date | string
   contributions?: Prisma.InvestmentContributionUncheckedCreateNestedManyWithoutInvestmentInput
+  refunds?: Prisma.InvestmentRefundUncheckedCreateNestedManyWithoutInvestmentInput
 }
 
 export type InvestmentCreateOrConnectWithoutPayoutAllocationInput = {
@@ -652,6 +739,7 @@ export type InvestmentUpdateWithoutPayoutAllocationInput = {
   investorProfile?: Prisma.InvestorProfileUpdateOneRequiredWithoutInvestmentsNestedInput
   loan?: Prisma.LoanUpdateOneRequiredWithoutInvestmentsNestedInput
   contributions?: Prisma.InvestmentContributionUpdateManyWithoutInvestmentNestedInput
+  refunds?: Prisma.InvestmentRefundUpdateManyWithoutInvestmentNestedInput
 }
 
 export type InvestmentUncheckedUpdateWithoutPayoutAllocationInput = {
@@ -661,6 +749,7 @@ export type InvestmentUncheckedUpdateWithoutPayoutAllocationInput = {
   status?: Prisma.EnumInvestmentStatusFieldUpdateOperationsInput | $Enums.InvestmentStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   contributions?: Prisma.InvestmentContributionUncheckedUpdateManyWithoutInvestmentNestedInput
+  refunds?: Prisma.InvestmentRefundUncheckedUpdateManyWithoutInvestmentNestedInput
 }
 
 export type InvestmentCreateManyInvestorProfileInput = {
@@ -677,6 +766,7 @@ export type InvestmentUpdateWithoutInvestorProfileInput = {
   loan?: Prisma.LoanUpdateOneRequiredWithoutInvestmentsNestedInput
   contributions?: Prisma.InvestmentContributionUpdateManyWithoutInvestmentNestedInput
   payoutAllocation?: Prisma.PayoutAllocationUpdateManyWithoutInvestmentNestedInput
+  refunds?: Prisma.InvestmentRefundUpdateManyWithoutInvestmentNestedInput
 }
 
 export type InvestmentUncheckedUpdateWithoutInvestorProfileInput = {
@@ -686,6 +776,7 @@ export type InvestmentUncheckedUpdateWithoutInvestorProfileInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   contributions?: Prisma.InvestmentContributionUncheckedUpdateManyWithoutInvestmentNestedInput
   payoutAllocation?: Prisma.PayoutAllocationUncheckedUpdateManyWithoutInvestmentNestedInput
+  refunds?: Prisma.InvestmentRefundUncheckedUpdateManyWithoutInvestmentNestedInput
 }
 
 export type InvestmentUncheckedUpdateManyWithoutInvestorProfileInput = {
@@ -709,6 +800,7 @@ export type InvestmentUpdateWithoutLoanInput = {
   investorProfile?: Prisma.InvestorProfileUpdateOneRequiredWithoutInvestmentsNestedInput
   contributions?: Prisma.InvestmentContributionUpdateManyWithoutInvestmentNestedInput
   payoutAllocation?: Prisma.PayoutAllocationUpdateManyWithoutInvestmentNestedInput
+  refunds?: Prisma.InvestmentRefundUpdateManyWithoutInvestmentNestedInput
 }
 
 export type InvestmentUncheckedUpdateWithoutLoanInput = {
@@ -718,6 +810,7 @@ export type InvestmentUncheckedUpdateWithoutLoanInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   contributions?: Prisma.InvestmentContributionUncheckedUpdateManyWithoutInvestmentNestedInput
   payoutAllocation?: Prisma.PayoutAllocationUncheckedUpdateManyWithoutInvestmentNestedInput
+  refunds?: Prisma.InvestmentRefundUncheckedUpdateManyWithoutInvestmentNestedInput
 }
 
 export type InvestmentUncheckedUpdateManyWithoutLoanInput = {
@@ -735,11 +828,13 @@ export type InvestmentUncheckedUpdateManyWithoutLoanInput = {
 export type InvestmentCountOutputType = {
   contributions: number
   payoutAllocation: number
+  refunds: number
 }
 
 export type InvestmentCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   contributions?: boolean | InvestmentCountOutputTypeCountContributionsArgs
   payoutAllocation?: boolean | InvestmentCountOutputTypeCountPayoutAllocationArgs
+  refunds?: boolean | InvestmentCountOutputTypeCountRefundsArgs
 }
 
 /**
@@ -766,6 +861,13 @@ export type InvestmentCountOutputTypeCountPayoutAllocationArgs<ExtArgs extends r
   where?: Prisma.PayoutAllocationWhereInput
 }
 
+/**
+ * InvestmentCountOutputType without action
+ */
+export type InvestmentCountOutputTypeCountRefundsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.InvestmentRefundWhereInput
+}
+
 
 export type InvestmentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -777,6 +879,7 @@ export type InvestmentSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   loan?: boolean | Prisma.LoanDefaultArgs<ExtArgs>
   contributions?: boolean | Prisma.Investment$contributionsArgs<ExtArgs>
   payoutAllocation?: boolean | Prisma.Investment$payoutAllocationArgs<ExtArgs>
+  refunds?: boolean | Prisma.Investment$refundsArgs<ExtArgs>
   _count?: boolean | Prisma.InvestmentCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["investment"]>
 
@@ -814,6 +917,7 @@ export type InvestmentInclude<ExtArgs extends runtime.Types.Extensions.InternalA
   loan?: boolean | Prisma.LoanDefaultArgs<ExtArgs>
   contributions?: boolean | Prisma.Investment$contributionsArgs<ExtArgs>
   payoutAllocation?: boolean | Prisma.Investment$payoutAllocationArgs<ExtArgs>
+  refunds?: boolean | Prisma.Investment$refundsArgs<ExtArgs>
   _count?: boolean | Prisma.InvestmentCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type InvestmentIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -832,6 +936,7 @@ export type $InvestmentPayload<ExtArgs extends runtime.Types.Extensions.Internal
     loan: Prisma.$LoanPayload<ExtArgs>
     contributions: Prisma.$InvestmentContributionPayload<ExtArgs>[]
     payoutAllocation: Prisma.$PayoutAllocationPayload<ExtArgs>[]
+    refunds: Prisma.$InvestmentRefundPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1237,6 +1342,7 @@ export interface Prisma__InvestmentClient<T, Null = never, ExtArgs extends runti
   loan<T extends Prisma.LoanDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.LoanDefaultArgs<ExtArgs>>): Prisma.Prisma__LoanClient<runtime.Types.Result.GetResult<Prisma.$LoanPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   contributions<T extends Prisma.Investment$contributionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Investment$contributionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InvestmentContributionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   payoutAllocation<T extends Prisma.Investment$payoutAllocationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Investment$payoutAllocationArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PayoutAllocationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  refunds<T extends Prisma.Investment$refundsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Investment$refundsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InvestmentRefundPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1717,6 +1823,30 @@ export type Investment$payoutAllocationArgs<ExtArgs extends runtime.Types.Extens
   take?: number
   skip?: number
   distinct?: Prisma.PayoutAllocationScalarFieldEnum | Prisma.PayoutAllocationScalarFieldEnum[]
+}
+
+/**
+ * Investment.refunds
+ */
+export type Investment$refundsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the InvestmentRefund
+   */
+  select?: Prisma.InvestmentRefundSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the InvestmentRefund
+   */
+  omit?: Prisma.InvestmentRefundOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InvestmentRefundInclude<ExtArgs> | null
+  where?: Prisma.InvestmentRefundWhereInput
+  orderBy?: Prisma.InvestmentRefundOrderByWithRelationInput | Prisma.InvestmentRefundOrderByWithRelationInput[]
+  cursor?: Prisma.InvestmentRefundWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.InvestmentRefundScalarFieldEnum | Prisma.InvestmentRefundScalarFieldEnum[]
 }
 
 /**

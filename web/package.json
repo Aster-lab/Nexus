@@ -7,8 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    
+    "pretest": "dotenv run -f .env.test -- tsx scripts/assert-db-environment.ts test",
+    "test": "dotenv run -f .env.test -- vitest run",
+    "pretest:watch": "dotenv run -f .env.test -- tsx scripts/assert-db-environment.ts test",
+    "test:watch": "dotenv run -f .env.test -- vitest",
+
     "db:status:dev": "prisma migrate status",
     "db:status:test": "dotenv run -f .env.test -- prisma migrate status",
     "db:migrate:dev": "prisma migrate dev",

@@ -72,8 +72,10 @@ export const ModelName = {
   PlatformAccount: 'PlatformAccount',
   LedgerTransaction: 'LedgerTransaction',
   LedgerEntry: 'LedgerEntry',
+  OpeningBalance: 'OpeningBalance',
   Investment: 'Investment',
   InvestmentContribution: 'InvestmentContribution',
+  InvestmentRefund: 'InvestmentRefund',
   EscrowAccount: 'EscrowAccount',
   EscrowTransaction: 'EscrowTransaction',
   RepaymentSchedule: 'RepaymentSchedule',
@@ -433,6 +435,23 @@ export const LedgerEntryScalarFieldEnum = {
 export type LedgerEntryScalarFieldEnum = (typeof LedgerEntryScalarFieldEnum)[keyof typeof LedgerEntryScalarFieldEnum]
 
 
+export const OpeningBalanceScalarFieldEnum = {
+  id: 'id',
+  walletId: 'walletId',
+  administratorUserId: 'administratorUserId',
+  ledgerTransactionId: 'ledgerTransactionId',
+  amountSatang: 'amountSatang',
+  currency: 'currency',
+  idempotencyKey: 'idempotencyKey',
+  reason: 'reason',
+  approvedAt: 'approvedAt',
+  postedAt: 'postedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type OpeningBalanceScalarFieldEnum = (typeof OpeningBalanceScalarFieldEnum)[keyof typeof OpeningBalanceScalarFieldEnum]
+
+
 export const InvestmentScalarFieldEnum = {
   id: 'id',
   investorProfileId: 'investorProfileId',
@@ -454,6 +473,18 @@ export const InvestmentContributionScalarFieldEnum = {
 } as const
 
 export type InvestmentContributionScalarFieldEnum = (typeof InvestmentContributionScalarFieldEnum)[keyof typeof InvestmentContributionScalarFieldEnum]
+
+
+export const InvestmentRefundScalarFieldEnum = {
+  id: 'id',
+  investmentId: 'investmentId',
+  amountSatang: 'amountSatang',
+  ledgerTransactionId: 'ledgerTransactionId',
+  idempotencyKey: 'idempotencyKey',
+  createdAt: 'createdAt'
+} as const
+
+export type InvestmentRefundScalarFieldEnum = (typeof InvestmentRefundScalarFieldEnum)[keyof typeof InvestmentRefundScalarFieldEnum]
 
 
 export const EscrowAccountScalarFieldEnum = {

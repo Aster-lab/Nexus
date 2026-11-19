@@ -246,6 +246,7 @@ export type WalletWhereInput = {
   escrowAccounts?: Prisma.EscrowAccountListRelationFilter
   investorPayouts?: Prisma.InvestorPayoutListRelationFilter
   withdrawalRequests?: Prisma.WithdrawalRequestListRelationFilter
+  OpeningBalance?: Prisma.XOR<Prisma.OpeningBalanceNullableScalarRelationFilter, Prisma.OpeningBalanceWhereInput> | null
 }
 
 export type WalletOrderByWithRelationInput = {
@@ -263,15 +264,16 @@ export type WalletOrderByWithRelationInput = {
   escrowAccounts?: Prisma.EscrowAccountOrderByRelationAggregateInput
   investorPayouts?: Prisma.InvestorPayoutOrderByRelationAggregateInput
   withdrawalRequests?: Prisma.WithdrawalRequestOrderByRelationAggregateInput
+  OpeningBalance?: Prisma.OpeningBalanceOrderByWithRelationInput
 }
 
 export type WalletWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  ownerUserId?: string
+  ownerPlatformAccountId?: string
   AND?: Prisma.WalletWhereInput | Prisma.WalletWhereInput[]
   OR?: Prisma.WalletWhereInput[]
   NOT?: Prisma.WalletWhereInput | Prisma.WalletWhereInput[]
-  ownerUserId?: Prisma.UuidNullableFilter<"Wallet"> | string | null
-  ownerPlatformAccountId?: Prisma.UuidNullableFilter<"Wallet"> | string | null
   currency?: Prisma.StringFilter<"Wallet"> | string
   balanceSatang?: Prisma.BigIntFilter<"Wallet"> | bigint | number
   status?: Prisma.EnumWalletStatusFilter<"Wallet"> | $Enums.WalletStatus
@@ -283,7 +285,8 @@ export type WalletWhereUniqueInput = Prisma.AtLeast<{
   escrowAccounts?: Prisma.EscrowAccountListRelationFilter
   investorPayouts?: Prisma.InvestorPayoutListRelationFilter
   withdrawalRequests?: Prisma.WithdrawalRequestListRelationFilter
-}, "id">
+  OpeningBalance?: Prisma.XOR<Prisma.OpeningBalanceNullableScalarRelationFilter, Prisma.OpeningBalanceWhereInput> | null
+}, "id" | "ownerUserId" | "ownerPlatformAccountId">
 
 export type WalletOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -328,6 +331,7 @@ export type WalletCreateInput = {
   escrowAccounts?: Prisma.EscrowAccountCreateNestedManyWithoutPlatformWalletInput
   investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutWalletInput
   withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutWalletInput
+  OpeningBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutWalletInput
 }
 
 export type WalletUncheckedCreateInput = {
@@ -343,6 +347,7 @@ export type WalletUncheckedCreateInput = {
   escrowAccounts?: Prisma.EscrowAccountUncheckedCreateNestedManyWithoutPlatformWalletInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutWalletInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutWalletInput
+  OpeningBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutWalletInput
 }
 
 export type WalletUpdateInput = {
@@ -358,6 +363,7 @@ export type WalletUpdateInput = {
   escrowAccounts?: Prisma.EscrowAccountUpdateManyWithoutPlatformWalletNestedInput
   investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutWalletNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutWalletNestedInput
+  OpeningBalance?: Prisma.OpeningBalanceUpdateOneWithoutWalletNestedInput
 }
 
 export type WalletUncheckedUpdateInput = {
@@ -373,6 +379,7 @@ export type WalletUncheckedUpdateInput = {
   escrowAccounts?: Prisma.EscrowAccountUncheckedUpdateManyWithoutPlatformWalletNestedInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutWalletNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutWalletNestedInput
+  OpeningBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutWalletNestedInput
 }
 
 export type WalletCreateManyInput = {
@@ -571,6 +578,20 @@ export type WalletUpdateOneWithoutLedgerEntriesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.WalletUpdateToOneWithWhereWithoutLedgerEntriesInput, Prisma.WalletUpdateWithoutLedgerEntriesInput>, Prisma.WalletUncheckedUpdateWithoutLedgerEntriesInput>
 }
 
+export type WalletCreateNestedOneWithoutOpeningBalanceInput = {
+  create?: Prisma.XOR<Prisma.WalletCreateWithoutOpeningBalanceInput, Prisma.WalletUncheckedCreateWithoutOpeningBalanceInput>
+  connectOrCreate?: Prisma.WalletCreateOrConnectWithoutOpeningBalanceInput
+  connect?: Prisma.WalletWhereUniqueInput
+}
+
+export type WalletUpdateOneRequiredWithoutOpeningBalanceNestedInput = {
+  create?: Prisma.XOR<Prisma.WalletCreateWithoutOpeningBalanceInput, Prisma.WalletUncheckedCreateWithoutOpeningBalanceInput>
+  connectOrCreate?: Prisma.WalletCreateOrConnectWithoutOpeningBalanceInput
+  upsert?: Prisma.WalletUpsertWithoutOpeningBalanceInput
+  connect?: Prisma.WalletWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.WalletUpdateToOneWithWhereWithoutOpeningBalanceInput, Prisma.WalletUpdateWithoutOpeningBalanceInput>, Prisma.WalletUncheckedUpdateWithoutOpeningBalanceInput>
+}
+
 export type WalletCreateNestedOneWithoutEscrowAccountsInput = {
   create?: Prisma.XOR<Prisma.WalletCreateWithoutEscrowAccountsInput, Prisma.WalletUncheckedCreateWithoutEscrowAccountsInput>
   connectOrCreate?: Prisma.WalletCreateOrConnectWithoutEscrowAccountsInput
@@ -625,6 +646,7 @@ export type WalletCreateWithoutOwnerUserInput = {
   escrowAccounts?: Prisma.EscrowAccountCreateNestedManyWithoutPlatformWalletInput
   investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutWalletInput
   withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutWalletInput
+  OpeningBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutWalletInput
 }
 
 export type WalletUncheckedCreateWithoutOwnerUserInput = {
@@ -639,6 +661,7 @@ export type WalletUncheckedCreateWithoutOwnerUserInput = {
   escrowAccounts?: Prisma.EscrowAccountUncheckedCreateNestedManyWithoutPlatformWalletInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutWalletInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutWalletInput
+  OpeningBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutWalletInput
 }
 
 export type WalletCreateOrConnectWithoutOwnerUserInput = {
@@ -693,6 +716,7 @@ export type WalletCreateWithoutOwnerPlatformAccountInput = {
   escrowAccounts?: Prisma.EscrowAccountCreateNestedManyWithoutPlatformWalletInput
   investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutWalletInput
   withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutWalletInput
+  OpeningBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutWalletInput
 }
 
 export type WalletUncheckedCreateWithoutOwnerPlatformAccountInput = {
@@ -707,6 +731,7 @@ export type WalletUncheckedCreateWithoutOwnerPlatformAccountInput = {
   escrowAccounts?: Prisma.EscrowAccountUncheckedCreateNestedManyWithoutPlatformWalletInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutWalletInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutWalletInput
+  OpeningBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutWalletInput
 }
 
 export type WalletCreateOrConnectWithoutOwnerPlatformAccountInput = {
@@ -747,6 +772,7 @@ export type WalletCreateWithoutLedgerEntriesInput = {
   escrowAccounts?: Prisma.EscrowAccountCreateNestedManyWithoutPlatformWalletInput
   investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutWalletInput
   withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutWalletInput
+  OpeningBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutWalletInput
 }
 
 export type WalletUncheckedCreateWithoutLedgerEntriesInput = {
@@ -761,6 +787,7 @@ export type WalletUncheckedCreateWithoutLedgerEntriesInput = {
   escrowAccounts?: Prisma.EscrowAccountUncheckedCreateNestedManyWithoutPlatformWalletInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutWalletInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutWalletInput
+  OpeningBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutWalletInput
 }
 
 export type WalletCreateOrConnectWithoutLedgerEntriesInput = {
@@ -791,6 +818,7 @@ export type WalletUpdateWithoutLedgerEntriesInput = {
   escrowAccounts?: Prisma.EscrowAccountUpdateManyWithoutPlatformWalletNestedInput
   investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutWalletNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutWalletNestedInput
+  OpeningBalance?: Prisma.OpeningBalanceUpdateOneWithoutWalletNestedInput
 }
 
 export type WalletUncheckedUpdateWithoutLedgerEntriesInput = {
@@ -802,6 +830,83 @@ export type WalletUncheckedUpdateWithoutLedgerEntriesInput = {
   status?: Prisma.EnumWalletStatusFieldUpdateOperationsInput | $Enums.WalletStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  escrowAccounts?: Prisma.EscrowAccountUncheckedUpdateManyWithoutPlatformWalletNestedInput
+  investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutWalletNestedInput
+  withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutWalletNestedInput
+  OpeningBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutWalletNestedInput
+}
+
+export type WalletCreateWithoutOpeningBalanceInput = {
+  id?: string
+  currency?: string
+  balanceSatang?: bigint | number
+  status?: $Enums.WalletStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  ownerUser?: Prisma.UserCreateNestedOneWithoutWalletsInput
+  ownerPlatformAccount?: Prisma.PlatformAccountCreateNestedOneWithoutWalletsInput
+  ledgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutWalletInput
+  escrowAccounts?: Prisma.EscrowAccountCreateNestedManyWithoutPlatformWalletInput
+  investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutWalletInput
+  withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutWalletInput
+}
+
+export type WalletUncheckedCreateWithoutOpeningBalanceInput = {
+  id?: string
+  ownerUserId?: string | null
+  ownerPlatformAccountId?: string | null
+  currency?: string
+  balanceSatang?: bigint | number
+  status?: $Enums.WalletStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  ledgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutWalletInput
+  escrowAccounts?: Prisma.EscrowAccountUncheckedCreateNestedManyWithoutPlatformWalletInput
+  investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutWalletInput
+  withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutWalletInput
+}
+
+export type WalletCreateOrConnectWithoutOpeningBalanceInput = {
+  where: Prisma.WalletWhereUniqueInput
+  create: Prisma.XOR<Prisma.WalletCreateWithoutOpeningBalanceInput, Prisma.WalletUncheckedCreateWithoutOpeningBalanceInput>
+}
+
+export type WalletUpsertWithoutOpeningBalanceInput = {
+  update: Prisma.XOR<Prisma.WalletUpdateWithoutOpeningBalanceInput, Prisma.WalletUncheckedUpdateWithoutOpeningBalanceInput>
+  create: Prisma.XOR<Prisma.WalletCreateWithoutOpeningBalanceInput, Prisma.WalletUncheckedCreateWithoutOpeningBalanceInput>
+  where?: Prisma.WalletWhereInput
+}
+
+export type WalletUpdateToOneWithWhereWithoutOpeningBalanceInput = {
+  where?: Prisma.WalletWhereInput
+  data: Prisma.XOR<Prisma.WalletUpdateWithoutOpeningBalanceInput, Prisma.WalletUncheckedUpdateWithoutOpeningBalanceInput>
+}
+
+export type WalletUpdateWithoutOpeningBalanceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  balanceSatang?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  status?: Prisma.EnumWalletStatusFieldUpdateOperationsInput | $Enums.WalletStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ownerUser?: Prisma.UserUpdateOneWithoutWalletsNestedInput
+  ownerPlatformAccount?: Prisma.PlatformAccountUpdateOneWithoutWalletsNestedInput
+  ledgerEntries?: Prisma.LedgerEntryUpdateManyWithoutWalletNestedInput
+  escrowAccounts?: Prisma.EscrowAccountUpdateManyWithoutPlatformWalletNestedInput
+  investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutWalletNestedInput
+  withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutWalletNestedInput
+}
+
+export type WalletUncheckedUpdateWithoutOpeningBalanceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  ownerUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ownerPlatformAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  balanceSatang?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  status?: Prisma.EnumWalletStatusFieldUpdateOperationsInput | $Enums.WalletStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ledgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutWalletNestedInput
   escrowAccounts?: Prisma.EscrowAccountUncheckedUpdateManyWithoutPlatformWalletNestedInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutWalletNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutWalletNestedInput
@@ -819,6 +924,7 @@ export type WalletCreateWithoutEscrowAccountsInput = {
   ledgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutWalletInput
   investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutWalletInput
   withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutWalletInput
+  OpeningBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutWalletInput
 }
 
 export type WalletUncheckedCreateWithoutEscrowAccountsInput = {
@@ -833,6 +939,7 @@ export type WalletUncheckedCreateWithoutEscrowAccountsInput = {
   ledgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutWalletInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutWalletInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutWalletInput
+  OpeningBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutWalletInput
 }
 
 export type WalletCreateOrConnectWithoutEscrowAccountsInput = {
@@ -863,6 +970,7 @@ export type WalletUpdateWithoutEscrowAccountsInput = {
   ledgerEntries?: Prisma.LedgerEntryUpdateManyWithoutWalletNestedInput
   investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutWalletNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutWalletNestedInput
+  OpeningBalance?: Prisma.OpeningBalanceUpdateOneWithoutWalletNestedInput
 }
 
 export type WalletUncheckedUpdateWithoutEscrowAccountsInput = {
@@ -877,6 +985,7 @@ export type WalletUncheckedUpdateWithoutEscrowAccountsInput = {
   ledgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutWalletNestedInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutWalletNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutWalletNestedInput
+  OpeningBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutWalletNestedInput
 }
 
 export type WalletCreateWithoutInvestorPayoutsInput = {
@@ -891,6 +1000,7 @@ export type WalletCreateWithoutInvestorPayoutsInput = {
   ledgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutWalletInput
   escrowAccounts?: Prisma.EscrowAccountCreateNestedManyWithoutPlatformWalletInput
   withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutWalletInput
+  OpeningBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutWalletInput
 }
 
 export type WalletUncheckedCreateWithoutInvestorPayoutsInput = {
@@ -905,6 +1015,7 @@ export type WalletUncheckedCreateWithoutInvestorPayoutsInput = {
   ledgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutWalletInput
   escrowAccounts?: Prisma.EscrowAccountUncheckedCreateNestedManyWithoutPlatformWalletInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutWalletInput
+  OpeningBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutWalletInput
 }
 
 export type WalletCreateOrConnectWithoutInvestorPayoutsInput = {
@@ -935,6 +1046,7 @@ export type WalletUpdateWithoutInvestorPayoutsInput = {
   ledgerEntries?: Prisma.LedgerEntryUpdateManyWithoutWalletNestedInput
   escrowAccounts?: Prisma.EscrowAccountUpdateManyWithoutPlatformWalletNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutWalletNestedInput
+  OpeningBalance?: Prisma.OpeningBalanceUpdateOneWithoutWalletNestedInput
 }
 
 export type WalletUncheckedUpdateWithoutInvestorPayoutsInput = {
@@ -949,6 +1061,7 @@ export type WalletUncheckedUpdateWithoutInvestorPayoutsInput = {
   ledgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutWalletNestedInput
   escrowAccounts?: Prisma.EscrowAccountUncheckedUpdateManyWithoutPlatformWalletNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutWalletNestedInput
+  OpeningBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutWalletNestedInput
 }
 
 export type WalletCreateWithoutWithdrawalRequestsInput = {
@@ -963,6 +1076,7 @@ export type WalletCreateWithoutWithdrawalRequestsInput = {
   ledgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutWalletInput
   escrowAccounts?: Prisma.EscrowAccountCreateNestedManyWithoutPlatformWalletInput
   investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutWalletInput
+  OpeningBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutWalletInput
 }
 
 export type WalletUncheckedCreateWithoutWithdrawalRequestsInput = {
@@ -977,6 +1091,7 @@ export type WalletUncheckedCreateWithoutWithdrawalRequestsInput = {
   ledgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutWalletInput
   escrowAccounts?: Prisma.EscrowAccountUncheckedCreateNestedManyWithoutPlatformWalletInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutWalletInput
+  OpeningBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutWalletInput
 }
 
 export type WalletCreateOrConnectWithoutWithdrawalRequestsInput = {
@@ -1007,6 +1122,7 @@ export type WalletUpdateWithoutWithdrawalRequestsInput = {
   ledgerEntries?: Prisma.LedgerEntryUpdateManyWithoutWalletNestedInput
   escrowAccounts?: Prisma.EscrowAccountUpdateManyWithoutPlatformWalletNestedInput
   investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutWalletNestedInput
+  OpeningBalance?: Prisma.OpeningBalanceUpdateOneWithoutWalletNestedInput
 }
 
 export type WalletUncheckedUpdateWithoutWithdrawalRequestsInput = {
@@ -1021,6 +1137,7 @@ export type WalletUncheckedUpdateWithoutWithdrawalRequestsInput = {
   ledgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutWalletNestedInput
   escrowAccounts?: Prisma.EscrowAccountUncheckedUpdateManyWithoutPlatformWalletNestedInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutWalletNestedInput
+  OpeningBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutWalletNestedInput
 }
 
 export type WalletCreateManyOwnerUserInput = {
@@ -1045,6 +1162,7 @@ export type WalletUpdateWithoutOwnerUserInput = {
   escrowAccounts?: Prisma.EscrowAccountUpdateManyWithoutPlatformWalletNestedInput
   investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutWalletNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutWalletNestedInput
+  OpeningBalance?: Prisma.OpeningBalanceUpdateOneWithoutWalletNestedInput
 }
 
 export type WalletUncheckedUpdateWithoutOwnerUserInput = {
@@ -1059,6 +1177,7 @@ export type WalletUncheckedUpdateWithoutOwnerUserInput = {
   escrowAccounts?: Prisma.EscrowAccountUncheckedUpdateManyWithoutPlatformWalletNestedInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutWalletNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutWalletNestedInput
+  OpeningBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutWalletNestedInput
 }
 
 export type WalletUncheckedUpdateManyWithoutOwnerUserInput = {
@@ -1093,6 +1212,7 @@ export type WalletUpdateWithoutOwnerPlatformAccountInput = {
   escrowAccounts?: Prisma.EscrowAccountUpdateManyWithoutPlatformWalletNestedInput
   investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutWalletNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutWalletNestedInput
+  OpeningBalance?: Prisma.OpeningBalanceUpdateOneWithoutWalletNestedInput
 }
 
 export type WalletUncheckedUpdateWithoutOwnerPlatformAccountInput = {
@@ -1107,6 +1227,7 @@ export type WalletUncheckedUpdateWithoutOwnerPlatformAccountInput = {
   escrowAccounts?: Prisma.EscrowAccountUncheckedUpdateManyWithoutPlatformWalletNestedInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutWalletNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutWalletNestedInput
+  OpeningBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutWalletNestedInput
 }
 
 export type WalletUncheckedUpdateManyWithoutOwnerPlatformAccountInput = {
@@ -1192,6 +1313,7 @@ export type WalletSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   escrowAccounts?: boolean | Prisma.Wallet$escrowAccountsArgs<ExtArgs>
   investorPayouts?: boolean | Prisma.Wallet$investorPayoutsArgs<ExtArgs>
   withdrawalRequests?: boolean | Prisma.Wallet$withdrawalRequestsArgs<ExtArgs>
+  OpeningBalance?: boolean | Prisma.Wallet$OpeningBalanceArgs<ExtArgs>
   _count?: boolean | Prisma.WalletCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["wallet"]>
 
@@ -1240,6 +1362,7 @@ export type WalletInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   escrowAccounts?: boolean | Prisma.Wallet$escrowAccountsArgs<ExtArgs>
   investorPayouts?: boolean | Prisma.Wallet$investorPayoutsArgs<ExtArgs>
   withdrawalRequests?: boolean | Prisma.Wallet$withdrawalRequestsArgs<ExtArgs>
+  OpeningBalance?: boolean | Prisma.Wallet$OpeningBalanceArgs<ExtArgs>
   _count?: boolean | Prisma.WalletCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type WalletIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1260,6 +1383,7 @@ export type $WalletPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     escrowAccounts: Prisma.$EscrowAccountPayload<ExtArgs>[]
     investorPayouts: Prisma.$InvestorPayoutPayload<ExtArgs>[]
     withdrawalRequests: Prisma.$WithdrawalRequestPayload<ExtArgs>[]
+    OpeningBalance: Prisma.$OpeningBalancePayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1670,6 +1794,7 @@ export interface Prisma__WalletClient<T, Null = never, ExtArgs extends runtime.T
   escrowAccounts<T extends Prisma.Wallet$escrowAccountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Wallet$escrowAccountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EscrowAccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   investorPayouts<T extends Prisma.Wallet$investorPayoutsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Wallet$investorPayoutsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InvestorPayoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   withdrawalRequests<T extends Prisma.Wallet$withdrawalRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Wallet$withdrawalRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WithdrawalRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  OpeningBalance<T extends Prisma.Wallet$OpeningBalanceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Wallet$OpeningBalanceArgs<ExtArgs>>): Prisma.Prisma__OpeningBalanceClient<runtime.Types.Result.GetResult<Prisma.$OpeningBalancePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2239,6 +2364,25 @@ export type Wallet$withdrawalRequestsArgs<ExtArgs extends runtime.Types.Extensio
   take?: number
   skip?: number
   distinct?: Prisma.WithdrawalRequestScalarFieldEnum | Prisma.WithdrawalRequestScalarFieldEnum[]
+}
+
+/**
+ * Wallet.OpeningBalance
+ */
+export type Wallet$OpeningBalanceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the OpeningBalance
+   */
+  select?: Prisma.OpeningBalanceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the OpeningBalance
+   */
+  omit?: Prisma.OpeningBalanceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OpeningBalanceInclude<ExtArgs> | null
+  where?: Prisma.OpeningBalanceWhereInput
 }
 
 /**

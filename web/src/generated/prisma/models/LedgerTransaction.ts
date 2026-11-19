@@ -230,6 +230,8 @@ export type LedgerTransactionWhereInput = {
   repayments?: Prisma.RepaymentListRelationFilter
   investorPayouts?: Prisma.InvestorPayoutListRelationFilter
   withdrawalRequests?: Prisma.WithdrawalRequestListRelationFilter
+  openingBalance?: Prisma.XOR<Prisma.OpeningBalanceNullableScalarRelationFilter, Prisma.OpeningBalanceWhereInput> | null
+  investmentRefunds?: Prisma.InvestmentRefundListRelationFilter
 }
 
 export type LedgerTransactionOrderByWithRelationInput = {
@@ -251,6 +253,8 @@ export type LedgerTransactionOrderByWithRelationInput = {
   repayments?: Prisma.RepaymentOrderByRelationAggregateInput
   investorPayouts?: Prisma.InvestorPayoutOrderByRelationAggregateInput
   withdrawalRequests?: Prisma.WithdrawalRequestOrderByRelationAggregateInput
+  openingBalance?: Prisma.OpeningBalanceOrderByWithRelationInput
+  investmentRefunds?: Prisma.InvestmentRefundOrderByRelationAggregateInput
 }
 
 export type LedgerTransactionWhereUniqueInput = Prisma.AtLeast<{
@@ -275,6 +279,8 @@ export type LedgerTransactionWhereUniqueInput = Prisma.AtLeast<{
   repayments?: Prisma.RepaymentListRelationFilter
   investorPayouts?: Prisma.InvestorPayoutListRelationFilter
   withdrawalRequests?: Prisma.WithdrawalRequestListRelationFilter
+  openingBalance?: Prisma.XOR<Prisma.OpeningBalanceNullableScalarRelationFilter, Prisma.OpeningBalanceWhereInput> | null
+  investmentRefunds?: Prisma.InvestmentRefundListRelationFilter
 }, "id" | "idempotencyKey">
 
 export type LedgerTransactionOrderByWithAggregationInput = {
@@ -327,6 +333,8 @@ export type LedgerTransactionCreateInput = {
   repayments?: Prisma.RepaymentCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionUncheckedCreateInput = {
@@ -347,6 +355,8 @@ export type LedgerTransactionUncheckedCreateInput = {
   repayments?: Prisma.RepaymentUncheckedCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionUpdateInput = {
@@ -367,6 +377,8 @@ export type LedgerTransactionUpdateInput = {
   repayments?: Prisma.RepaymentUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionUncheckedUpdateInput = {
@@ -387,6 +399,8 @@ export type LedgerTransactionUncheckedUpdateInput = {
   repayments?: Prisma.RepaymentUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionCreateManyInput = {
@@ -562,6 +576,20 @@ export type LedgerTransactionUpdateOneRequiredWithoutEntriesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.LedgerTransactionUpdateToOneWithWhereWithoutEntriesInput, Prisma.LedgerTransactionUpdateWithoutEntriesInput>, Prisma.LedgerTransactionUncheckedUpdateWithoutEntriesInput>
 }
 
+export type LedgerTransactionCreateNestedOneWithoutOpeningBalanceInput = {
+  create?: Prisma.XOR<Prisma.LedgerTransactionCreateWithoutOpeningBalanceInput, Prisma.LedgerTransactionUncheckedCreateWithoutOpeningBalanceInput>
+  connectOrCreate?: Prisma.LedgerTransactionCreateOrConnectWithoutOpeningBalanceInput
+  connect?: Prisma.LedgerTransactionWhereUniqueInput
+}
+
+export type LedgerTransactionUpdateOneRequiredWithoutOpeningBalanceNestedInput = {
+  create?: Prisma.XOR<Prisma.LedgerTransactionCreateWithoutOpeningBalanceInput, Prisma.LedgerTransactionUncheckedCreateWithoutOpeningBalanceInput>
+  connectOrCreate?: Prisma.LedgerTransactionCreateOrConnectWithoutOpeningBalanceInput
+  upsert?: Prisma.LedgerTransactionUpsertWithoutOpeningBalanceInput
+  connect?: Prisma.LedgerTransactionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.LedgerTransactionUpdateToOneWithWhereWithoutOpeningBalanceInput, Prisma.LedgerTransactionUpdateWithoutOpeningBalanceInput>, Prisma.LedgerTransactionUncheckedUpdateWithoutOpeningBalanceInput>
+}
+
 export type LedgerTransactionCreateNestedOneWithoutInvestmentContributionsInput = {
   create?: Prisma.XOR<Prisma.LedgerTransactionCreateWithoutInvestmentContributionsInput, Prisma.LedgerTransactionUncheckedCreateWithoutInvestmentContributionsInput>
   connectOrCreate?: Prisma.LedgerTransactionCreateOrConnectWithoutInvestmentContributionsInput
@@ -574,6 +602,20 @@ export type LedgerTransactionUpdateOneRequiredWithoutInvestmentContributionsNest
   upsert?: Prisma.LedgerTransactionUpsertWithoutInvestmentContributionsInput
   connect?: Prisma.LedgerTransactionWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.LedgerTransactionUpdateToOneWithWhereWithoutInvestmentContributionsInput, Prisma.LedgerTransactionUpdateWithoutInvestmentContributionsInput>, Prisma.LedgerTransactionUncheckedUpdateWithoutInvestmentContributionsInput>
+}
+
+export type LedgerTransactionCreateNestedOneWithoutInvestmentRefundsInput = {
+  create?: Prisma.XOR<Prisma.LedgerTransactionCreateWithoutInvestmentRefundsInput, Prisma.LedgerTransactionUncheckedCreateWithoutInvestmentRefundsInput>
+  connectOrCreate?: Prisma.LedgerTransactionCreateOrConnectWithoutInvestmentRefundsInput
+  connect?: Prisma.LedgerTransactionWhereUniqueInput
+}
+
+export type LedgerTransactionUpdateOneRequiredWithoutInvestmentRefundsNestedInput = {
+  create?: Prisma.XOR<Prisma.LedgerTransactionCreateWithoutInvestmentRefundsInput, Prisma.LedgerTransactionUncheckedCreateWithoutInvestmentRefundsInput>
+  connectOrCreate?: Prisma.LedgerTransactionCreateOrConnectWithoutInvestmentRefundsInput
+  upsert?: Prisma.LedgerTransactionUpsertWithoutInvestmentRefundsInput
+  connect?: Prisma.LedgerTransactionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.LedgerTransactionUpdateToOneWithWhereWithoutInvestmentRefundsInput, Prisma.LedgerTransactionUpdateWithoutInvestmentRefundsInput>, Prisma.LedgerTransactionUncheckedUpdateWithoutInvestmentRefundsInput>
 }
 
 export type LedgerTransactionCreateNestedOneWithoutEscrowTransactionsInput = {
@@ -653,6 +695,8 @@ export type LedgerTransactionCreateWithoutReversalTransactionsInput = {
   repayments?: Prisma.RepaymentCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionUncheckedCreateWithoutReversalTransactionsInput = {
@@ -672,6 +716,8 @@ export type LedgerTransactionUncheckedCreateWithoutReversalTransactionsInput = {
   repayments?: Prisma.RepaymentUncheckedCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionCreateOrConnectWithoutReversalTransactionsInput = {
@@ -696,6 +742,8 @@ export type LedgerTransactionCreateWithoutReversedTransactionInput = {
   repayments?: Prisma.RepaymentCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionUncheckedCreateWithoutReversedTransactionInput = {
@@ -715,6 +763,8 @@ export type LedgerTransactionUncheckedCreateWithoutReversedTransactionInput = {
   repayments?: Prisma.RepaymentUncheckedCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionCreateOrConnectWithoutReversedTransactionInput = {
@@ -755,6 +805,8 @@ export type LedgerTransactionUpdateWithoutReversalTransactionsInput = {
   repayments?: Prisma.RepaymentUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionUncheckedUpdateWithoutReversalTransactionsInput = {
@@ -774,6 +826,8 @@ export type LedgerTransactionUncheckedUpdateWithoutReversalTransactionsInput = {
   repayments?: Prisma.RepaymentUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionUpsertWithWhereUniqueWithoutReversedTransactionInput = {
@@ -825,6 +879,8 @@ export type LedgerTransactionCreateWithoutEntriesInput = {
   repayments?: Prisma.RepaymentCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionUncheckedCreateWithoutEntriesInput = {
@@ -844,6 +900,8 @@ export type LedgerTransactionUncheckedCreateWithoutEntriesInput = {
   repayments?: Prisma.RepaymentUncheckedCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionCreateOrConnectWithoutEntriesInput = {
@@ -879,6 +937,8 @@ export type LedgerTransactionUpdateWithoutEntriesInput = {
   repayments?: Prisma.RepaymentUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionUncheckedUpdateWithoutEntriesInput = {
@@ -898,6 +958,108 @@ export type LedgerTransactionUncheckedUpdateWithoutEntriesInput = {
   repayments?: Prisma.RepaymentUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+}
+
+export type LedgerTransactionCreateWithoutOpeningBalanceInput = {
+  id?: string
+  transactionType: string
+  status?: $Enums.LedgerTransactionStatus
+  idempotencyKey?: string | null
+  referenceType?: string | null
+  referenceId?: string | null
+  description: string
+  createdAt?: Date | string
+  postedAt?: Date | string | null
+  entries?: Prisma.LedgerEntryCreateNestedManyWithoutLedgerTransactionInput
+  reversedTransaction?: Prisma.LedgerTransactionCreateNestedOneWithoutReversalTransactionsInput
+  reversalTransactions?: Prisma.LedgerTransactionCreateNestedManyWithoutReversedTransactionInput
+  investmentContributions?: Prisma.InvestmentContributionCreateNestedManyWithoutLedgerTransactionInput
+  escrowTransactions?: Prisma.EscrowTransactionCreateNestedManyWithoutLedgerTransactionInput
+  repayments?: Prisma.RepaymentCreateNestedManyWithoutLedgerTransactionInput
+  investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutLedgerTransactionInput
+  withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundCreateNestedManyWithoutLedgerTransactionInput
+}
+
+export type LedgerTransactionUncheckedCreateWithoutOpeningBalanceInput = {
+  id?: string
+  transactionType: string
+  status?: $Enums.LedgerTransactionStatus
+  idempotencyKey?: string | null
+  referenceType?: string | null
+  referenceId?: string | null
+  description: string
+  createdAt?: Date | string
+  postedAt?: Date | string | null
+  reversedTransactionId?: string | null
+  entries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  reversalTransactions?: Prisma.LedgerTransactionUncheckedCreateNestedManyWithoutReversedTransactionInput
+  investmentContributions?: Prisma.InvestmentContributionUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  escrowTransactions?: Prisma.EscrowTransactionUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  repayments?: Prisma.RepaymentUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedCreateNestedManyWithoutLedgerTransactionInput
+}
+
+export type LedgerTransactionCreateOrConnectWithoutOpeningBalanceInput = {
+  where: Prisma.LedgerTransactionWhereUniqueInput
+  create: Prisma.XOR<Prisma.LedgerTransactionCreateWithoutOpeningBalanceInput, Prisma.LedgerTransactionUncheckedCreateWithoutOpeningBalanceInput>
+}
+
+export type LedgerTransactionUpsertWithoutOpeningBalanceInput = {
+  update: Prisma.XOR<Prisma.LedgerTransactionUpdateWithoutOpeningBalanceInput, Prisma.LedgerTransactionUncheckedUpdateWithoutOpeningBalanceInput>
+  create: Prisma.XOR<Prisma.LedgerTransactionCreateWithoutOpeningBalanceInput, Prisma.LedgerTransactionUncheckedCreateWithoutOpeningBalanceInput>
+  where?: Prisma.LedgerTransactionWhereInput
+}
+
+export type LedgerTransactionUpdateToOneWithWhereWithoutOpeningBalanceInput = {
+  where?: Prisma.LedgerTransactionWhereInput
+  data: Prisma.XOR<Prisma.LedgerTransactionUpdateWithoutOpeningBalanceInput, Prisma.LedgerTransactionUncheckedUpdateWithoutOpeningBalanceInput>
+}
+
+export type LedgerTransactionUpdateWithoutOpeningBalanceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  transactionType?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumLedgerTransactionStatusFieldUpdateOperationsInput | $Enums.LedgerTransactionStatus
+  idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  postedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  entries?: Prisma.LedgerEntryUpdateManyWithoutLedgerTransactionNestedInput
+  reversedTransaction?: Prisma.LedgerTransactionUpdateOneWithoutReversalTransactionsNestedInput
+  reversalTransactions?: Prisma.LedgerTransactionUpdateManyWithoutReversedTransactionNestedInput
+  investmentContributions?: Prisma.InvestmentContributionUpdateManyWithoutLedgerTransactionNestedInput
+  escrowTransactions?: Prisma.EscrowTransactionUpdateManyWithoutLedgerTransactionNestedInput
+  repayments?: Prisma.RepaymentUpdateManyWithoutLedgerTransactionNestedInput
+  investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutLedgerTransactionNestedInput
+  withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUpdateManyWithoutLedgerTransactionNestedInput
+}
+
+export type LedgerTransactionUncheckedUpdateWithoutOpeningBalanceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  transactionType?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumLedgerTransactionStatusFieldUpdateOperationsInput | $Enums.LedgerTransactionStatus
+  idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  postedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reversedTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  entries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  reversalTransactions?: Prisma.LedgerTransactionUncheckedUpdateManyWithoutReversedTransactionNestedInput
+  investmentContributions?: Prisma.InvestmentContributionUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  escrowTransactions?: Prisma.EscrowTransactionUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  repayments?: Prisma.RepaymentUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionCreateWithoutInvestmentContributionsInput = {
@@ -917,6 +1079,8 @@ export type LedgerTransactionCreateWithoutInvestmentContributionsInput = {
   repayments?: Prisma.RepaymentCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionUncheckedCreateWithoutInvestmentContributionsInput = {
@@ -936,6 +1100,8 @@ export type LedgerTransactionUncheckedCreateWithoutInvestmentContributionsInput 
   repayments?: Prisma.RepaymentUncheckedCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionCreateOrConnectWithoutInvestmentContributionsInput = {
@@ -971,6 +1137,8 @@ export type LedgerTransactionUpdateWithoutInvestmentContributionsInput = {
   repayments?: Prisma.RepaymentUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionUncheckedUpdateWithoutInvestmentContributionsInput = {
@@ -990,6 +1158,108 @@ export type LedgerTransactionUncheckedUpdateWithoutInvestmentContributionsInput 
   repayments?: Prisma.RepaymentUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+}
+
+export type LedgerTransactionCreateWithoutInvestmentRefundsInput = {
+  id?: string
+  transactionType: string
+  status?: $Enums.LedgerTransactionStatus
+  idempotencyKey?: string | null
+  referenceType?: string | null
+  referenceId?: string | null
+  description: string
+  createdAt?: Date | string
+  postedAt?: Date | string | null
+  entries?: Prisma.LedgerEntryCreateNestedManyWithoutLedgerTransactionInput
+  reversedTransaction?: Prisma.LedgerTransactionCreateNestedOneWithoutReversalTransactionsInput
+  reversalTransactions?: Prisma.LedgerTransactionCreateNestedManyWithoutReversedTransactionInput
+  investmentContributions?: Prisma.InvestmentContributionCreateNestedManyWithoutLedgerTransactionInput
+  escrowTransactions?: Prisma.EscrowTransactionCreateNestedManyWithoutLedgerTransactionInput
+  repayments?: Prisma.RepaymentCreateNestedManyWithoutLedgerTransactionInput
+  investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutLedgerTransactionInput
+  withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutLedgerTransactionInput
+}
+
+export type LedgerTransactionUncheckedCreateWithoutInvestmentRefundsInput = {
+  id?: string
+  transactionType: string
+  status?: $Enums.LedgerTransactionStatus
+  idempotencyKey?: string | null
+  referenceType?: string | null
+  referenceId?: string | null
+  description: string
+  createdAt?: Date | string
+  postedAt?: Date | string | null
+  reversedTransactionId?: string | null
+  entries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  reversalTransactions?: Prisma.LedgerTransactionUncheckedCreateNestedManyWithoutReversedTransactionInput
+  investmentContributions?: Prisma.InvestmentContributionUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  escrowTransactions?: Prisma.EscrowTransactionUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  repayments?: Prisma.RepaymentUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutLedgerTransactionInput
+}
+
+export type LedgerTransactionCreateOrConnectWithoutInvestmentRefundsInput = {
+  where: Prisma.LedgerTransactionWhereUniqueInput
+  create: Prisma.XOR<Prisma.LedgerTransactionCreateWithoutInvestmentRefundsInput, Prisma.LedgerTransactionUncheckedCreateWithoutInvestmentRefundsInput>
+}
+
+export type LedgerTransactionUpsertWithoutInvestmentRefundsInput = {
+  update: Prisma.XOR<Prisma.LedgerTransactionUpdateWithoutInvestmentRefundsInput, Prisma.LedgerTransactionUncheckedUpdateWithoutInvestmentRefundsInput>
+  create: Prisma.XOR<Prisma.LedgerTransactionCreateWithoutInvestmentRefundsInput, Prisma.LedgerTransactionUncheckedCreateWithoutInvestmentRefundsInput>
+  where?: Prisma.LedgerTransactionWhereInput
+}
+
+export type LedgerTransactionUpdateToOneWithWhereWithoutInvestmentRefundsInput = {
+  where?: Prisma.LedgerTransactionWhereInput
+  data: Prisma.XOR<Prisma.LedgerTransactionUpdateWithoutInvestmentRefundsInput, Prisma.LedgerTransactionUncheckedUpdateWithoutInvestmentRefundsInput>
+}
+
+export type LedgerTransactionUpdateWithoutInvestmentRefundsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  transactionType?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumLedgerTransactionStatusFieldUpdateOperationsInput | $Enums.LedgerTransactionStatus
+  idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  postedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  entries?: Prisma.LedgerEntryUpdateManyWithoutLedgerTransactionNestedInput
+  reversedTransaction?: Prisma.LedgerTransactionUpdateOneWithoutReversalTransactionsNestedInput
+  reversalTransactions?: Prisma.LedgerTransactionUpdateManyWithoutReversedTransactionNestedInput
+  investmentContributions?: Prisma.InvestmentContributionUpdateManyWithoutLedgerTransactionNestedInput
+  escrowTransactions?: Prisma.EscrowTransactionUpdateManyWithoutLedgerTransactionNestedInput
+  repayments?: Prisma.RepaymentUpdateManyWithoutLedgerTransactionNestedInput
+  investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutLedgerTransactionNestedInput
+  withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUpdateOneWithoutLedgerTransactionNestedInput
+}
+
+export type LedgerTransactionUncheckedUpdateWithoutInvestmentRefundsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  transactionType?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumLedgerTransactionStatusFieldUpdateOperationsInput | $Enums.LedgerTransactionStatus
+  idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  referenceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  postedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reversedTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  entries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  reversalTransactions?: Prisma.LedgerTransactionUncheckedUpdateManyWithoutReversedTransactionNestedInput
+  investmentContributions?: Prisma.InvestmentContributionUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  escrowTransactions?: Prisma.EscrowTransactionUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  repayments?: Prisma.RepaymentUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionCreateWithoutEscrowTransactionsInput = {
@@ -1009,6 +1279,8 @@ export type LedgerTransactionCreateWithoutEscrowTransactionsInput = {
   repayments?: Prisma.RepaymentCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionUncheckedCreateWithoutEscrowTransactionsInput = {
@@ -1028,6 +1300,8 @@ export type LedgerTransactionUncheckedCreateWithoutEscrowTransactionsInput = {
   repayments?: Prisma.RepaymentUncheckedCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionCreateOrConnectWithoutEscrowTransactionsInput = {
@@ -1063,6 +1337,8 @@ export type LedgerTransactionUpdateWithoutEscrowTransactionsInput = {
   repayments?: Prisma.RepaymentUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionUncheckedUpdateWithoutEscrowTransactionsInput = {
@@ -1082,6 +1358,8 @@ export type LedgerTransactionUncheckedUpdateWithoutEscrowTransactionsInput = {
   repayments?: Prisma.RepaymentUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionCreateWithoutRepaymentsInput = {
@@ -1101,6 +1379,8 @@ export type LedgerTransactionCreateWithoutRepaymentsInput = {
   escrowTransactions?: Prisma.EscrowTransactionCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionUncheckedCreateWithoutRepaymentsInput = {
@@ -1120,6 +1400,8 @@ export type LedgerTransactionUncheckedCreateWithoutRepaymentsInput = {
   escrowTransactions?: Prisma.EscrowTransactionUncheckedCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionCreateOrConnectWithoutRepaymentsInput = {
@@ -1155,6 +1437,8 @@ export type LedgerTransactionUpdateWithoutRepaymentsInput = {
   escrowTransactions?: Prisma.EscrowTransactionUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionUncheckedUpdateWithoutRepaymentsInput = {
@@ -1174,6 +1458,8 @@ export type LedgerTransactionUncheckedUpdateWithoutRepaymentsInput = {
   escrowTransactions?: Prisma.EscrowTransactionUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionCreateWithoutInvestorPayoutsInput = {
@@ -1193,6 +1479,8 @@ export type LedgerTransactionCreateWithoutInvestorPayoutsInput = {
   escrowTransactions?: Prisma.EscrowTransactionCreateNestedManyWithoutLedgerTransactionInput
   repayments?: Prisma.RepaymentCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionUncheckedCreateWithoutInvestorPayoutsInput = {
@@ -1212,6 +1500,8 @@ export type LedgerTransactionUncheckedCreateWithoutInvestorPayoutsInput = {
   escrowTransactions?: Prisma.EscrowTransactionUncheckedCreateNestedManyWithoutLedgerTransactionInput
   repayments?: Prisma.RepaymentUncheckedCreateNestedManyWithoutLedgerTransactionInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionCreateOrConnectWithoutInvestorPayoutsInput = {
@@ -1247,6 +1537,8 @@ export type LedgerTransactionUpdateWithoutInvestorPayoutsInput = {
   escrowTransactions?: Prisma.EscrowTransactionUpdateManyWithoutLedgerTransactionNestedInput
   repayments?: Prisma.RepaymentUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionUncheckedUpdateWithoutInvestorPayoutsInput = {
@@ -1266,6 +1558,8 @@ export type LedgerTransactionUncheckedUpdateWithoutInvestorPayoutsInput = {
   escrowTransactions?: Prisma.EscrowTransactionUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   repayments?: Prisma.RepaymentUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionCreateWithoutWithdrawalRequestsInput = {
@@ -1285,6 +1579,8 @@ export type LedgerTransactionCreateWithoutWithdrawalRequestsInput = {
   escrowTransactions?: Prisma.EscrowTransactionCreateNestedManyWithoutLedgerTransactionInput
   repayments?: Prisma.RepaymentCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionUncheckedCreateWithoutWithdrawalRequestsInput = {
@@ -1304,6 +1600,8 @@ export type LedgerTransactionUncheckedCreateWithoutWithdrawalRequestsInput = {
   escrowTransactions?: Prisma.EscrowTransactionUncheckedCreateNestedManyWithoutLedgerTransactionInput
   repayments?: Prisma.RepaymentUncheckedCreateNestedManyWithoutLedgerTransactionInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedCreateNestedManyWithoutLedgerTransactionInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedCreateNestedOneWithoutLedgerTransactionInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedCreateNestedManyWithoutLedgerTransactionInput
 }
 
 export type LedgerTransactionCreateOrConnectWithoutWithdrawalRequestsInput = {
@@ -1339,6 +1637,8 @@ export type LedgerTransactionUpdateWithoutWithdrawalRequestsInput = {
   escrowTransactions?: Prisma.EscrowTransactionUpdateManyWithoutLedgerTransactionNestedInput
   repayments?: Prisma.RepaymentUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionUncheckedUpdateWithoutWithdrawalRequestsInput = {
@@ -1358,6 +1658,8 @@ export type LedgerTransactionUncheckedUpdateWithoutWithdrawalRequestsInput = {
   escrowTransactions?: Prisma.EscrowTransactionUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   repayments?: Prisma.RepaymentUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionCreateManyReversedTransactionInput = {
@@ -1389,6 +1691,8 @@ export type LedgerTransactionUpdateWithoutReversedTransactionInput = {
   repayments?: Prisma.RepaymentUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionUncheckedUpdateWithoutReversedTransactionInput = {
@@ -1408,6 +1712,8 @@ export type LedgerTransactionUncheckedUpdateWithoutReversedTransactionInput = {
   repayments?: Prisma.RepaymentUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   investorPayouts?: Prisma.InvestorPayoutUncheckedUpdateManyWithoutLedgerTransactionNestedInput
   withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutLedgerTransactionNestedInput
+  openingBalance?: Prisma.OpeningBalanceUncheckedUpdateOneWithoutLedgerTransactionNestedInput
+  investmentRefunds?: Prisma.InvestmentRefundUncheckedUpdateManyWithoutLedgerTransactionNestedInput
 }
 
 export type LedgerTransactionUncheckedUpdateManyWithoutReversedTransactionInput = {
@@ -1435,6 +1741,7 @@ export type LedgerTransactionCountOutputType = {
   repayments: number
   investorPayouts: number
   withdrawalRequests: number
+  investmentRefunds: number
 }
 
 export type LedgerTransactionCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1445,6 +1752,7 @@ export type LedgerTransactionCountOutputTypeSelect<ExtArgs extends runtime.Types
   repayments?: boolean | LedgerTransactionCountOutputTypeCountRepaymentsArgs
   investorPayouts?: boolean | LedgerTransactionCountOutputTypeCountInvestorPayoutsArgs
   withdrawalRequests?: boolean | LedgerTransactionCountOutputTypeCountWithdrawalRequestsArgs
+  investmentRefunds?: boolean | LedgerTransactionCountOutputTypeCountInvestmentRefundsArgs
 }
 
 /**
@@ -1506,6 +1814,13 @@ export type LedgerTransactionCountOutputTypeCountWithdrawalRequestsArgs<ExtArgs 
   where?: Prisma.WithdrawalRequestWhereInput
 }
 
+/**
+ * LedgerTransactionCountOutputType without action
+ */
+export type LedgerTransactionCountOutputTypeCountInvestmentRefundsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.InvestmentRefundWhereInput
+}
+
 
 export type LedgerTransactionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1526,6 +1841,8 @@ export type LedgerTransactionSelect<ExtArgs extends runtime.Types.Extensions.Int
   repayments?: boolean | Prisma.LedgerTransaction$repaymentsArgs<ExtArgs>
   investorPayouts?: boolean | Prisma.LedgerTransaction$investorPayoutsArgs<ExtArgs>
   withdrawalRequests?: boolean | Prisma.LedgerTransaction$withdrawalRequestsArgs<ExtArgs>
+  openingBalance?: boolean | Prisma.LedgerTransaction$openingBalanceArgs<ExtArgs>
+  investmentRefunds?: boolean | Prisma.LedgerTransaction$investmentRefundsArgs<ExtArgs>
   _count?: boolean | Prisma.LedgerTransactionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["ledgerTransaction"]>
 
@@ -1580,6 +1897,8 @@ export type LedgerTransactionInclude<ExtArgs extends runtime.Types.Extensions.In
   repayments?: boolean | Prisma.LedgerTransaction$repaymentsArgs<ExtArgs>
   investorPayouts?: boolean | Prisma.LedgerTransaction$investorPayoutsArgs<ExtArgs>
   withdrawalRequests?: boolean | Prisma.LedgerTransaction$withdrawalRequestsArgs<ExtArgs>
+  openingBalance?: boolean | Prisma.LedgerTransaction$openingBalanceArgs<ExtArgs>
+  investmentRefunds?: boolean | Prisma.LedgerTransaction$investmentRefundsArgs<ExtArgs>
   _count?: boolean | Prisma.LedgerTransactionCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type LedgerTransactionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1600,6 +1919,8 @@ export type $LedgerTransactionPayload<ExtArgs extends runtime.Types.Extensions.I
     repayments: Prisma.$RepaymentPayload<ExtArgs>[]
     investorPayouts: Prisma.$InvestorPayoutPayload<ExtArgs>[]
     withdrawalRequests: Prisma.$WithdrawalRequestPayload<ExtArgs>[]
+    openingBalance: Prisma.$OpeningBalancePayload<ExtArgs> | null
+    investmentRefunds: Prisma.$InvestmentRefundPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2014,6 +2335,8 @@ export interface Prisma__LedgerTransactionClient<T, Null = never, ExtArgs extend
   repayments<T extends Prisma.LedgerTransaction$repaymentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.LedgerTransaction$repaymentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RepaymentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   investorPayouts<T extends Prisma.LedgerTransaction$investorPayoutsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.LedgerTransaction$investorPayoutsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InvestorPayoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   withdrawalRequests<T extends Prisma.LedgerTransaction$withdrawalRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.LedgerTransaction$withdrawalRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WithdrawalRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  openingBalance<T extends Prisma.LedgerTransaction$openingBalanceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.LedgerTransaction$openingBalanceArgs<ExtArgs>>): Prisma.Prisma__OpeningBalanceClient<runtime.Types.Result.GetResult<Prisma.$OpeningBalancePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  investmentRefunds<T extends Prisma.LedgerTransaction$investmentRefundsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.LedgerTransaction$investmentRefundsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InvestmentRefundPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2638,6 +2961,49 @@ export type LedgerTransaction$withdrawalRequestsArgs<ExtArgs extends runtime.Typ
   take?: number
   skip?: number
   distinct?: Prisma.WithdrawalRequestScalarFieldEnum | Prisma.WithdrawalRequestScalarFieldEnum[]
+}
+
+/**
+ * LedgerTransaction.openingBalance
+ */
+export type LedgerTransaction$openingBalanceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the OpeningBalance
+   */
+  select?: Prisma.OpeningBalanceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the OpeningBalance
+   */
+  omit?: Prisma.OpeningBalanceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OpeningBalanceInclude<ExtArgs> | null
+  where?: Prisma.OpeningBalanceWhereInput
+}
+
+/**
+ * LedgerTransaction.investmentRefunds
+ */
+export type LedgerTransaction$investmentRefundsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the InvestmentRefund
+   */
+  select?: Prisma.InvestmentRefundSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the InvestmentRefund
+   */
+  omit?: Prisma.InvestmentRefundOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InvestmentRefundInclude<ExtArgs> | null
+  where?: Prisma.InvestmentRefundWhereInput
+  orderBy?: Prisma.InvestmentRefundOrderByWithRelationInput | Prisma.InvestmentRefundOrderByWithRelationInput[]
+  cursor?: Prisma.InvestmentRefundWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.InvestmentRefundScalarFieldEnum | Prisma.InvestmentRefundScalarFieldEnum[]
 }
 
 /**

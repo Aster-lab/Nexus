@@ -147,6 +147,11 @@ export type LedgerTransaction = Prisma.LedgerTransactionModel
  */
 export type LedgerEntry = Prisma.LedgerEntryModel
 /**
+ * Model OpeningBalance
+ * 
+ */
+export type OpeningBalance = Prisma.OpeningBalanceModel
+/**
  * Model Investment
  * 
  */
@@ -156,6 +161,11 @@ export type Investment = Prisma.InvestmentModel
  * 
  */
 export type InvestmentContribution = Prisma.InvestmentContributionModel
+/**
+ * Model InvestmentRefund
+ * 
+ */
+export type InvestmentRefund = Prisma.InvestmentRefundModel
 /**
  * Model EscrowAccount
  * 

@@ -29,6 +29,13 @@ const PLATFORM_ACCOUNTS = [
         accountType : "LIABILITY",
         currency : "THB",
         status : "INACTIVE",
+    },
+    {
+        accountCode : "1300",
+        accountName: "Simulated Opening Balance Asset",
+        accountType : "ASSET",
+        currency : "THB",
+        status: "INACTIVE",
     }
 ] satisfies Prisma.PlatformAccountCreateManyInput[];
 

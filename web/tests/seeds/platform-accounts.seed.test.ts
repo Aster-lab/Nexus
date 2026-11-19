@@ -43,6 +43,13 @@ const expectedAccounts = [
         currency: "THB",
         status: "INACTIVE",
     },
+    {
+        accountCode: "1300",
+        accountName: "Simulated Opening Balance Asset",
+        accountType: "ASSET",
+        currency : "THB",
+        status: "INACTIVE",
+    }
 ];
 
 describe("seedPlatformAccounts", () => {
@@ -62,12 +69,12 @@ describe("seedPlatformAccounts", () => {
         );
     });
 
-    it("creates all four approved platform accounts", async () => {
+    it("creates all five approved platform accounts", async () => {
         await seedPlatformAccounts();
 
         expect(transactionMock).toHaveBeenCalledTimes(1);
-        expect(findUniqueMock).toHaveBeenCalledTimes(4);
-        expect(createMock).toHaveBeenCalledTimes(4);
+        expect(findUniqueMock).toHaveBeenCalledTimes(5);
+        expect(createMock).toHaveBeenCalledTimes(5);
 
         for (const account of expectedAccounts) {
             expect(createMock).toHaveBeenCalledWith({
@@ -86,6 +93,22 @@ describe("seedPlatformAccounts", () => {
         expect(createdAccounts).toEqual(expectedAccounts);
     });
 
+    it("keeps the opening balance asset inactive", async () => {
+        await seedPlatformAccounts();
+
+        const openingBalanceAccount = createMock.mock.calls
+            .map(([args]) => args.data)
+            .find((account) => account.accountCode === "1300");
+
+        expect(openingBalanceAccount).toEqual({
+            accountCode: "1300",
+            accountName: "Simulated Opening Balance Asset",
+            accountType: "ASSET",
+            currency: "THB",
+            status: "INACTIVE",
+        });
+    });
+
     it("skips existing matching accounts", async () => {
         findUniqueMock.mockImplementation(async ({ where }) => {
             const account = expectedAccounts.find(
@@ -97,7 +120,7 @@ describe("seedPlatformAccounts", () => {
 
         await seedPlatformAccounts();
 
-        expect(findUniqueMock).toHaveBeenCalledTimes(4);
+        expect(findUniqueMock).toHaveBeenCalledTimes(5);
         expect(createMock).not.toHaveBeenCalled();
     });
 
@@ -120,12 +143,12 @@ describe("seedPlatformAccounts", () => {
 
         await seedPlatformAccounts();
 
-        expect(createMock).toHaveBeenCalledTimes(4);
+        expect(createMock).toHaveBeenCalledTimes(5);
 
         await seedPlatformAccounts();
 
-        expect(createMock).toHaveBeenCalledTimes(4);
-        expect(findUniqueMock).toHaveBeenCalledTimes(8);
+        expect(createMock).toHaveBeenCalledTimes(5);
+        expect(findUniqueMock).toHaveBeenCalledTimes(10);
     });
 
     it("throws an error when an existing account has different details", async () => {

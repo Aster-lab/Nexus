@@ -250,6 +250,7 @@ export type UserWhereInput = {
   createdLegalHolds?: Prisma.LegalHoldListRelationFilter
   releasedLegalHolds?: Prisma.LegalHoldListRelationFilter
   approvedRetentionPolicies?: Prisma.RetentionPolicyListRelationFilter
+  administeredOpeningBalances?: Prisma.OpeningBalanceListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -298,6 +299,7 @@ export type UserOrderByWithRelationInput = {
   createdLegalHolds?: Prisma.LegalHoldOrderByRelationAggregateInput
   releasedLegalHolds?: Prisma.LegalHoldOrderByRelationAggregateInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyOrderByRelationAggregateInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -349,6 +351,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   createdLegalHolds?: Prisma.LegalHoldListRelationFilter
   releasedLegalHolds?: Prisma.LegalHoldListRelationFilter
   approvedRetentionPolicies?: Prisma.RetentionPolicyListRelationFilter
+  administeredOpeningBalances?: Prisma.OpeningBalanceListRelationFilter
 }, "id">
 
 export type UserOrderByWithAggregationInput = {
@@ -427,6 +430,7 @@ export type UserCreateInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -475,6 +479,7 @@ export type UserUncheckedCreateInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUpdateInput = {
@@ -523,6 +528,7 @@ export type UserUpdateInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -571,6 +577,7 @@ export type UserUncheckedUpdateInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -911,6 +918,20 @@ export type UserUpdateOneWithoutWalletsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutWalletsInput, Prisma.UserUpdateWithoutWalletsInput>, Prisma.UserUncheckedUpdateWithoutWalletsInput>
 }
 
+export type UserCreateNestedOneWithoutAdministeredOpeningBalancesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAdministeredOpeningBalancesInput, Prisma.UserUncheckedCreateWithoutAdministeredOpeningBalancesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAdministeredOpeningBalancesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutAdministeredOpeningBalancesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAdministeredOpeningBalancesInput, Prisma.UserUncheckedCreateWithoutAdministeredOpeningBalancesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAdministeredOpeningBalancesInput
+  upsert?: Prisma.UserUpsertWithoutAdministeredOpeningBalancesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAdministeredOpeningBalancesInput, Prisma.UserUpdateWithoutAdministeredOpeningBalancesInput>, Prisma.UserUncheckedUpdateWithoutAdministeredOpeningBalancesInput>
+}
+
 export type UserCreateNestedOneWithoutModelActivationHistoriesInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutModelActivationHistoriesInput, Prisma.UserUncheckedCreateWithoutModelActivationHistoriesInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutModelActivationHistoriesInput
@@ -1248,6 +1269,7 @@ export type UserCreateWithoutRolesInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutRolesInput = {
@@ -1295,6 +1317,7 @@ export type UserUncheckedCreateWithoutRolesInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutRolesInput = {
@@ -1347,6 +1370,7 @@ export type UserCreateWithoutGrantedUserRolesInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutGrantedUserRolesInput = {
@@ -1394,6 +1418,7 @@ export type UserUncheckedCreateWithoutGrantedUserRolesInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutGrantedUserRolesInput = {
@@ -1457,6 +1482,7 @@ export type UserUpdateWithoutRolesInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRolesInput = {
@@ -1504,6 +1530,7 @@ export type UserUncheckedUpdateWithoutRolesInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUpsertWithoutGrantedUserRolesInput = {
@@ -1562,6 +1589,7 @@ export type UserUpdateWithoutGrantedUserRolesInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutGrantedUserRolesInput = {
@@ -1609,6 +1637,7 @@ export type UserUncheckedUpdateWithoutGrantedUserRolesInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutBorrowerProfileInput = {
@@ -1656,6 +1685,7 @@ export type UserCreateWithoutBorrowerProfileInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutBorrowerProfileInput = {
@@ -1703,6 +1733,7 @@ export type UserUncheckedCreateWithoutBorrowerProfileInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutBorrowerProfileInput = {
@@ -1766,6 +1797,7 @@ export type UserUpdateWithoutBorrowerProfileInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBorrowerProfileInput = {
@@ -1813,6 +1845,7 @@ export type UserUncheckedUpdateWithoutBorrowerProfileInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutInvestorProfileInput = {
@@ -1860,6 +1893,7 @@ export type UserCreateWithoutInvestorProfileInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutInvestorProfileInput = {
@@ -1907,6 +1941,7 @@ export type UserUncheckedCreateWithoutInvestorProfileInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutInvestorProfileInput = {
@@ -1970,6 +2005,7 @@ export type UserUpdateWithoutInvestorProfileInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutInvestorProfileInput = {
@@ -2017,6 +2053,7 @@ export type UserUncheckedUpdateWithoutInvestorProfileInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -2064,6 +2101,7 @@ export type UserCreateWithoutSessionsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -2111,6 +2149,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -2174,6 +2213,7 @@ export type UserUpdateWithoutSessionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -2221,6 +2261,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutOauthAccountsInput = {
@@ -2268,6 +2309,7 @@ export type UserCreateWithoutOauthAccountsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutOauthAccountsInput = {
@@ -2315,6 +2357,7 @@ export type UserUncheckedCreateWithoutOauthAccountsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutOauthAccountsInput = {
@@ -2378,6 +2421,7 @@ export type UserUpdateWithoutOauthAccountsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOauthAccountsInput = {
@@ -2425,6 +2469,7 @@ export type UserUncheckedUpdateWithoutOauthAccountsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutSecurityEventsInput = {
@@ -2472,6 +2517,7 @@ export type UserCreateWithoutSecurityEventsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutSecurityEventsInput = {
@@ -2519,6 +2565,7 @@ export type UserUncheckedCreateWithoutSecurityEventsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutSecurityEventsInput = {
@@ -2582,6 +2629,7 @@ export type UserUpdateWithoutSecurityEventsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSecurityEventsInput = {
@@ -2629,6 +2677,7 @@ export type UserUncheckedUpdateWithoutSecurityEventsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutAccountRestrictionsInput = {
@@ -2676,6 +2725,7 @@ export type UserCreateWithoutAccountRestrictionsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutAccountRestrictionsInput = {
@@ -2723,6 +2773,7 @@ export type UserUncheckedCreateWithoutAccountRestrictionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutAccountRestrictionsInput = {
@@ -2775,6 +2826,7 @@ export type UserCreateWithoutCreatedRestrictionsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutCreatedRestrictionsInput = {
@@ -2822,6 +2874,7 @@ export type UserUncheckedCreateWithoutCreatedRestrictionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutCreatedRestrictionsInput = {
@@ -2874,6 +2927,7 @@ export type UserCreateWithoutLiftedRestrictionsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutLiftedRestrictionsInput = {
@@ -2921,6 +2975,7 @@ export type UserUncheckedCreateWithoutLiftedRestrictionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutLiftedRestrictionsInput = {
@@ -2984,6 +3039,7 @@ export type UserUpdateWithoutAccountRestrictionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountRestrictionsInput = {
@@ -3031,6 +3087,7 @@ export type UserUncheckedUpdateWithoutAccountRestrictionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUpsertWithoutCreatedRestrictionsInput = {
@@ -3089,6 +3146,7 @@ export type UserUpdateWithoutCreatedRestrictionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedRestrictionsInput = {
@@ -3136,6 +3194,7 @@ export type UserUncheckedUpdateWithoutCreatedRestrictionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUpsertWithoutLiftedRestrictionsInput = {
@@ -3194,6 +3253,7 @@ export type UserUpdateWithoutLiftedRestrictionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLiftedRestrictionsInput = {
@@ -3241,6 +3301,7 @@ export type UserUncheckedUpdateWithoutLiftedRestrictionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutCreatedApplicationVersionsInput = {
@@ -3288,6 +3349,7 @@ export type UserCreateWithoutCreatedApplicationVersionsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutCreatedApplicationVersionsInput = {
@@ -3335,6 +3397,7 @@ export type UserUncheckedCreateWithoutCreatedApplicationVersionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutCreatedApplicationVersionsInput = {
@@ -3398,6 +3461,7 @@ export type UserUpdateWithoutCreatedApplicationVersionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedApplicationVersionsInput = {
@@ -3445,6 +3509,7 @@ export type UserUncheckedUpdateWithoutCreatedApplicationVersionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutApplicationReviewsInput = {
@@ -3492,6 +3557,7 @@ export type UserCreateWithoutApplicationReviewsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutApplicationReviewsInput = {
@@ -3539,6 +3605,7 @@ export type UserUncheckedCreateWithoutApplicationReviewsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutApplicationReviewsInput = {
@@ -3602,6 +3669,7 @@ export type UserUpdateWithoutApplicationReviewsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutApplicationReviewsInput = {
@@ -3649,6 +3717,7 @@ export type UserUncheckedUpdateWithoutApplicationReviewsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutRequestedInformationInput = {
@@ -3696,6 +3765,7 @@ export type UserCreateWithoutRequestedInformationInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutRequestedInformationInput = {
@@ -3743,6 +3813,7 @@ export type UserUncheckedCreateWithoutRequestedInformationInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutRequestedInformationInput = {
@@ -3806,6 +3877,7 @@ export type UserUpdateWithoutRequestedInformationInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRequestedInformationInput = {
@@ -3853,6 +3925,7 @@ export type UserUncheckedUpdateWithoutRequestedInformationInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutCreatedLoanOffersInput = {
@@ -3900,6 +3973,7 @@ export type UserCreateWithoutCreatedLoanOffersInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutCreatedLoanOffersInput = {
@@ -3947,6 +4021,7 @@ export type UserUncheckedCreateWithoutCreatedLoanOffersInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutCreatedLoanOffersInput = {
@@ -4010,6 +4085,7 @@ export type UserUpdateWithoutCreatedLoanOffersInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedLoanOffersInput = {
@@ -4057,6 +4133,7 @@ export type UserUncheckedUpdateWithoutCreatedLoanOffersInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutLoanStatusChangesInput = {
@@ -4104,6 +4181,7 @@ export type UserCreateWithoutLoanStatusChangesInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutLoanStatusChangesInput = {
@@ -4151,6 +4229,7 @@ export type UserUncheckedCreateWithoutLoanStatusChangesInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutLoanStatusChangesInput = {
@@ -4214,6 +4293,7 @@ export type UserUpdateWithoutLoanStatusChangesInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLoanStatusChangesInput = {
@@ -4261,6 +4341,7 @@ export type UserUncheckedUpdateWithoutLoanStatusChangesInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutWalletsInput = {
@@ -4308,6 +4389,7 @@ export type UserCreateWithoutWalletsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutWalletsInput = {
@@ -4355,6 +4437,7 @@ export type UserUncheckedCreateWithoutWalletsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutWalletsInput = {
@@ -4418,6 +4501,7 @@ export type UserUpdateWithoutWalletsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWalletsInput = {
@@ -4445,6 +4529,215 @@ export type UserUncheckedUpdateWithoutWalletsInput = {
   requestedInformation?: Prisma.InformationRequestUncheckedUpdateManyWithoutRequestedByNestedInput
   createdLoanOffers?: Prisma.LoanOfferUncheckedUpdateManyWithoutCreatedByNestedInput
   loanStatusChanges?: Prisma.LoanStatusHistoryUncheckedUpdateManyWithoutChangedByNestedInput
+  modelActivationHistories?: Prisma.ModelActivationHistoryUncheckedUpdateManyWithoutPerformedByNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  approvedPolicyVersions?: Prisma.PolicyVersionUncheckedUpdateManyWithoutApprovedByNestedInput
+  assignedAlerts?: Prisma.AlertUncheckedUpdateManyWithoutAssignedToNestedInput
+  alertHistory?: Prisma.AlertHistoryUncheckedUpdateManyWithoutActorNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  supportRequests?: Prisma.SupportRequestUncheckedUpdateManyWithoutUserNestedInput
+  feedback?: Prisma.FeedbackUncheckedUpdateManyWithoutUserNestedInput
+  supportHistories?: Prisma.SupportHistoryUncheckedUpdateManyWithoutActorNestedInput
+  withdrawalRequests?: Prisma.WithdrawalRequestUncheckedUpdateManyWithoutUserNestedInput
+  idempotencyRecords?: Prisma.IdempotencyRecordUncheckedUpdateManyWithoutUserNestedInput
+  uploadedDocuments?: Prisma.ApplicationDocumentUncheckedUpdateManyWithoutUploadedByNestedInput
+  documentAccessLogs?: Prisma.DocumentAccessLogUncheckedUpdateManyWithoutAccessedByNestedInput
+  dataAccessRequests?: Prisma.DataAccessRequestUncheckedUpdateManyWithoutUserNestedInput
+  dataCorrectionRequests?: Prisma.DataCorrectionRequestUncheckedUpdateManyWithoutUserNestedInput
+  reviewedCorrectionRequests?: Prisma.DataCorrectionRequestUncheckedUpdateManyWithoutReviewedByNestedInput
+  createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
+  releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
+  approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
+}
+
+export type UserCreateWithoutAdministeredOpeningBalancesInput = {
+  id?: string
+  email: string
+  passwordHash?: string | null
+  emailVerifiedAt?: Date | string | null
+  accountStatus?: $Enums.AccountStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deactivatedAt?: Date | string | null
+  lastLoginAt?: Date | string | null
+  roles?: Prisma.UserRoleCreateNestedManyWithoutUserInput
+  borrowerProfile?: Prisma.BorrowerProfileCreateNestedOneWithoutUserInput
+  investorProfile?: Prisma.InvestorProfileCreateNestedOneWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  oauthAccounts?: Prisma.OAuthAccountCreateNestedManyWithoutUserInput
+  securityEvents?: Prisma.SecurityEventCreateNestedManyWithoutUserInput
+  accountRestrictions?: Prisma.AccountRestrictionCreateNestedManyWithoutUserInput
+  createdRestrictions?: Prisma.AccountRestrictionCreateNestedManyWithoutCreatedByInput
+  liftedRestrictions?: Prisma.AccountRestrictionCreateNestedManyWithoutLiftedByInput
+  grantedUserRoles?: Prisma.UserRoleCreateNestedManyWithoutGrantedByInput
+  createdApplicationVersions?: Prisma.ApplicationVersionCreateNestedManyWithoutCreatedByInput
+  applicationReviews?: Prisma.ApplicationReviewCreateNestedManyWithoutReviewerInput
+  requestedInformation?: Prisma.InformationRequestCreateNestedManyWithoutRequestedByInput
+  createdLoanOffers?: Prisma.LoanOfferCreateNestedManyWithoutCreatedByInput
+  loanStatusChanges?: Prisma.LoanStatusHistoryCreateNestedManyWithoutChangedByInput
+  wallets?: Prisma.WalletCreateNestedManyWithoutOwnerUserInput
+  modelActivationHistories?: Prisma.ModelActivationHistoryCreateNestedManyWithoutPerformedByInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  approvedPolicyVersions?: Prisma.PolicyVersionCreateNestedManyWithoutApprovedByInput
+  assignedAlerts?: Prisma.AlertCreateNestedManyWithoutAssignedToInput
+  alertHistory?: Prisma.AlertHistoryCreateNestedManyWithoutActorInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+  supportRequests?: Prisma.SupportRequestCreateNestedManyWithoutUserInput
+  feedback?: Prisma.FeedbackCreateNestedManyWithoutUserInput
+  supportHistories?: Prisma.SupportHistoryCreateNestedManyWithoutActorInput
+  withdrawalRequests?: Prisma.WithdrawalRequestCreateNestedManyWithoutUserInput
+  idempotencyRecords?: Prisma.IdempotencyRecordCreateNestedManyWithoutUserInput
+  uploadedDocuments?: Prisma.ApplicationDocumentCreateNestedManyWithoutUploadedByInput
+  documentAccessLogs?: Prisma.DocumentAccessLogCreateNestedManyWithoutAccessedByInput
+  dataAccessRequests?: Prisma.DataAccessRequestCreateNestedManyWithoutUserInput
+  dataCorrectionRequests?: Prisma.DataCorrectionRequestCreateNestedManyWithoutUserInput
+  reviewedCorrectionRequests?: Prisma.DataCorrectionRequestCreateNestedManyWithoutReviewedByInput
+  createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
+  releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
+  approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+}
+
+export type UserUncheckedCreateWithoutAdministeredOpeningBalancesInput = {
+  id?: string
+  email: string
+  passwordHash?: string | null
+  emailVerifiedAt?: Date | string | null
+  accountStatus?: $Enums.AccountStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deactivatedAt?: Date | string | null
+  lastLoginAt?: Date | string | null
+  roles?: Prisma.UserRoleUncheckedCreateNestedManyWithoutUserInput
+  borrowerProfile?: Prisma.BorrowerProfileUncheckedCreateNestedOneWithoutUserInput
+  investorProfile?: Prisma.InvestorProfileUncheckedCreateNestedOneWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  oauthAccounts?: Prisma.OAuthAccountUncheckedCreateNestedManyWithoutUserInput
+  securityEvents?: Prisma.SecurityEventUncheckedCreateNestedManyWithoutUserInput
+  accountRestrictions?: Prisma.AccountRestrictionUncheckedCreateNestedManyWithoutUserInput
+  createdRestrictions?: Prisma.AccountRestrictionUncheckedCreateNestedManyWithoutCreatedByInput
+  liftedRestrictions?: Prisma.AccountRestrictionUncheckedCreateNestedManyWithoutLiftedByInput
+  grantedUserRoles?: Prisma.UserRoleUncheckedCreateNestedManyWithoutGrantedByInput
+  createdApplicationVersions?: Prisma.ApplicationVersionUncheckedCreateNestedManyWithoutCreatedByInput
+  applicationReviews?: Prisma.ApplicationReviewUncheckedCreateNestedManyWithoutReviewerInput
+  requestedInformation?: Prisma.InformationRequestUncheckedCreateNestedManyWithoutRequestedByInput
+  createdLoanOffers?: Prisma.LoanOfferUncheckedCreateNestedManyWithoutCreatedByInput
+  loanStatusChanges?: Prisma.LoanStatusHistoryUncheckedCreateNestedManyWithoutChangedByInput
+  wallets?: Prisma.WalletUncheckedCreateNestedManyWithoutOwnerUserInput
+  modelActivationHistories?: Prisma.ModelActivationHistoryUncheckedCreateNestedManyWithoutPerformedByInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  approvedPolicyVersions?: Prisma.PolicyVersionUncheckedCreateNestedManyWithoutApprovedByInput
+  assignedAlerts?: Prisma.AlertUncheckedCreateNestedManyWithoutAssignedToInput
+  alertHistory?: Prisma.AlertHistoryUncheckedCreateNestedManyWithoutActorInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+  supportRequests?: Prisma.SupportRequestUncheckedCreateNestedManyWithoutUserInput
+  feedback?: Prisma.FeedbackUncheckedCreateNestedManyWithoutUserInput
+  supportHistories?: Prisma.SupportHistoryUncheckedCreateNestedManyWithoutActorInput
+  withdrawalRequests?: Prisma.WithdrawalRequestUncheckedCreateNestedManyWithoutUserInput
+  idempotencyRecords?: Prisma.IdempotencyRecordUncheckedCreateNestedManyWithoutUserInput
+  uploadedDocuments?: Prisma.ApplicationDocumentUncheckedCreateNestedManyWithoutUploadedByInput
+  documentAccessLogs?: Prisma.DocumentAccessLogUncheckedCreateNestedManyWithoutAccessedByInput
+  dataAccessRequests?: Prisma.DataAccessRequestUncheckedCreateNestedManyWithoutUserInput
+  dataCorrectionRequests?: Prisma.DataCorrectionRequestUncheckedCreateNestedManyWithoutUserInput
+  reviewedCorrectionRequests?: Prisma.DataCorrectionRequestUncheckedCreateNestedManyWithoutReviewedByInput
+  createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
+  releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
+  approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+}
+
+export type UserCreateOrConnectWithoutAdministeredOpeningBalancesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAdministeredOpeningBalancesInput, Prisma.UserUncheckedCreateWithoutAdministeredOpeningBalancesInput>
+}
+
+export type UserUpsertWithoutAdministeredOpeningBalancesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAdministeredOpeningBalancesInput, Prisma.UserUncheckedUpdateWithoutAdministeredOpeningBalancesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAdministeredOpeningBalancesInput, Prisma.UserUncheckedCreateWithoutAdministeredOpeningBalancesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAdministeredOpeningBalancesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAdministeredOpeningBalancesInput, Prisma.UserUncheckedUpdateWithoutAdministeredOpeningBalancesInput>
+}
+
+export type UserUpdateWithoutAdministeredOpeningBalancesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  roles?: Prisma.UserRoleUpdateManyWithoutUserNestedInput
+  borrowerProfile?: Prisma.BorrowerProfileUpdateOneWithoutUserNestedInput
+  investorProfile?: Prisma.InvestorProfileUpdateOneWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  oauthAccounts?: Prisma.OAuthAccountUpdateManyWithoutUserNestedInput
+  securityEvents?: Prisma.SecurityEventUpdateManyWithoutUserNestedInput
+  accountRestrictions?: Prisma.AccountRestrictionUpdateManyWithoutUserNestedInput
+  createdRestrictions?: Prisma.AccountRestrictionUpdateManyWithoutCreatedByNestedInput
+  liftedRestrictions?: Prisma.AccountRestrictionUpdateManyWithoutLiftedByNestedInput
+  grantedUserRoles?: Prisma.UserRoleUpdateManyWithoutGrantedByNestedInput
+  createdApplicationVersions?: Prisma.ApplicationVersionUpdateManyWithoutCreatedByNestedInput
+  applicationReviews?: Prisma.ApplicationReviewUpdateManyWithoutReviewerNestedInput
+  requestedInformation?: Prisma.InformationRequestUpdateManyWithoutRequestedByNestedInput
+  createdLoanOffers?: Prisma.LoanOfferUpdateManyWithoutCreatedByNestedInput
+  loanStatusChanges?: Prisma.LoanStatusHistoryUpdateManyWithoutChangedByNestedInput
+  wallets?: Prisma.WalletUpdateManyWithoutOwnerUserNestedInput
+  modelActivationHistories?: Prisma.ModelActivationHistoryUpdateManyWithoutPerformedByNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  approvedPolicyVersions?: Prisma.PolicyVersionUpdateManyWithoutApprovedByNestedInput
+  assignedAlerts?: Prisma.AlertUpdateManyWithoutAssignedToNestedInput
+  alertHistory?: Prisma.AlertHistoryUpdateManyWithoutActorNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+  supportRequests?: Prisma.SupportRequestUpdateManyWithoutUserNestedInput
+  feedback?: Prisma.FeedbackUpdateManyWithoutUserNestedInput
+  supportHistories?: Prisma.SupportHistoryUpdateManyWithoutActorNestedInput
+  withdrawalRequests?: Prisma.WithdrawalRequestUpdateManyWithoutUserNestedInput
+  idempotencyRecords?: Prisma.IdempotencyRecordUpdateManyWithoutUserNestedInput
+  uploadedDocuments?: Prisma.ApplicationDocumentUpdateManyWithoutUploadedByNestedInput
+  documentAccessLogs?: Prisma.DocumentAccessLogUpdateManyWithoutAccessedByNestedInput
+  dataAccessRequests?: Prisma.DataAccessRequestUpdateManyWithoutUserNestedInput
+  dataCorrectionRequests?: Prisma.DataCorrectionRequestUpdateManyWithoutUserNestedInput
+  reviewedCorrectionRequests?: Prisma.DataCorrectionRequestUpdateManyWithoutReviewedByNestedInput
+  createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
+  releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
+  approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAdministeredOpeningBalancesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deactivatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  roles?: Prisma.UserRoleUncheckedUpdateManyWithoutUserNestedInput
+  borrowerProfile?: Prisma.BorrowerProfileUncheckedUpdateOneWithoutUserNestedInput
+  investorProfile?: Prisma.InvestorProfileUncheckedUpdateOneWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  oauthAccounts?: Prisma.OAuthAccountUncheckedUpdateManyWithoutUserNestedInput
+  securityEvents?: Prisma.SecurityEventUncheckedUpdateManyWithoutUserNestedInput
+  accountRestrictions?: Prisma.AccountRestrictionUncheckedUpdateManyWithoutUserNestedInput
+  createdRestrictions?: Prisma.AccountRestrictionUncheckedUpdateManyWithoutCreatedByNestedInput
+  liftedRestrictions?: Prisma.AccountRestrictionUncheckedUpdateManyWithoutLiftedByNestedInput
+  grantedUserRoles?: Prisma.UserRoleUncheckedUpdateManyWithoutGrantedByNestedInput
+  createdApplicationVersions?: Prisma.ApplicationVersionUncheckedUpdateManyWithoutCreatedByNestedInput
+  applicationReviews?: Prisma.ApplicationReviewUncheckedUpdateManyWithoutReviewerNestedInput
+  requestedInformation?: Prisma.InformationRequestUncheckedUpdateManyWithoutRequestedByNestedInput
+  createdLoanOffers?: Prisma.LoanOfferUncheckedUpdateManyWithoutCreatedByNestedInput
+  loanStatusChanges?: Prisma.LoanStatusHistoryUncheckedUpdateManyWithoutChangedByNestedInput
+  wallets?: Prisma.WalletUncheckedUpdateManyWithoutOwnerUserNestedInput
   modelActivationHistories?: Prisma.ModelActivationHistoryUncheckedUpdateManyWithoutPerformedByNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   approvedPolicyVersions?: Prisma.PolicyVersionUncheckedUpdateManyWithoutApprovedByNestedInput
@@ -4512,6 +4805,7 @@ export type UserCreateWithoutModelActivationHistoriesInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutModelActivationHistoriesInput = {
@@ -4559,6 +4853,7 @@ export type UserUncheckedCreateWithoutModelActivationHistoriesInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutModelActivationHistoriesInput = {
@@ -4622,6 +4917,7 @@ export type UserUpdateWithoutModelActivationHistoriesInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutModelActivationHistoriesInput = {
@@ -4669,6 +4965,7 @@ export type UserUncheckedUpdateWithoutModelActivationHistoriesInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutAuditLogsInput = {
@@ -4716,6 +5013,7 @@ export type UserCreateWithoutAuditLogsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutAuditLogsInput = {
@@ -4763,6 +5061,7 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutAuditLogsInput = {
@@ -4826,6 +5125,7 @@ export type UserUpdateWithoutAuditLogsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditLogsInput = {
@@ -4873,6 +5173,7 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutApprovedPolicyVersionsInput = {
@@ -4920,6 +5221,7 @@ export type UserCreateWithoutApprovedPolicyVersionsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutApprovedPolicyVersionsInput = {
@@ -4967,6 +5269,7 @@ export type UserUncheckedCreateWithoutApprovedPolicyVersionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutApprovedPolicyVersionsInput = {
@@ -5030,6 +5333,7 @@ export type UserUpdateWithoutApprovedPolicyVersionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutApprovedPolicyVersionsInput = {
@@ -5077,6 +5381,7 @@ export type UserUncheckedUpdateWithoutApprovedPolicyVersionsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutAssignedAlertsInput = {
@@ -5124,6 +5429,7 @@ export type UserCreateWithoutAssignedAlertsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutAssignedAlertsInput = {
@@ -5171,6 +5477,7 @@ export type UserUncheckedCreateWithoutAssignedAlertsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutAssignedAlertsInput = {
@@ -5234,6 +5541,7 @@ export type UserUpdateWithoutAssignedAlertsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAssignedAlertsInput = {
@@ -5281,6 +5589,7 @@ export type UserUncheckedUpdateWithoutAssignedAlertsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutAlertHistoryInput = {
@@ -5328,6 +5637,7 @@ export type UserCreateWithoutAlertHistoryInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutAlertHistoryInput = {
@@ -5375,6 +5685,7 @@ export type UserUncheckedCreateWithoutAlertHistoryInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutAlertHistoryInput = {
@@ -5438,6 +5749,7 @@ export type UserUpdateWithoutAlertHistoryInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAlertHistoryInput = {
@@ -5485,6 +5797,7 @@ export type UserUncheckedUpdateWithoutAlertHistoryInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -5532,6 +5845,7 @@ export type UserCreateWithoutNotificationsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -5579,6 +5893,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -5642,6 +5957,7 @@ export type UserUpdateWithoutNotificationsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -5689,6 +6005,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutNotificationPreferencesInput = {
@@ -5736,6 +6053,7 @@ export type UserCreateWithoutNotificationPreferencesInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutNotificationPreferencesInput = {
@@ -5783,6 +6101,7 @@ export type UserUncheckedCreateWithoutNotificationPreferencesInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutNotificationPreferencesInput = {
@@ -5846,6 +6165,7 @@ export type UserUpdateWithoutNotificationPreferencesInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationPreferencesInput = {
@@ -5893,6 +6213,7 @@ export type UserUncheckedUpdateWithoutNotificationPreferencesInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutSupportRequestsInput = {
@@ -5940,6 +6261,7 @@ export type UserCreateWithoutSupportRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutSupportRequestsInput = {
@@ -5987,6 +6309,7 @@ export type UserUncheckedCreateWithoutSupportRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutSupportRequestsInput = {
@@ -6050,6 +6373,7 @@ export type UserUpdateWithoutSupportRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSupportRequestsInput = {
@@ -6097,6 +6421,7 @@ export type UserUncheckedUpdateWithoutSupportRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutSupportHistoriesInput = {
@@ -6144,6 +6469,7 @@ export type UserCreateWithoutSupportHistoriesInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutSupportHistoriesInput = {
@@ -6191,6 +6517,7 @@ export type UserUncheckedCreateWithoutSupportHistoriesInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutSupportHistoriesInput = {
@@ -6254,6 +6581,7 @@ export type UserUpdateWithoutSupportHistoriesInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSupportHistoriesInput = {
@@ -6301,6 +6629,7 @@ export type UserUncheckedUpdateWithoutSupportHistoriesInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutFeedbackInput = {
@@ -6348,6 +6677,7 @@ export type UserCreateWithoutFeedbackInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutFeedbackInput = {
@@ -6395,6 +6725,7 @@ export type UserUncheckedCreateWithoutFeedbackInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutFeedbackInput = {
@@ -6458,6 +6789,7 @@ export type UserUpdateWithoutFeedbackInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutFeedbackInput = {
@@ -6505,6 +6837,7 @@ export type UserUncheckedUpdateWithoutFeedbackInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutWithdrawalRequestsInput = {
@@ -6552,6 +6885,7 @@ export type UserCreateWithoutWithdrawalRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutWithdrawalRequestsInput = {
@@ -6599,6 +6933,7 @@ export type UserUncheckedCreateWithoutWithdrawalRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutWithdrawalRequestsInput = {
@@ -6662,6 +6997,7 @@ export type UserUpdateWithoutWithdrawalRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWithdrawalRequestsInput = {
@@ -6709,6 +7045,7 @@ export type UserUncheckedUpdateWithoutWithdrawalRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutIdempotencyRecordsInput = {
@@ -6756,6 +7093,7 @@ export type UserCreateWithoutIdempotencyRecordsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutIdempotencyRecordsInput = {
@@ -6803,6 +7141,7 @@ export type UserUncheckedCreateWithoutIdempotencyRecordsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutIdempotencyRecordsInput = {
@@ -6866,6 +7205,7 @@ export type UserUpdateWithoutIdempotencyRecordsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutIdempotencyRecordsInput = {
@@ -6913,6 +7253,7 @@ export type UserUncheckedUpdateWithoutIdempotencyRecordsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutUploadedDocumentsInput = {
@@ -6960,6 +7301,7 @@ export type UserCreateWithoutUploadedDocumentsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutUploadedDocumentsInput = {
@@ -7007,6 +7349,7 @@ export type UserUncheckedCreateWithoutUploadedDocumentsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutUploadedDocumentsInput = {
@@ -7070,6 +7413,7 @@ export type UserUpdateWithoutUploadedDocumentsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUploadedDocumentsInput = {
@@ -7117,6 +7461,7 @@ export type UserUncheckedUpdateWithoutUploadedDocumentsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutDocumentAccessLogsInput = {
@@ -7164,6 +7509,7 @@ export type UserCreateWithoutDocumentAccessLogsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutDocumentAccessLogsInput = {
@@ -7211,6 +7557,7 @@ export type UserUncheckedCreateWithoutDocumentAccessLogsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutDocumentAccessLogsInput = {
@@ -7274,6 +7621,7 @@ export type UserUpdateWithoutDocumentAccessLogsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDocumentAccessLogsInput = {
@@ -7321,6 +7669,7 @@ export type UserUncheckedUpdateWithoutDocumentAccessLogsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutDataAccessRequestsInput = {
@@ -7368,6 +7717,7 @@ export type UserCreateWithoutDataAccessRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutDataAccessRequestsInput = {
@@ -7415,6 +7765,7 @@ export type UserUncheckedCreateWithoutDataAccessRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutDataAccessRequestsInput = {
@@ -7478,6 +7829,7 @@ export type UserUpdateWithoutDataAccessRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDataAccessRequestsInput = {
@@ -7525,6 +7877,7 @@ export type UserUncheckedUpdateWithoutDataAccessRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutDataCorrectionRequestsInput = {
@@ -7572,6 +7925,7 @@ export type UserCreateWithoutDataCorrectionRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutDataCorrectionRequestsInput = {
@@ -7619,6 +7973,7 @@ export type UserUncheckedCreateWithoutDataCorrectionRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutDataCorrectionRequestsInput = {
@@ -7671,6 +8026,7 @@ export type UserCreateWithoutReviewedCorrectionRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutReviewedCorrectionRequestsInput = {
@@ -7718,6 +8074,7 @@ export type UserUncheckedCreateWithoutReviewedCorrectionRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutReviewedCorrectionRequestsInput = {
@@ -7781,6 +8138,7 @@ export type UserUpdateWithoutDataCorrectionRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDataCorrectionRequestsInput = {
@@ -7828,6 +8186,7 @@ export type UserUncheckedUpdateWithoutDataCorrectionRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUpsertWithoutReviewedCorrectionRequestsInput = {
@@ -7886,6 +8245,7 @@ export type UserUpdateWithoutReviewedCorrectionRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReviewedCorrectionRequestsInput = {
@@ -7933,6 +8293,7 @@ export type UserUncheckedUpdateWithoutReviewedCorrectionRequestsInput = {
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutCreatedLegalHoldsInput = {
@@ -7980,6 +8341,7 @@ export type UserCreateWithoutCreatedLegalHoldsInput = {
   reviewedCorrectionRequests?: Prisma.DataCorrectionRequestCreateNestedManyWithoutReviewedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutCreatedLegalHoldsInput = {
@@ -8027,6 +8389,7 @@ export type UserUncheckedCreateWithoutCreatedLegalHoldsInput = {
   reviewedCorrectionRequests?: Prisma.DataCorrectionRequestUncheckedCreateNestedManyWithoutReviewedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutCreatedLegalHoldsInput = {
@@ -8079,6 +8442,7 @@ export type UserCreateWithoutReleasedLegalHoldsInput = {
   reviewedCorrectionRequests?: Prisma.DataCorrectionRequestCreateNestedManyWithoutReviewedByInput
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutReleasedLegalHoldsInput = {
@@ -8126,6 +8490,7 @@ export type UserUncheckedCreateWithoutReleasedLegalHoldsInput = {
   reviewedCorrectionRequests?: Prisma.DataCorrectionRequestUncheckedCreateNestedManyWithoutReviewedByInput
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedCreateNestedManyWithoutApprovedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutReleasedLegalHoldsInput = {
@@ -8189,6 +8554,7 @@ export type UserUpdateWithoutCreatedLegalHoldsInput = {
   reviewedCorrectionRequests?: Prisma.DataCorrectionRequestUpdateManyWithoutReviewedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedLegalHoldsInput = {
@@ -8236,6 +8602,7 @@ export type UserUncheckedUpdateWithoutCreatedLegalHoldsInput = {
   reviewedCorrectionRequests?: Prisma.DataCorrectionRequestUncheckedUpdateManyWithoutReviewedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUpsertWithoutReleasedLegalHoldsInput = {
@@ -8294,6 +8661,7 @@ export type UserUpdateWithoutReleasedLegalHoldsInput = {
   reviewedCorrectionRequests?: Prisma.DataCorrectionRequestUpdateManyWithoutReviewedByNestedInput
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReleasedLegalHoldsInput = {
@@ -8341,6 +8709,7 @@ export type UserUncheckedUpdateWithoutReleasedLegalHoldsInput = {
   reviewedCorrectionRequests?: Prisma.DataCorrectionRequestUncheckedUpdateManyWithoutReviewedByNestedInput
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   approvedRetentionPolicies?: Prisma.RetentionPolicyUncheckedUpdateManyWithoutApprovedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserCreateWithoutApprovedRetentionPoliciesInput = {
@@ -8388,6 +8757,7 @@ export type UserCreateWithoutApprovedRetentionPoliciesInput = {
   reviewedCorrectionRequests?: Prisma.DataCorrectionRequestCreateNestedManyWithoutReviewedByInput
   createdLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldCreateNestedManyWithoutReleasedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserUncheckedCreateWithoutApprovedRetentionPoliciesInput = {
@@ -8435,6 +8805,7 @@ export type UserUncheckedCreateWithoutApprovedRetentionPoliciesInput = {
   reviewedCorrectionRequests?: Prisma.DataCorrectionRequestUncheckedCreateNestedManyWithoutReviewedByInput
   createdLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutCreatedByInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedCreateNestedManyWithoutReleasedByInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedCreateNestedManyWithoutAdministratorInput
 }
 
 export type UserCreateOrConnectWithoutApprovedRetentionPoliciesInput = {
@@ -8498,6 +8869,7 @@ export type UserUpdateWithoutApprovedRetentionPoliciesInput = {
   reviewedCorrectionRequests?: Prisma.DataCorrectionRequestUpdateManyWithoutReviewedByNestedInput
   createdLegalHolds?: Prisma.LegalHoldUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUpdateManyWithoutReleasedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUpdateManyWithoutAdministratorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutApprovedRetentionPoliciesInput = {
@@ -8545,6 +8917,7 @@ export type UserUncheckedUpdateWithoutApprovedRetentionPoliciesInput = {
   reviewedCorrectionRequests?: Prisma.DataCorrectionRequestUncheckedUpdateManyWithoutReviewedByNestedInput
   createdLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutCreatedByNestedInput
   releasedLegalHolds?: Prisma.LegalHoldUncheckedUpdateManyWithoutReleasedByNestedInput
+  administeredOpeningBalances?: Prisma.OpeningBalanceUncheckedUpdateManyWithoutAdministratorNestedInput
 }
 
 
@@ -8587,6 +8960,7 @@ export type UserCountOutputType = {
   createdLegalHolds: number
   releasedLegalHolds: number
   approvedRetentionPolicies: number
+  administeredOpeningBalances: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -8624,6 +8998,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   createdLegalHolds?: boolean | UserCountOutputTypeCountCreatedLegalHoldsArgs
   releasedLegalHolds?: boolean | UserCountOutputTypeCountReleasedLegalHoldsArgs
   approvedRetentionPolicies?: boolean | UserCountOutputTypeCountApprovedRetentionPoliciesArgs
+  administeredOpeningBalances?: boolean | UserCountOutputTypeCountAdministeredOpeningBalancesArgs
 }
 
 /**
@@ -8874,6 +9249,13 @@ export type UserCountOutputTypeCountApprovedRetentionPoliciesArgs<ExtArgs extend
   where?: Prisma.RetentionPolicyWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountAdministeredOpeningBalancesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.OpeningBalanceWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -8921,6 +9303,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   createdLegalHolds?: boolean | Prisma.User$createdLegalHoldsArgs<ExtArgs>
   releasedLegalHolds?: boolean | Prisma.User$releasedLegalHoldsArgs<ExtArgs>
   approvedRetentionPolicies?: boolean | Prisma.User$approvedRetentionPoliciesArgs<ExtArgs>
+  administeredOpeningBalances?: boolean | Prisma.User$administeredOpeningBalancesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -8998,6 +9381,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   createdLegalHolds?: boolean | Prisma.User$createdLegalHoldsArgs<ExtArgs>
   releasedLegalHolds?: boolean | Prisma.User$releasedLegalHoldsArgs<ExtArgs>
   approvedRetentionPolicies?: boolean | Prisma.User$approvedRetentionPoliciesArgs<ExtArgs>
+  administeredOpeningBalances?: boolean | Prisma.User$administeredOpeningBalancesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -9042,6 +9426,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     createdLegalHolds: Prisma.$LegalHoldPayload<ExtArgs>[]
     releasedLegalHolds: Prisma.$LegalHoldPayload<ExtArgs>[]
     approvedRetentionPolicies: Prisma.$RetentionPolicyPayload<ExtArgs>[]
+    administeredOpeningBalances: Prisma.$OpeningBalancePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -9483,6 +9868,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   createdLegalHolds<T extends Prisma.User$createdLegalHoldsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdLegalHoldsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LegalHoldPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   releasedLegalHolds<T extends Prisma.User$releasedLegalHoldsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$releasedLegalHoldsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LegalHoldPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   approvedRetentionPolicies<T extends Prisma.User$approvedRetentionPoliciesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$approvedRetentionPoliciesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RetentionPolicyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  administeredOpeningBalances<T extends Prisma.User$administeredOpeningBalancesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$administeredOpeningBalancesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OpeningBalancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -10765,6 +11151,30 @@ export type User$approvedRetentionPoliciesArgs<ExtArgs extends runtime.Types.Ext
   take?: number
   skip?: number
   distinct?: Prisma.RetentionPolicyScalarFieldEnum | Prisma.RetentionPolicyScalarFieldEnum[]
+}
+
+/**
+ * User.administeredOpeningBalances
+ */
+export type User$administeredOpeningBalancesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the OpeningBalance
+   */
+  select?: Prisma.OpeningBalanceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the OpeningBalance
+   */
+  omit?: Prisma.OpeningBalanceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OpeningBalanceInclude<ExtArgs> | null
+  where?: Prisma.OpeningBalanceWhereInput
+  orderBy?: Prisma.OpeningBalanceOrderByWithRelationInput | Prisma.OpeningBalanceOrderByWithRelationInput[]
+  cursor?: Prisma.OpeningBalanceWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.OpeningBalanceScalarFieldEnum | Prisma.OpeningBalanceScalarFieldEnum[]
 }
 
 /**

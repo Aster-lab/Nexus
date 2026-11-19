@@ -418,8 +418,10 @@ export const ModelName = {
   PlatformAccount: 'PlatformAccount',
   LedgerTransaction: 'LedgerTransaction',
   LedgerEntry: 'LedgerEntry',
+  OpeningBalance: 'OpeningBalance',
   Investment: 'Investment',
   InvestmentContribution: 'InvestmentContribution',
+  InvestmentRefund: 'InvestmentRefund',
   EscrowAccount: 'EscrowAccount',
   EscrowTransaction: 'EscrowTransaction',
   RepaymentSchedule: 'RepaymentSchedule',
@@ -478,7 +480,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "role" | "userRole" | "borrowerProfile" | "investorProfile" | "session" | "oAuthAccount" | "securityEvent" | "accountRestriction" | "loanApplication" | "applicationVersion" | "borrowerFinancialInformation" | "applicationReview" | "informationRequest" | "loanOffer" | "loan" | "loanStatusHistory" | "wallet" | "platformAccount" | "ledgerTransaction" | "ledgerEntry" | "investment" | "investmentContribution" | "escrowAccount" | "escrowTransaction" | "repaymentSchedule" | "scheduleVersion" | "installment" | "repayment" | "payoutAllocation" | "investorPayout" | "modelVersion" | "modelActivationHistory" | "featureSnapshot" | "predictionRecord" | "riskAssessment" | "auditLog" | "platformPolicy" | "policyVersion" | "alert" | "alertHistory" | "notification" | "notificationPreference" | "notificationDelivery" | "supportRequest" | "supportHistory" | "feedback" | "withdrawalRequest" | "idempotencyRecord" | "outboxEvent" | "systemEvent" | "applicationDocument" | "documentSecurityScan" | "documentAccessLog" | "dataAccessRequest" | "dataCorrectionRequest" | "legalHold" | "investorPreference" | "investorBehavior" | "recommendationRun" | "recommendationResult" | "savedLoan" | "savedLoanHistory" | "retentionPolicy" | "retentionExecution" | "backupRecord"
+    modelProps: "user" | "role" | "userRole" | "borrowerProfile" | "investorProfile" | "session" | "oAuthAccount" | "securityEvent" | "accountRestriction" | "loanApplication" | "applicationVersion" | "borrowerFinancialInformation" | "applicationReview" | "informationRequest" | "loanOffer" | "loan" | "loanStatusHistory" | "wallet" | "platformAccount" | "ledgerTransaction" | "ledgerEntry" | "openingBalance" | "investment" | "investmentContribution" | "investmentRefund" | "escrowAccount" | "escrowTransaction" | "repaymentSchedule" | "scheduleVersion" | "installment" | "repayment" | "payoutAllocation" | "investorPayout" | "modelVersion" | "modelActivationHistory" | "featureSnapshot" | "predictionRecord" | "riskAssessment" | "auditLog" | "platformPolicy" | "policyVersion" | "alert" | "alertHistory" | "notification" | "notificationPreference" | "notificationDelivery" | "supportRequest" | "supportHistory" | "feedback" | "withdrawalRequest" | "idempotencyRecord" | "outboxEvent" | "systemEvent" | "applicationDocument" | "documentSecurityScan" | "documentAccessLog" | "dataAccessRequest" | "dataCorrectionRequest" | "legalHold" | "investorPreference" | "investorBehavior" | "recommendationRun" | "recommendationResult" | "savedLoan" | "savedLoanHistory" | "retentionPolicy" | "retentionExecution" | "backupRecord"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2036,6 +2038,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    OpeningBalance: {
+      payload: Prisma.$OpeningBalancePayload<ExtArgs>
+      fields: Prisma.OpeningBalanceFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OpeningBalanceFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpeningBalancePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OpeningBalanceFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpeningBalancePayload>
+        }
+        findFirst: {
+          args: Prisma.OpeningBalanceFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpeningBalancePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OpeningBalanceFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpeningBalancePayload>
+        }
+        findMany: {
+          args: Prisma.OpeningBalanceFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpeningBalancePayload>[]
+        }
+        create: {
+          args: Prisma.OpeningBalanceCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpeningBalancePayload>
+        }
+        createMany: {
+          args: Prisma.OpeningBalanceCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OpeningBalanceCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpeningBalancePayload>[]
+        }
+        delete: {
+          args: Prisma.OpeningBalanceDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpeningBalancePayload>
+        }
+        update: {
+          args: Prisma.OpeningBalanceUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpeningBalancePayload>
+        }
+        deleteMany: {
+          args: Prisma.OpeningBalanceDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OpeningBalanceUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OpeningBalanceUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpeningBalancePayload>[]
+        }
+        upsert: {
+          args: Prisma.OpeningBalanceUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpeningBalancePayload>
+        }
+        aggregate: {
+          args: Prisma.OpeningBalanceAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOpeningBalance>
+        }
+        groupBy: {
+          args: Prisma.OpeningBalanceGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OpeningBalanceGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OpeningBalanceCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OpeningBalanceCountAggregateOutputType> | number
+        }
+      }
+    }
     Investment: {
       payload: Prisma.$InvestmentPayload<ExtArgs>
       fields: Prisma.InvestmentFieldRefs
@@ -2181,6 +2257,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.InvestmentContributionCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.InvestmentContributionCountAggregateOutputType> | number
+        }
+      }
+    }
+    InvestmentRefund: {
+      payload: Prisma.$InvestmentRefundPayload<ExtArgs>
+      fields: Prisma.InvestmentRefundFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.InvestmentRefundFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InvestmentRefundPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.InvestmentRefundFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InvestmentRefundPayload>
+        }
+        findFirst: {
+          args: Prisma.InvestmentRefundFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InvestmentRefundPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.InvestmentRefundFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InvestmentRefundPayload>
+        }
+        findMany: {
+          args: Prisma.InvestmentRefundFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InvestmentRefundPayload>[]
+        }
+        create: {
+          args: Prisma.InvestmentRefundCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InvestmentRefundPayload>
+        }
+        createMany: {
+          args: Prisma.InvestmentRefundCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.InvestmentRefundCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InvestmentRefundPayload>[]
+        }
+        delete: {
+          args: Prisma.InvestmentRefundDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InvestmentRefundPayload>
+        }
+        update: {
+          args: Prisma.InvestmentRefundUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InvestmentRefundPayload>
+        }
+        deleteMany: {
+          args: Prisma.InvestmentRefundDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.InvestmentRefundUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.InvestmentRefundUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InvestmentRefundPayload>[]
+        }
+        upsert: {
+          args: Prisma.InvestmentRefundUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InvestmentRefundPayload>
+        }
+        aggregate: {
+          args: Prisma.InvestmentRefundAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateInvestmentRefund>
+        }
+        groupBy: {
+          args: Prisma.InvestmentRefundGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InvestmentRefundGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.InvestmentRefundCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InvestmentRefundCountAggregateOutputType> | number
         }
       }
     }
@@ -5687,6 +5837,23 @@ export const LedgerEntryScalarFieldEnum = {
 export type LedgerEntryScalarFieldEnum = (typeof LedgerEntryScalarFieldEnum)[keyof typeof LedgerEntryScalarFieldEnum]
 
 
+export const OpeningBalanceScalarFieldEnum = {
+  id: 'id',
+  walletId: 'walletId',
+  administratorUserId: 'administratorUserId',
+  ledgerTransactionId: 'ledgerTransactionId',
+  amountSatang: 'amountSatang',
+  currency: 'currency',
+  idempotencyKey: 'idempotencyKey',
+  reason: 'reason',
+  approvedAt: 'approvedAt',
+  postedAt: 'postedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type OpeningBalanceScalarFieldEnum = (typeof OpeningBalanceScalarFieldEnum)[keyof typeof OpeningBalanceScalarFieldEnum]
+
+
 export const InvestmentScalarFieldEnum = {
   id: 'id',
   investorProfileId: 'investorProfileId',
@@ -5708,6 +5875,18 @@ export const InvestmentContributionScalarFieldEnum = {
 } as const
 
 export type InvestmentContributionScalarFieldEnum = (typeof InvestmentContributionScalarFieldEnum)[keyof typeof InvestmentContributionScalarFieldEnum]
+
+
+export const InvestmentRefundScalarFieldEnum = {
+  id: 'id',
+  investmentId: 'investmentId',
+  amountSatang: 'amountSatang',
+  ledgerTransactionId: 'ledgerTransactionId',
+  idempotencyKey: 'idempotencyKey',
+  createdAt: 'createdAt'
+} as const
+
+export type InvestmentRefundScalarFieldEnum = (typeof InvestmentRefundScalarFieldEnum)[keyof typeof InvestmentRefundScalarFieldEnum]
 
 
 export const EscrowAccountScalarFieldEnum = {
@@ -7291,8 +7470,10 @@ export type GlobalOmitConfig = {
   platformAccount?: Prisma.PlatformAccountOmit
   ledgerTransaction?: Prisma.LedgerTransactionOmit
   ledgerEntry?: Prisma.LedgerEntryOmit
+  openingBalance?: Prisma.OpeningBalanceOmit
   investment?: Prisma.InvestmentOmit
   investmentContribution?: Prisma.InvestmentContributionOmit
+  investmentRefund?: Prisma.InvestmentRefundOmit
   escrowAccount?: Prisma.EscrowAccountOmit
   escrowTransaction?: Prisma.EscrowTransactionOmit
   repaymentSchedule?: Prisma.RepaymentScheduleOmit
