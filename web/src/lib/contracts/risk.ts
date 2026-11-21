@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const RISK_FEATURE_SCHEMA_VERSION = "nexus_risk_features.v1" as const;
+export const NEXUS_RISK_FEATURE_SCHEMA_VERSION = "nexus_risk_features.v2" as const;
 export const RISK_RESPONSE_SCHEMA_VERSION = "nexus_prediction_batch.v1" as const;
 export const PERSISTED_PREDICTION_OUTPUT_SCHEMA_VERSION = "nexus_prediction_output.v1" as const;
 
@@ -65,6 +66,52 @@ export const FeatureSnapshotContractSchema = z
     source_mapping: FeatureMetadataByNameSchema,
   })
   .strict();
+
+// NEXUS-native contract for retraining against THB amounts and application-
+// time bureau inputs. Kept separate from v1 so old LendingClub artifacts and
+// historical snapshots can never be mistaken for this model's input schema.
+export const NEXUS_RISK_FEATURE_NAMES = [
+  "annual_income", "dti", "loan_amount", "acc_open_past_24mths", "bc_util",
+  "lti", "interest_burden", "credit_score", "int_rate", "revol_util", "term_months",
+] as const;
+
+export const NexusRiskFeaturesSchema = z.object({
+  annual_income: finiteNumber.positive(),
+  dti: finiteNumber.nonnegative(), // percentage points
+  loan_amount: finiteNumber.positive(), // THB
+  acc_open_past_24mths: finiteNumber.nonnegative(),
+  bc_util: finiteNumber.nonnegative(), // ratio; may exceed 1 for over-limit accounts
+  lti: finiteNumber.nonnegative(),
+  interest_burden: finiteNumber.nonnegative(),
+  credit_score: finiteNumber.nonnegative(), // bureau-native score; no unapproved scale conversion
+  int_rate: finiteNumber.min(0).max(1),
+  revol_util: finiteNumber.nonnegative(), // ratio; may exceed 1 for over-limit accounts
+  term_months: z.number().int().positive(),
+}).strict();
+
+const NexusFeatureMetadataByNameSchema = z.object({
+  annual_income: z.string().min(1),
+  dti: z.string().min(1),
+  loan_amount: z.string().min(1),
+  acc_open_past_24mths: z.string().min(1),
+  bc_util: z.string().min(1),
+  lti: z.string().min(1),
+  interest_burden: z.string().min(1),
+  credit_score: z.string().min(1),
+  int_rate: z.string().min(1),
+  revol_util: z.string().min(1),
+  term_months: z.string().min(1),
+}).strict();
+
+export const NexusFeatureSnapshotContractSchema = z.object({
+  schema_version: z.literal(NEXUS_RISK_FEATURE_SCHEMA_VERSION),
+  feature_generation_version: z.string().min(1),
+  source_application_version_id: z.uuid(),
+  created_at: z.iso.datetime({ offset: true }),
+  feature_values: NexusRiskFeaturesSchema,
+  feature_units: NexusFeatureMetadataByNameSchema,
+  source_mapping: NexusFeatureMetadataByNameSchema,
+}).strict();
 
 export const VersionedRiskRequestSchema = z
   .object({
@@ -188,6 +235,52 @@ export const InvestorPreferenceContractSchema = z
     loan_purpose: z.array(z.enum(["business", "education", "medical", "personal", "home", "other"])).min(1),
   })
   .strict();
+
+// Persisted financial amounts are satang. Investor preference amounts and the
+// Python recommendation algorithm use THB; the adapter converts the remaining
+// funding amount to THB before scoring.
+export const DynamicRecommendationCandidateSchema = z.object({
+  loan_id: z.uuid(),
+  principal_satang: z.number().int().positive().safe(),
+  funded_satang: z.number().int().nonnegative().safe(),
+  annual_interest_rate: z.number().finite().min(0).max(1),
+  term_months: z.number().int().positive(),
+  loan_purpose: z.enum(["business", "education", "medical", "personal", "home", "other"]),
+  risk_tier: z.enum(["TIER_A", "TIER_B", "TIER_C", "TIER_D"]),
+}).strict().refine((candidate) => candidate.funded_satang < candidate.principal_satang, "Candidate must have remaining funding capacity.");
+
+export const DynamicRecommendationRequestSchema = z.object({
+  schema_version: z.literal("nexus_investor_recommendation_request.v1"),
+  preferences: InvestorPreferenceContractSchema,
+  candidates: z.array(DynamicRecommendationCandidateSchema).max(200),
+}).strict().superRefine((request, ctx) => {
+  const ids = new Set<string>();
+  request.candidates.forEach((candidate, index) => {
+    if (ids.has(candidate.loan_id)) ctx.addIssue({ code: "custom", path: ["candidates", index, "loan_id"], message: "Candidate loan IDs must be unique." });
+    ids.add(candidate.loan_id);
+  });
+});
+
+export const DynamicRecommendationResponseSchema = z.object({
+  schema_version: z.literal("nexus_investor_recommendation_response.v1"),
+  recommendations: z.array(z.object({
+    loan_id: z.uuid(),
+    score: z.number().finite().min(0).max(1),
+    feature_scores: z.object({
+      risk_tier: z.number().finite().min(0).max(1),
+      interest_rate: z.number().finite().min(0).max(1),
+      loan_duration: z.number().finite().min(0).max(1),
+      loan_amount: z.number().finite().min(0).max(1),
+      loan_purpose: z.number().finite().min(0).max(1),
+    }).strict(),
+  }).strict()),
+}).strict().superRefine((response, ctx) => {
+  const ids = new Set<string>();
+  response.recommendations.forEach((recommendation, index) => {
+    if (ids.has(recommendation.loan_id)) ctx.addIssue({ code: "custom", path: ["recommendations", index, "loan_id"], message: "Recommendation loan IDs must be unique." });
+    ids.add(recommendation.loan_id);
+  });
+});
 
 export const RecommendationResultExplanationSchema = z
   .object({

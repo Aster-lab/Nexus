@@ -77,6 +77,32 @@ class CreditDataContract(StrictDocument):
             raise ValueError("report_date must use YYYY-MM-DD format")
         return value
 
+
+class CreditDataV2Contract(StrictDocument):
+    schema_version: Literal["borrower_credit.v2"]
+    entry_id: NonEmpty
+    bureau_name: NonEmpty
+    report_date: StrictStr
+    credit_score: SafeCount
+    inquiry_count_12_months: SafeCount
+    delinquency_count_12_months: SafeCount
+    accounts_opened_past_24_months: SafeCount
+    bankcard_balance_satang: SafeSatang
+    bankcard_credit_limit_satang: PositiveSafeSatang
+    revolving_balance_satang: SafeSatang
+    revolving_credit_limit_satang: PositiveSafeSatang
+
+    @field_validator("report_date")
+    @classmethod
+    def require_iso_calendar_date(cls, value: str) -> str:
+        try:
+            parsed = date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError("report_date must be an ISO calendar date (YYYY-MM-DD)") from exc
+        if parsed.isoformat() != value:
+            raise ValueError("report_date must use YYYY-MM-DD format")
+        return value
+
 class FinancialSourceItem(StrictDocument):
     entry_id: NonEmpty
     data_type: Literal["INCOME", "EXPENSE", "DEBT", "CREDIT"]
@@ -108,7 +134,7 @@ class BorrowerFinancialInformationContract(BaseModel):
     income_data: IncomeDataContract
     expense_data: ExpenseDataContract
     debt_data: DebtDataContract
-    credit_data: CreditDataContract
+    credit_data: CreditDataContract | CreditDataV2Contract
     source_metadata: SourceMetadataContract
 
     @model_validator(mode="after")

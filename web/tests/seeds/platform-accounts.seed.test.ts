@@ -196,17 +196,22 @@ describe("seedPlatformAccounts", () => {
         expect(createMock).not.toHaveBeenCalled();
     });
 
-    it("does not create an account when its status conflicts", async () => {
-        findUniqueMock.mockResolvedValue({
-            ...expectedAccounts[0],
-            status: "ACTIVE",
+    it("preserves an existing operational status", async () => {
+        findUniqueMock.mockImplementation(async ({ where }) => {
+            if (where.accountCode === "1200") {
+                return {
+                    ...expectedAccounts[0],
+                    status: "ACTIVE",
+                };
+            }
+            return null;
         });
 
-        await expect(seedPlatformAccounts()).rejects.toThrow(
-            "PlatformAccount conflict for code 1200",
-        );
-
-        expect(createMock).not.toHaveBeenCalled();
+        await expect(seedPlatformAccounts()).resolves.toBeUndefined();
+        expect(createMock).toHaveBeenCalledTimes(expectedAccounts.length - 1);
+        expect(createMock).not.toHaveBeenCalledWith({
+            data: expectedAccounts[0],
+        });
     });
 
     it("propagates database errors", async () => {

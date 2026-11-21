@@ -7,7 +7,7 @@ const OPENING_BALANCE_ACCOUNT_CODE = "1300";
 const ADMIN_ROLE_CODE = "ADMIN";
 const CURRENCY = "THB";
 const MAX_BIGINT = 9_223_372_036_854_775_807n;
-const MAX_TRANSACTION_RETRIES = 3;
+const MAX_TRANSACTION_RETRIES = 5;
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -99,9 +99,38 @@ function isPrismaError(
   error: unknown,
   code: string,
 ): error is Prisma.PrismaClientKnownRequestError {
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code?: unknown }).code === code,
+  );
+}
+
+function isSerializationConflict(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const candidate = error as {
+    code?: unknown;
+    message?: unknown;
+    meta?: {
+      code?: unknown;
+      driverAdapterError?: {
+        originalCode?: unknown;
+        cause?: { originalCode?: unknown };
+      };
+    };
+  };
+
   return (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === code
+    candidate.code === "P2034" ||
+    candidate.code === "40001" ||
+    candidate.meta?.code === "40001" ||
+    candidate.meta?.driverAdapterError?.originalCode === "40001" ||
+    candidate.meta?.driverAdapterError?.cause?.originalCode === "40001" ||
+    (candidate.code === "P2010" &&
+      typeof candidate.message === "string" &&
+      /\b40001\b/.test(candidate.message))
   );
 }
 
@@ -527,8 +556,12 @@ export async function createOpeningBalance(
         throw error;
       }
 
-      if (isPrismaError(error, "P2034")) {
+      if (isSerializationConflict(error)) {
         if (attempt < MAX_TRANSACTION_RETRIES) {
+          const backoffWindowMs = 50 * 2 ** (attempt - 1);
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.floor(Math.random() * backoffWindowMs)),
+          );
           continue;
         }
 

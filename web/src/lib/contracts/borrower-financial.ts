@@ -50,7 +50,7 @@ export const DebtDataSchema = z.object({
   }).strict()),
 }).strict();
 
-export const CreditDataSchema = z.object({
+export const CreditDataV1Schema = z.object({
   schema_version: z.literal("borrower_credit.v1"),
   entry_id: nonEmptyText,
   bureau_name: nonEmptyText,
@@ -59,6 +59,26 @@ export const CreditDataSchema = z.object({
   inquiry_count_12_months: z.number().int().nonnegative().safe(),
   delinquency_count_12_months: z.number().int().nonnegative().safe(),
 }).strict();
+
+// Bureau fields needed to derive the application-time risk features. Monetary
+// values remain integer satang in storage; feature generation converts them
+// to THB only at the model boundary.
+export const CreditDataV2Schema = z.object({
+  schema_version: z.literal("borrower_credit.v2"),
+  entry_id: nonEmptyText,
+  bureau_name: nonEmptyText,
+  report_date: z.iso.date(),
+  credit_score: z.number().int().nonnegative().safe(),
+  inquiry_count_12_months: z.number().int().nonnegative().safe(),
+  delinquency_count_12_months: z.number().int().nonnegative().safe(),
+  accounts_opened_past_24_months: z.number().int().nonnegative().safe(),
+  bankcard_balance_satang: safeSatang,
+  bankcard_credit_limit_satang: positiveSafeSatang,
+  revolving_balance_satang: safeSatang,
+  revolving_credit_limit_satang: positiveSafeSatang,
+}).strict();
+
+export const CreditDataSchema = z.union([CreditDataV1Schema, CreditDataV2Schema]);
 
 const SourceMetadataSchema = z.object({
   schema_version: z.literal("borrower_financial_sources.v1"),

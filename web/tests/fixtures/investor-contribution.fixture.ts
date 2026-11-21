@@ -195,6 +195,8 @@ export async function createInvestorContributionFixture({
     },
   });
 
+  
+
   return {
     idempotencyKey,
     amountSatang: DEFAULT_AMOUNT,

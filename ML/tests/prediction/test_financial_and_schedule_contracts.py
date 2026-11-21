@@ -75,6 +75,25 @@ def test_financial_contract_rejects_duplicate_ids_and_naive_capture_time():
         BorrowerFinancialInformationContract.model_validate(naive_time)
 
 
+def test_v2_credit_contract_requires_bureau_features_for_nexus_prediction():
+    value = financial_example()
+    value["credit_data"] = {
+        "schema_version": "borrower_credit.v2", "entry_id": "credit-1",
+        "bureau_name": "THAI_CREDIT_BUREAU", "report_date": "2026-10-31",
+        "credit_score": 720, "inquiry_count_12_months": 1,
+        "delinquency_count_12_months": 0, "accounts_opened_past_24_months": 2,
+        "bankcard_balance_satang": 200000, "bankcard_credit_limit_satang": 1000000,
+        "revolving_balance_satang": 300000, "revolving_credit_limit_satang": 1200000,
+    }
+    contract = BorrowerFinancialInformationContract.model_validate(value)
+    assert contract.credit_data.schema_version == "borrower_credit.v2"
+    assert contract.credit_data.accounts_opened_past_24_months == 2
+
+    del value["credit_data"]["revolving_credit_limit_satang"]
+    with pytest.raises(ValidationError):
+        BorrowerFinancialInformationContract.model_validate(value)
+
+
 def test_schedule_inputs_and_snapshot_contracts():
     inputs = ScheduleInputsContract.model_validate({
         "schema_version": "repayment_schedule_inputs.v1", "principal_satang": 12000000,

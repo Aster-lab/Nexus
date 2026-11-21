@@ -1,0 +1,179 @@
+import { prisma } from "../../prisma";
+
+const CURRENCY = "THB";
+const TRANSACTION_TYPE = "BORROWER_REPAYMENT";
+const REFERENCE_TYPE = "LOAN";
+
+export interface RepaymentReceiptItem {
+  repaymentId: string;
+  installmentId: string;
+  installmentNumber: number;
+  ledgerTransactionId: string;
+  principalSatang: bigint;
+  interestSatang: bigint;
+  totalSatang: bigint;
+  remainingBalanceSatang: bigint;
+}
+
+export interface RepaymentReceipt {
+  receiptId: string;
+  loanId: string;
+  ledgerTransactionId: string;
+  status: "POSTED";
+  receiptTimestamp: Date;
+  totalReceivedSatang: bigint;
+  repaymentIds: string[];
+  repayments: RepaymentReceiptItem[];
+}
+
+/**
+ * Builds a receipt from committed repayment and ledger records. This should
+ * be called after the posting transaction resolves, so a receipt is never
+ * returned for an uncommitted or incomplete posting.
+ */
+export async function generateRepaymentReceipt(
+  ledgerTransactionId: string,
+): Promise<RepaymentReceipt> {
+  if (!ledgerTransactionId || !ledgerTransactionId.trim()) {
+    throw new Error("A ledger transaction ID is required to generate a receipt.");
+  }
+
+  const transaction = await prisma.ledgerTransaction.findUnique({
+    where: { id: ledgerTransactionId },
+    select: {
+      id: true,
+      transactionType: true,
+      status: true,
+      referenceType: true,
+      referenceId: true,
+      postedAt: true,
+      entries: {
+        select: {
+          entryType: true,
+          amountSatang: true,
+          currency: true,
+        },
+      },
+      repayments: {
+        select: {
+          id: true,
+          loanId: true,
+          installmentId: true,
+          ledgerTransactionId: true,
+          principalSatang: true,
+          interestSatang: true,
+          feeSatang: true,
+          totalSatang: true,
+          status: true,
+          installment: {
+            select: {
+              installmentNumber: true,
+              principalDueSatang: true,
+              interestDueSatang: true,
+              paidPrincipalSatang: true,
+              paidInterestSatang: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (
+    !transaction ||
+    transaction.status !== "POSTED" ||
+    transaction.postedAt === null ||
+    transaction.transactionType !== TRANSACTION_TYPE ||
+    transaction.referenceType !== REFERENCE_TYPE ||
+    transaction.referenceId === null
+  ) {
+    throw new Error("A posted borrower repayment transaction is required.");
+  }
+
+  if (transaction.repayments.length === 0) {
+    throw new Error("The posted repayment has no persisted repayment rows.");
+  }
+
+  const repayments = [...transaction.repayments].sort(
+    (a, b) =>
+      a.installment.installmentNumber - b.installment.installmentNumber ||
+      a.id.localeCompare(b.id),
+  );
+
+  for (const repayment of repayments) {
+    const remainingPrincipal =
+      repayment.installment.principalDueSatang -
+      repayment.installment.paidPrincipalSatang;
+    const remainingInterest =
+      repayment.installment.interestDueSatang -
+      repayment.installment.paidInterestSatang;
+
+    if (
+      repayment.status !== "POSTED" ||
+      repayment.loanId !== transaction.referenceId ||
+      repayment.ledgerTransactionId !== transaction.id ||
+      repayment.totalSatang !==
+        repayment.principalSatang + repayment.interestSatang + repayment.feeSatang ||
+      remainingPrincipal < 0n ||
+      remainingInterest < 0n
+    ) {
+      throw new Error("Persisted repayment details are inconsistent.");
+    }
+  }
+
+  const totalReceivedSatang = repayments.reduce(
+    (total, repayment) => total + repayment.totalSatang,
+    0n,
+  );
+  const debitEntries = transaction.entries.filter(
+    (entry) => entry.entryType === "DEBIT",
+  );
+  const creditEntries = transaction.entries.filter(
+    (entry) => entry.entryType === "CREDIT",
+  );
+  const debitTotal = debitEntries.reduce(
+    (total, entry) => total + entry.amountSatang,
+    0n,
+  );
+  const creditTotal = creditEntries.reduce(
+    (total, entry) => total + entry.amountSatang,
+    0n,
+  );
+
+  if (
+    transaction.entries.length !== 2 ||
+    debitEntries.length !== 1 ||
+    creditEntries.length !== 1 ||
+    transaction.entries.some((entry) => entry.currency !== CURRENCY) ||
+    debitTotal !== totalReceivedSatang ||
+    creditTotal !== totalReceivedSatang
+  ) {
+    throw new Error("Repayment receipt does not reconcile to its posted ledger entries.");
+  }
+
+  const receiptItems = repayments.map((repayment) => ({
+    repaymentId: repayment.id,
+    installmentId: repayment.installmentId,
+    installmentNumber: repayment.installment.installmentNumber,
+    ledgerTransactionId: repayment.ledgerTransactionId,
+    principalSatang: repayment.principalSatang,
+    interestSatang: repayment.interestSatang,
+    totalSatang: repayment.totalSatang,
+    remainingBalanceSatang:
+      repayment.installment.principalDueSatang -
+      repayment.installment.paidPrincipalSatang +
+      repayment.installment.interestDueSatang -
+      repayment.installment.paidInterestSatang,
+  }));
+
+  return {
+    receiptId: transaction.id,
+    loanId: transaction.referenceId,
+    ledgerTransactionId: transaction.id,
+    status: "POSTED",
+    receiptTimestamp: transaction.postedAt,
+    totalReceivedSatang,
+    repaymentIds: receiptItems.map((item) => item.repaymentId),
+    repayments: receiptItems,
+  };
+}

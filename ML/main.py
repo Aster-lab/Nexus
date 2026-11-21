@@ -11,6 +11,10 @@ from pydantic import BaseModel, ConfigDict, Field,field_validator,model_validato
 from feature_contract import FEATURE_SCHEMA_VERSION, PREDICTION_OUTPUT_SCHEMA_VERSION, PREDICTION_RESPONSE_SCHEMA_VERSION
 from predict import FEATURE_NAMES,RiskEngine
 from recommendation.recommendation_service import get_recommendations
+from recommendation.contracts import InvestorPreferenceContract
+from recommendation.data.json_repository import load_json
+from recommendation.data.path import RECOMMENDATION_CONFIG_PATH
+from recommendation.recommend import score_dynamic_candidates
 
 logger = logging.getLogger(__name__)
 #singleton reference
@@ -163,6 +167,78 @@ class PredictionBatchResponseSchema(BaseModel):
             raise ValueError("success response cannot contain validation errors")
         if self.status == "partial_success" and not self.errors:
             raise ValueError("partial_success response must contain validation errors")
+        return self
+
+
+class DynamicRecommendationCandidateSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    loan_id: str = Field(min_length=36, max_length=36)
+    principal_satang: int = Field(gt=0)
+    funded_satang: int = Field(ge=0)
+    annual_interest_rate: float = Field(ge=0, le=1, allow_inf_nan=False)
+    term_months: int = Field(gt=0)
+    loan_purpose: Literal["business", "education", "medical", "personal", "home", "other"]
+    risk_tier: Literal["TIER_A", "TIER_B", "TIER_C", "TIER_D"]
+
+    @field_validator("loan_id")
+    @classmethod
+    def require_uuid(cls, value: str) -> str:
+        from uuid import UUID
+        try:
+            UUID(value)
+        except ValueError:
+            raise ValueError("loan_id must be a UUID") from None
+        return value
+
+    @model_validator(mode="after")
+    def validate_funding_amount(self):
+        if self.funded_satang >= self.principal_satang:
+            raise ValueError("candidate must have remaining funding capacity")
+        return self
+
+
+class DynamicRecommendationRequestSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    schema_version: Literal["nexus_investor_recommendation_request.v1"]
+    preferences: InvestorPreferenceContract
+    candidates: List[DynamicRecommendationCandidateSchema] = Field(max_length=200)
+
+    @model_validator(mode="after")
+    def validate_unique_candidates(self):
+        ids = [candidate.loan_id for candidate in self.candidates]
+        if len(ids) != len(set(ids)):
+            raise ValueError("candidate loan IDs must be unique")
+        return self
+
+
+class RecommendationFeatureScoresSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    risk_tier: float = Field(ge=0, le=1, allow_inf_nan=False)
+    interest_rate: float = Field(ge=0, le=1, allow_inf_nan=False)
+    loan_duration: float = Field(ge=0, le=1, allow_inf_nan=False)
+    loan_amount: float = Field(ge=0, le=1, allow_inf_nan=False)
+    loan_purpose: float = Field(ge=0, le=1, allow_inf_nan=False)
+
+
+class DynamicRecommendationItemSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    loan_id: str
+    score: float = Field(ge=0, le=1, allow_inf_nan=False)
+    feature_scores: RecommendationFeatureScoresSchema
+
+
+class DynamicRecommendationResponseSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    schema_version: Literal["nexus_investor_recommendation_response.v1"]
+    recommendations: List[DynamicRecommendationItemSchema]
+
+    @model_validator(mode="after")
+    def validate_unique_results(self):
+        ids = [item.loan_id for item in self.recommendations]
+        if len(ids) != len(set(ids)):
+            raise ValueError("recommendation loan IDs must be unique")
         return self
 
 
@@ -345,6 +421,28 @@ def recommend_credit_loans(current_time: str) -> Dict[str, Any]:
                 "message": "Recommendations could not be generated from the current data.",
             },
         ) from exc
+
+
+@app.post('/recommendations', status_code=status.HTTP_200_OK)
+def recommend_nexus_candidates(
+    request: DynamicRecommendationRequestSchema,
+    _: None = Depends(require_ml_service_token),
+) -> Dict[str, Any]:
+    """Rank the authenticated backend's eligible, investor-specific candidates."""
+    try:
+        config = load_json(RECOMMENDATION_CONFIG_PATH)
+        result = score_dynamic_candidates(
+            preferences=request.preferences.model_dump(),
+            candidates=[candidate.model_dump() for candidate in request.candidates],
+            config=config,
+        )
+        return DynamicRecommendationResponseSchema.model_validate(result).model_dump(mode="json")
+    except (FileNotFoundError, ValueError, KeyError):
+        logger.exception("Dynamic recommendation request could not be processed")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"error_code": "RECOMMENDATION_SERVICE_UNAVAILABLE"},
+        ) from None
     except Exception as exc:
         logger.exception("Unexpected error while generating recommendations")
         raise HTTPException(

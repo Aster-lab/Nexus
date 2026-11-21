@@ -3,20 +3,39 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // In-memory Prisma mock shared by the seed function and tests.
 const { mockPrisma, policies, versions } = vi.hoisted(() => {
-  const policies: any[] = [];
-  const versions: any[] = [];
+  type MockPolicy = {
+    id: string;
+    policyCode: string;
+    name: string;
+    description: string;
+  };
+  type MockPolicyVersion = {
+    id: string;
+    policyId: string;
+    versionNumber: number;
+    policyValues: Record<string, unknown>;
+    status: string;
+    approvedByUserId: string | null;
+    effectiveAt: Date | null;
+  };
+  type PolicyVersionUniqueInput = {
+    policyId_versionNumber: { policyId: string; versionNumber: number };
+  };
+
+  const policies: MockPolicy[] = [];
+  const versions: MockPolicyVersion[] = [];
 
   const tx = {
     platformPolicy: {
-      findUnique: vi.fn(async ({ where }: any) => {
+      findUnique: vi.fn(async ({ where }: { where: { policyCode: string } }) => {
         return (
           policies.find(
-            (policy) => policy.policyCode === where.policyCode
+            (policy) => policy.policyCode === where.policyCode,
           ) ?? null
         );
       }),
 
-      create: vi.fn(async ({ data }: any) => {
+      create: vi.fn(async ({ data }: { data: Omit<MockPolicy, "id"> }) => {
         const policy = {
           id: `policy-${policies.length + 1}`,
           ...data,
@@ -28,7 +47,7 @@ const { mockPrisma, policies, versions } = vi.hoisted(() => {
     },
 
     policyVersion: {
-      findUnique: vi.fn(async ({ where }: any) => {
+      findUnique: vi.fn(async ({ where }: { where: PolicyVersionUniqueInput }) => {
         return (
           versions.find(
             (version) =>
@@ -39,7 +58,7 @@ const { mockPrisma, policies, versions } = vi.hoisted(() => {
         );
       }),
 
-      create: vi.fn(async ({ data }: any) => {
+      create: vi.fn(async ({ data }: { data: Omit<MockPolicyVersion, "id"> }) => {
         const version = {
           id: `version-${versions.length + 1}`,
           ...data,
@@ -52,7 +71,7 @@ const { mockPrisma, policies, versions } = vi.hoisted(() => {
   };
 
   const mockPrisma = {
-    $transaction: vi.fn(async (callback: any) => callback(tx)),
+    $transaction: vi.fn(async (callback: (transaction: typeof tx) => Promise<void>) => callback(tx)),
   };
 
   return { mockPrisma, policies, versions };
@@ -124,12 +143,17 @@ describe("seedPlatformPolicies", () => {
 
   it("rejects an existing version with conflicting policy values", async () => {
     await seedPlatformPolicies();
-
+    
     const existingVersion = versions.find(
       (version) => version.policyId === policies.find(
         (policy) => policy.policyCode === "LOAN_INTEREST_POLICY"
       )?.id
     );
+    expect(existingVersion).toBeDefined();
+
+    if (!existingVersion) {
+      throw new Error("Expected policy version was not found");
+    }
 
     expect(existingVersion).toBeDefined();
 

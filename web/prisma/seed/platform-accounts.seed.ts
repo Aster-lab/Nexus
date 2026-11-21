@@ -48,10 +48,10 @@ export async function seedPlatformAccounts() {
 
             if (existing){
                 const matches =
+                    existing.accountCode == account.accountCode &&
                     existing.accountName == account.accountName &&
                     existing.accountType == account.accountType &&
-                    existing.currency == account.currency &&
-                    existing.status == account.status;
+                    existing.currency == account.currency;
                 
                 if  (!matches) {
                     throw new Error(
@@ -59,7 +59,9 @@ export async function seedPlatformAccounts() {
                         "Existing record does not match the approved seed definition"
                     )
                 }
-                console.log(`PlatformAccount ${account.accountCode} already exists; skipping.`);
+                console.log(
+                    `PlatformAccount ${account.accountCode} already exists; preserving status ${existing.status}.`,
+                );
                 continue;
             }
             await tx.platformAccount.create({data: account,});

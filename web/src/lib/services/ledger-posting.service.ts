@@ -1,0 +1,363 @@
+
+import { Prisma } from "../../generated/prisma/client";
+import {prisma} from "../prisma";
+
+const CURRENCY = "THB";
+
+export interface PostWalletTransferInput {
+  transactionType: string;
+  referenceType: string;
+  referenceId: string;
+  description: string;
+  idempotencyKey: string;
+
+  debitWalletId: string;
+  creditWalletId: string;
+
+  amountSatang: bigint;
+}
+
+export interface PostedWalletTransfer {
+  ledgerTransactionId: string;
+  amountSatang: bigint;
+  reused: boolean;
+}
+
+function validateInput(input: PostWalletTransferInput): void {
+  if (
+    !input.transactionType ||
+    !input.referenceType ||
+    !input.referenceId ||
+    !input.description ||
+    !input.idempotencyKey ||
+    !input.debitWalletId ||
+    !input.creditWalletId
+  ) {
+    throw new Error("Ledger transfer input is incomplete.");
+  }
+
+  if (input.amountSatang <= 0n) {
+    throw new Error("Transfer amount must be greater than zero.");
+  }
+
+  if (input.debitWalletId === input.creditWalletId) {
+    throw new Error("Debit and credit wallets must be different.");
+  }
+}
+
+async function findExistingPosting(
+  tx: Prisma.TransactionClient,
+  input: PostWalletTransferInput,
+): Promise<PostedWalletTransfer | null> {
+  const existing = await tx.ledgerTransaction.findUnique({
+    where: {
+      idempotencyKey: input.idempotencyKey,
+    },
+    include: {
+      entries: {
+        select: {
+          walletId: true,
+          platformAccountId: true,
+          entryType: true,
+          amountSatang: true,
+          currency: true,
+        },
+      },
+    },
+  });
+
+  if (!existing) {
+    return null;
+  }
+
+  if (
+    existing.status !== "POSTED" ||
+    existing.transactionType !== input.transactionType ||
+    existing.referenceType !== input.referenceType ||
+    existing.referenceId !== input.referenceId
+  ) {
+    throw new Error(
+      "Idempotency key has already been used for a different or incomplete operation.",
+    );
+  }
+
+  const debitEntries = existing.entries.filter(
+    (entry) =>
+      entry.walletId === input.debitWalletId &&
+      entry.platformAccountId === null &&
+      entry.entryType === "DEBIT",
+  );
+
+  const creditEntries = existing.entries.filter(
+    (entry) =>
+      entry.walletId === input.creditWalletId &&
+      entry.platformAccountId === null &&
+      entry.entryType === "CREDIT",
+  );
+
+  const valid =
+    existing.entries.length === 2 &&
+    debitEntries.length === 1 &&
+    creditEntries.length === 1 &&
+    debitEntries[0].amountSatang === input.amountSatang &&
+    creditEntries[0].amountSatang === input.amountSatang &&
+    debitEntries[0].currency === CURRENCY &&
+    creditEntries[0].currency === CURRENCY;
+
+  if (!valid) {
+    throw new Error(
+      "Idempotency key conflicts with the original ledger posting.",
+    );
+  }
+
+  return {
+    ledgerTransactionId: existing.id,
+    amountSatang: input.amountSatang,
+    reused: true,
+  };
+}
+
+/**
+ * Posts a balanced transfer between two existing wallets.
+ *
+ * MUST be called inside the caller's Prisma transaction.
+ *
+ * Caller responsibilities:
+ * - Acquire locks in the established global lock order.
+ * - Resolve and validate the business-specific wallet ownership.
+ * - Re-read wallet balances after locking.
+ * - Use Serializable isolation.
+ * - Retry the entire transaction on recognized serialization conflicts.
+ *
+ * Wallet balance projections are service-owned.
+ * Database triggers validate reconciliation; they do not mutate balances.
+ */
+export async function postWalletTransfer(
+  tx: Prisma.TransactionClient,
+  input: PostWalletTransferInput,
+): Promise<PostedWalletTransfer> {
+  validateInput(input);
+
+  // Return the original successful posting for an identical retry.
+  const existing = await findExistingPosting(tx, input);
+
+  if (existing) {
+    return existing;
+  }
+
+  const wallets = await tx.wallet.findMany({
+    where: {
+      id: {
+        in: [
+          input.debitWalletId,
+          input.creditWalletId,
+        ],
+      },
+    },
+    select: {
+      id: true,
+      ownerUserId: true,
+      ownerPlatformAccountId: true,
+      balanceSatang: true,
+      currency: true,
+      status: true,
+    },
+  });
+
+  const debitWallet = wallets.find(
+    (wallet) => wallet.id === input.debitWalletId,
+  );
+
+  const creditWallet = wallets.find(
+    (wallet) => wallet.id === input.creditWalletId,
+  );
+
+  if (!debitWallet || !creditWallet) {
+    throw new Error("One or both wallets do not exist.");
+  }
+
+  for (const wallet of [debitWallet, creditWallet]) {
+    if (wallet.status !== "ACTIVE") {
+      throw new Error("Both wallets must be ACTIVE.");
+    }
+
+    if (wallet.currency !== CURRENCY) {
+      throw new Error("Only THB wallet transfers are supported.");
+    }
+
+    if (
+      (wallet.ownerUserId === null) ===
+      (wallet.ownerPlatformAccountId === null)
+    ) {
+      throw new Error("Wallet must have exactly one owner.");
+    }
+  }
+
+  if (debitWallet.balanceSatang < input.amountSatang) {
+    throw new Error("Insufficient debit wallet balance.");
+  }
+
+  // 1. Create DRAFT transaction header.
+  const transaction = await tx.ledgerTransaction.create({
+    data: {
+      transactionType: input.transactionType,
+      status: "DRAFT",
+      idempotencyKey: input.idempotencyKey,
+      referenceType: input.referenceType,
+      referenceId: input.referenceId,
+      description: input.description,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  // 2. Create the two balanced wallet entries.
+  await tx.ledgerEntry.createMany({
+    data: [
+      {
+        ledgerTransactionId: transaction.id,
+        walletId: input.debitWalletId,
+        platformAccountId: null,
+        entryType: "DEBIT",
+        amountSatang: input.amountSatang,
+        currency: CURRENCY,
+      },
+      {
+        ledgerTransactionId: transaction.id,
+        walletId: input.creditWalletId,
+        platformAccountId: null,
+        entryType: "CREDIT",
+        amountSatang: input.amountSatang,
+        currency: CURRENCY,
+      },
+    ],
+  });
+
+  // 3. Update the debit wallet exactly once.
+  const debitUpdate = await tx.wallet.updateMany({
+    where: {
+      id: input.debitWalletId,
+      status: "ACTIVE",
+      currency: CURRENCY,
+      balanceSatang: {
+        gte: input.amountSatang,
+      },
+    },
+    data: {
+      balanceSatang: {
+        decrement: input.amountSatang,
+      },
+    },
+  });
+
+  if (debitUpdate.count !== 1) {
+    throw new Error(
+      "Debit wallet balance changed or is insufficient.",
+    );
+  }
+
+  // 4. Update the credit wallet exactly once.
+  const creditUpdate = await tx.wallet.updateMany({
+    where: {
+      id: input.creditWalletId,
+      status: "ACTIVE",
+      currency: CURRENCY,
+    },
+    data: {
+      balanceSatang: {
+        increment: input.amountSatang,
+      },
+    },
+  });
+
+  if (creditUpdate.count !== 1) {
+    throw new Error("Could not update credit wallet.");
+  }
+
+  // 5. Perform the only DRAFT -> POSTED transition.
+  const posted = await tx.ledgerTransaction.updateMany({
+    where: {
+      id: transaction.id,
+      status: "DRAFT",
+    },
+    data: {
+      status: "POSTED",
+      postedAt: new Date(),
+    },
+  });
+
+  if (posted.count !== 1) {
+    throw new Error("Ledger transaction could not be posted.");
+  }
+
+  return {
+    ledgerTransactionId: transaction.id,
+    amountSatang: input.amountSatang,
+    reused: false,
+  };
+}
+
+
+export async function withSerializableTransactionRetry<T>(
+  operation: (tx: Prisma.TransactionClient) => Promise<T>,
+  maxAttempts = 5,
+): Promise<T> {
+  if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {
+    throw new Error("maxAttempts must be a positive integer.");
+  }
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await prisma.$transaction(operation, {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        maxWait: 10_000,
+        timeout: 30_000,
+      });
+    } catch (error) {
+      const knownError =
+        error && typeof error === "object"
+          ? (error as {
+              code?: unknown;
+              meta?: { code?: unknown };
+              message?: unknown;
+            })
+          : undefined;
+      const prismaCode = knownError?.code;
+      const postgresCode = knownError?.meta?.code;
+      const errorMessage =
+        typeof knownError?.message === "string" ? knownError.message : "";
+
+      // Prisma's PostgreSQL adapter may surface SQLSTATE 40001 directly for
+      // raw FOR UPDATE statements, while model operations wrap it as P2034 or
+      // P2010. Handle all documented shapes without relying on instanceof,
+      // which can differ across generated Prisma runtimes.
+      const isSerializationConflict =
+        prismaCode === "P2034" ||
+        prismaCode === "40001" ||
+        postgresCode === "40001" ||
+        (prismaCode === "P2010" && /\b40001\b/.test(errorMessage));
+
+      const isUniqueConflict = prismaCode === "P2002";
+
+      const retryable =
+        isSerializationConflict ||
+        isUniqueConflict;
+
+      if (!retryable || attempt === maxAttempts) {
+        throw error;
+      }
+
+      // A short exponential backoff with jitter prevents two transactions
+      // that collided once from retrying in lockstep and colliding again.
+      const backoffWindowMs = 50 * 2 ** (attempt - 1);
+      const jitterMs = Math.floor(Math.random() * backoffWindowMs);
+      await new Promise((resolve) =>
+        setTimeout(resolve, jitterMs),
+      );
+    }
+  }
+
+  throw new Error("Serializable transaction retry limit exceeded.");
+}
+
