@@ -6157,6 +6157,7 @@ export const NotificationScalarFieldEnum = {
   category: 'category',
   title: 'title',
   content: 'content',
+  actionPath: 'actionPath',
   status: 'status',
   createdAt: 'createdAt'
 } as const

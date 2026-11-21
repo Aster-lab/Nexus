@@ -30,7 +30,11 @@ export async function GET(request: Request): Promise<Response> {
         status: true,
       },
     });
-    if (!wallet) return apiSuccessResponse({ wallet: null, transactions: [] });
+    if (!wallet) return apiSuccessResponse({
+      wallet: null,
+      transactions: [],
+      pagination: { page: pagination.page, limit: pagination.limit, total: 0, totalPages: 0, hasPreviousPage: false, hasNextPage: false },
+    });
 
     const where = {
       walletId: wallet.id,
@@ -56,6 +60,7 @@ export async function GET(request: Request): Promise<Response> {
               description: true,
               status: true,
               postedAt: true,
+              repayments: { select: { id: true, loanId: true, status: true } },
             },
           },
         },
@@ -71,6 +76,7 @@ export async function GET(request: Request): Promise<Response> {
         referenceType: entry.ledgerTransaction.referenceType,
         referenceId: entry.ledgerTransaction.referenceId,
         description: entry.ledgerTransaction.description,
+        repayments: entry.ledgerTransaction.repayments,
         direction: entry.entryType,
         amountSatang: entry.amountSatang.toString(),
         currency: entry.currency,

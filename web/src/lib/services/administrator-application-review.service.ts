@@ -1,6 +1,7 @@
 import { Prisma } from "../../generated/prisma/client";
 import { prisma } from "../prisma";
 import { requireFinancialAdministrator } from "./financial-authorization.service";
+import { createInAppNotification } from "./notification.service";
 
 export type AdministratorApplicationDecision = "APPROVED" | "REJECTED";
 
@@ -26,7 +27,7 @@ export async function decideLoanApplication(input: {
     await tx.$queryRaw<Array<{ id: string }>>`SELECT id FROM loan_applications WHERE id = ${input.applicationId}::uuid FOR UPDATE`;
     const application = await tx.loanApplication.findUnique({
       where: { id: input.applicationId },
-      select: { id: true, status: true, currentVersionId: true, submittedAt: true },
+      select: { id: true, status: true, currentVersionId: true, submittedAt: true, borrowerProfile: { select: { userId: true } } },
     });
     if (!application) throw new AdministratorApplicationReviewError("APPLICATION_NOT_FOUND", "Application not found.");
     if (!application.currentVersionId || !application.submittedAt || !["SUBMITTED", "UNDER_REVIEW"].includes(application.status)) {
@@ -50,6 +51,15 @@ export async function decideLoanApplication(input: {
       data: { status: nextStatus, ...(nextStatus === "REJECTED" ? { closedAt: now } : {}) },
     });
     if (changed.count !== 1) throw new AdministratorApplicationReviewError("APPLICATION_NOT_REVIEWABLE", "Application state changed before the decision was saved.");
+    await createInAppNotification(tx, {
+      userId: application.borrowerProfile.userId,
+      category: "APPLICATION_STATUS",
+      title: input.decision === "APPROVED" ? "Application approved" : "Application update",
+      content: input.decision === "APPROVED"
+        ? "Your application has been approved. Review it in your borrower workspace for next steps."
+        : "A decision has been recorded for your application. Review the application for next steps.",
+      actionPath: `/borrower/applications/${application.id}`,
+    });
     await tx.auditLog.create({
       data: {
         actorUserId: input.actorUserId,

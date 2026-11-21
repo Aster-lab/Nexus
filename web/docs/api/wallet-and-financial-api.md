@@ -28,6 +28,8 @@ All keys are trimmed and limited to 255 characters. Clients should generate a hi
 
 Investor portfolio, investment, payout, and allocation endpoints expose only records scoped to the authenticated investor. Administrator repayment, payout, funding, audit, and reconciliation views require the administrator role. Monetary amounts remain satang strings. See [borrower](borrower-api.md), [investor](investor-api.md), and [administrator](administrator-api.md) endpoint details.
 
+Borrower and investor wallet activity endpoints derive wallet ownership from the authenticated identity and return posted ledger entries only. Administrator wallet and ledger listing endpoints are read-only and require an administrator session.
+
 ## Representative repayment request
 
 ```http

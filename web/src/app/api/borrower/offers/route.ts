@@ -14,14 +14,7 @@ export async function GET(request: Request): Promise<Response> {
     requireRole(identity, "BORROWER");
     if (!identity.borrowerProfile) throw new ApiError("FORBIDDEN", "A borrower profile is required.", 403);
     const pagination = parsePagination(new URL(request.url).searchParams, { sortFields: ["createdAt", "expiresAt"] });
-    const where = {
-      status: "ISSUED" as const,
-      expiresAt: { gt: new Date() },
-      application: {
-        borrowerProfileId: identity.borrowerProfile.id,
-        status: "APPROVED" as const,
-      },
-    };
+    const where = { application: { borrowerProfileId: identity.borrowerProfile.id } };
     const orderBy = pagination.sortBy === "expiresAt"
       ? { expiresAt: pagination.sortOrder }
       : { createdAt: pagination.sortOrder };
@@ -33,21 +26,43 @@ export async function GET(request: Request): Promise<Response> {
         take: pagination.limit,
         select: {
           id: true,
+          applicationId: true,
           principalSatang: true,
           annualInterestRate: true,
           termMonths: true,
           repaymentFrequency: true,
           expiresAt: true,
           status: true,
+          acceptedAt: true,
+          createdAt: true,
+          loan: { select: { id: true } },
+          application: { select: { status: true, currentVersionId: true } },
+          applicationVersionId: true,
         },
       }),
       prisma.loanOffer.count({ where }),
     ]);
-    const data = offers.map((offer) => ({
-      ...offer,
-      principalSatang: offer.principalSatang.toString(),
-      annualInterestRate: offer.annualInterestRate.toString(),
-    }));
+    const data = offers.map((offer) => {
+      const now = new Date();
+      return {
+        id: offer.id,
+        applicationId: offer.applicationId,
+        principalSatang: offer.principalSatang.toString(),
+        annualInterestRate: offer.annualInterestRate.toString(),
+        termMonths: offer.termMonths,
+        repaymentFrequency: offer.repaymentFrequency,
+        expiresAt: offer.expiresAt,
+        status: offer.status,
+        isExpired: offer.status === "ISSUED" && offer.expiresAt <= now,
+        acceptedAt: offer.acceptedAt,
+        createdAt: offer.createdAt,
+        permissions: {
+          canAccept: offer.status === "ISSUED" && offer.expiresAt > now &&
+            offer.application.status === "APPROVED" &&
+            offer.application.currentVersionId === offer.applicationVersionId && !offer.loan,
+        },
+      };
+    });
     return apiPaginatedResponse(data, pagination, total);
   } catch (error) {
     return apiErrorResponseFrom(error);

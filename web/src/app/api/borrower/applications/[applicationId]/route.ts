@@ -17,7 +17,12 @@ function serialize(application: {
   id: string;
   borrowerProfileId: string;
   status: string;
+  createdAt: Date;
+  updatedAt: Date;
   submittedAt: Date | null;
+  closedAt: Date | null;
+  financialReviews: Array<{ id: string; decision: string; reason: string; createdAt: Date }>;
+  informationRequests: Array<{ id: string; requestDetails: unknown; status: string; createdAt: Date }>;
   currentVersion: {
     id: string;
     versionNumber: number;
@@ -28,6 +33,7 @@ function serialize(application: {
 }) {
   return {
     ...application,
+    permissions: { canEdit: application.status === "DRAFT", canSubmit: application.status === "DRAFT" && application.currentVersion !== null },
     currentVersion: application.currentVersion ? {
       ...application.currentVersion,
       requestedPrincipalSatang: application.currentVersion.requestedPrincipalSatang.toString(),
@@ -50,7 +56,12 @@ export async function GET(
         id: true,
         borrowerProfileId: true,
         status: true,
+        createdAt: true,
+        updatedAt: true,
         submittedAt: true,
+        closedAt: true,
+        financialReviews: { select: { id: true, decision: true, reason: true, createdAt: true }, orderBy: { createdAt: "desc" } },
+        informationRequests: { select: { id: true, requestDetails: true, status: true, createdAt: true }, orderBy: { createdAt: "desc" } },
         currentVersion: {
           select: {
             id: true,

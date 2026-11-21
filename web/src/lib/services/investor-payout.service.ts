@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Prisma } from "../../generated/prisma/client";
 import { prisma } from "../prisma";
 import { requireFinancialAdministrator } from "./financial-authorization.service";
+import { createInAppNotification } from "./notification.service";
 import {
   postWalletTransfer,
   withSerializableTransactionRetry,
@@ -312,6 +313,14 @@ async function postInvestorPayoutInTransaction(
     tx, payout.id, transfer.ledgerTransactionId, completedAt,
   );
   if (updated.count !== 1) throw new Error("Investor payout could not be completed.");
+
+  await createInAppNotification(tx, {
+    userId: allocation.investment.investorProfile.userId,
+    category: "PAYOUT",
+    title: "Investor payout completed",
+    content: "A repayment allocation has been paid to your simulated wallet. View payout history for details.",
+    actionPath: "/investor/payouts",
+  });
 
   await tx.auditLog.create({
     data: {

@@ -1,0 +1,40 @@
+{
+  "investor_id": 1,
+  "account": {
+    "status": "ACTIVE",
+    "verified": true,
+    "onboarding_completed": true
+  },
+  "eligibility": {
+    "age": 35,
+    "country": "Thailand",
+    "investor_type": "INDIVIDUAL",
+    "qualified_investor": true
+  },
+  "preferences": {
+    "risk_tier": ["TIER_A", "TIER_B", "TIER_C", "TIER_D"],
+    "interest_rate": { "min": 0, "max": 30 },
+    "loan_duration": { "min": 1, "max": 60 },
+    "investment_amount": { "min": 100, "max": 50000 },
+    "loan_purpose": ["business", "education", "medical", "personal", "home", "other"]
+  },
+  "financial": {
+    "investment_capacity": { "minimum": 100, "maximum": 50000 },
+    "available_balance": 50000
+  },
+  "exposure": {
+    "proposed_amount": 2000,
+    "limits": {
+      "total": 50000,
+      "per_loan": 5000,
+      "per_borrower": 10000,
+      "per_purpose": 20000
+    },
+    "current": {
+      "total": 0,
+      "per_loan": 0,
+      "per_borrower": 0,
+      "per_purpose": 0
+    }
+  }
+}

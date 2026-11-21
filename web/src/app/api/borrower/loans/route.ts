@@ -32,16 +32,70 @@ export async function GET(request: Request): Promise<Response> {
           fundedAt: true,
           disbursedAt: true,
           createdAt: true,
+          repaymentSchedule: {
+            select: {
+              currentVersion: {
+                select: {
+                  installments: {
+                    select: {
+                      dueDate: true,
+                      principalDueSatang: true,
+                      interestDueSatang: true,
+                      paidPrincipalSatang: true,
+                      paidInterestSatang: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       }),
       prisma.loan.count({ where }),
     ]);
-    const data = loans.map((loan) => ({
-      ...loan,
-      principalSatang: loan.principalSatang.toString(),
-      fundedSatang: loan.fundedSatang.toString(),
-      annualInterestRate: loan.annualInterestRate.toString(),
-    }));
+    const data = loans.map((loan) => {
+      const installments = loan.repaymentSchedule?.currentVersion?.installments;
+      if (!installments) return {
+        id: loan.id,
+        status: loan.status,
+        principalSatang: loan.principalSatang.toString(),
+        originalPrincipalSatang: loan.principalSatang.toString(),
+        fundedSatang: loan.fundedSatang.toString(),
+        annualInterestRate: loan.annualInterestRate.toString(),
+        termMonths: loan.termMonths,
+        fundingDeadline: loan.fundingDeadline,
+        fundedAt: loan.fundedAt,
+        disbursedAt: loan.disbursedAt,
+        createdAt: loan.createdAt,
+        outstandingPrincipalSatang: null,
+        outstandingBalanceSatang: null,
+        installmentCount: 0,
+      };
+      let outstandingPrincipal = 0n;
+      let outstandingBalance = 0n;
+      for (const installment of installments) {
+        const principalRemaining = installment.principalDueSatang - installment.paidPrincipalSatang;
+        const interestRemaining = installment.interestDueSatang - installment.paidInterestSatang;
+        outstandingPrincipal += principalRemaining;
+        outstandingBalance += principalRemaining + interestRemaining;
+      }
+      return {
+        id: loan.id,
+        status: loan.status,
+        principalSatang: loan.principalSatang.toString(),
+        originalPrincipalSatang: loan.principalSatang.toString(),
+        fundedSatang: loan.fundedSatang.toString(),
+        annualInterestRate: loan.annualInterestRate.toString(),
+        termMonths: loan.termMonths,
+        fundingDeadline: loan.fundingDeadline,
+        fundedAt: loan.fundedAt,
+        disbursedAt: loan.disbursedAt,
+        createdAt: loan.createdAt,
+        outstandingPrincipalSatang: outstandingPrincipal.toString(),
+        outstandingBalanceSatang: outstandingBalance.toString(),
+        installmentCount: installments.length,
+      };
+    });
     return apiPaginatedResponse(data, pagination, total);
   } catch (error) {
     return apiErrorResponseFrom(error);

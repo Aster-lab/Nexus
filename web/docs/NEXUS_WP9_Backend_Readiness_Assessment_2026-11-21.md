@@ -46,7 +46,7 @@ Local login now accepts active users whose password is stored with the versioned
 
 The local sign-in path is implemented in `POST /api/auth/login` and `POST /api/auth/logout`; it uses scrypt, an opaque eight-hour Nexus session, hashed session persistence, same-origin checks when an Origin header is supplied, and logout revocation. OAuth is served by NextAuth's callback route with PKCE/state. Deployment must configure `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `NEXUS_OIDC_ISSUER`, `NEXUS_OIDC_CLIENT_ID`, and `NEXUS_OIDC_CLIENT_SECRET` to enable OAuth.
 
-The repository still has no user registration, password enrollment, or password reset workflow. Existing local accounts need a scrypt hash provisioned through an approved account-management path before they can use local login. No public registration or email-verification policy was inferred.
+At the time of this assessment, the repository had no user registration, password enrollment, or password reset workflow. WP9.3 follow-up has since added borrower/investor self-registration using the established scrypt password hash. Administrator accounts remain admin-created. Registration activates accounts immediately for the MVP; the existing nullable `emailVerifiedAt` field remains unset for local registrations, leaving room for a later email-verification flow. Password reset and verification delivery remain out of scope.
 
 ### Borrower ML feature generation — additional inputs and units required
 

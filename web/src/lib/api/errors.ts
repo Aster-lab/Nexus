@@ -58,6 +58,12 @@ export function mapApiError(error: unknown): MappedApiError {
         body: apiError("INSUFFICIENT_FUNDS", "The borrower wallet does not have sufficient available balance."),
       };
     }
+    if (error.message === "Only the loan borrower can submit a repayment.") {
+      return { status: 403, body: apiError("FORBIDDEN", "You are not authorized to repay this loan.") };
+    }
+    if (error.message === "Loan not found.") {
+      return { status: 404, body: apiError("NOT_FOUND", "The requested loan was not found.") };
+    }
     if (error.message === "Payout requires a POSTED repayment and POSTED ledger transaction." ||
       error.message === "Payout allocation must have a positive payable amount.") {
       return { status: 422, body: apiError("BUSINESS_RULE_VIOLATION", "The payout allocation is not eligible for processing.") };

@@ -34,6 +34,9 @@ export async function GET(
     return apiSuccessResponse({
       ...receipt,
       totalReceivedSatang: receipt.totalReceivedSatang.toString(),
+      principalSatang: receipt.principalSatang.toString(),
+      interestSatang: receipt.interestSatang.toString(),
+      repaymentDate: receipt.repaymentDate.toISOString(),
       receiptTimestamp: receipt.receiptTimestamp.toISOString(),
       repayments: receipt.repayments.map((item) => ({
         ...item,

@@ -2,6 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { GET as getCurrentUser } from "../../src/app/api/auth/me/route";
 import { POST as login } from "../../src/app/api/auth/login/route";
+import { POST as register } from "../../src/app/api/auth/register/route";
 import { POST as logout } from "../../src/app/api/auth/logout/route";
 import {
   GET as getMyProfile,
@@ -90,6 +91,7 @@ describe("API-02 authentication and current-user APIs", () => {
     if (createdUserIds.length === 0) return;
     await prisma.session.deleteMany({ where: { userId: { in: createdUserIds } } });
     await prisma.oAuthAccount.deleteMany({ where: { userId: { in: createdUserIds } } });
+    await prisma.wallet.deleteMany({ where: { ownerUserId: { in: createdUserIds } } });
     await prisma.borrowerProfile.deleteMany({ where: { userId: { in: createdUserIds } } });
     await prisma.investorProfile.deleteMany({ where: { userId: { in: createdUserIds } } });
     await prisma.userRole.deleteMany({ where: { userId: { in: createdUserIds } } });
@@ -336,5 +338,122 @@ describe("API-02 authentication and current-user APIs", () => {
     await expectApiError(await getMyProfile(authenticatedRequest(revokedToken)), {
       status: 401, code: "UNAUTHENTICATED",
     });
+  });
+
+  it("AUTH-08 registers one account with borrower and investor roles and supports local login", async () => {
+    const email = `${randomUUID()}@registration.test`;
+    const password = "registration password 2026";
+    const response = await register(new Request("http://localhost/api/auth/register", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        email: ` ${email.toUpperCase()} `,
+        password,
+        roles: ["BORROWER", "INVESTOR"],
+        borrowerProfile: {
+          legalName: "Registration Borrower",
+          phone: "+66 80 123 4567",
+          address: {
+            schema_version: "borrower_profile_address.v1",
+            line1: "12 Example Road",
+            line2: null,
+            subdistrict: null,
+            district: "Pathum Wan",
+            province: "Bangkok",
+            postal_code: "10330",
+            country_code: "TH",
+          },
+        },
+        investorProfile: { displayName: "Registration Investor" },
+      }),
+    }));
+    const created = await expectApiSuccess<{
+      id: string;
+      email: string;
+      roles: string[];
+      borrowerProfile: { legalName: string };
+      investorProfile: { displayName: string };
+    }>(response, 201);
+    createdUserIds.push(created.id);
+    expect(created).toMatchObject({
+      email,
+      roles: ["BORROWER", "INVESTOR"],
+      borrowerProfile: { legalName: "Registration Borrower" },
+      investorProfile: { displayName: "Registration Investor" },
+    });
+    await expect(prisma.wallet.findUniqueOrThrow({
+      where: { ownerUserId: created.id },
+      select: { ownerUserId: true, currency: true, balanceSatang: true, status: true },
+    })).resolves.toEqual({
+      ownerUserId: created.id,
+      currency: "THB",
+      balanceSatang: 0n,
+      status: "ACTIVE",
+    });
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id: created.id },
+      select: { passwordHash: true, accountStatus: true, emailVerifiedAt: true, sessions: { select: { id: true } } },
+    });
+    expect(user.passwordHash).toMatch(/^scrypt\$v1\$/);
+    expect(user.accountStatus).toBe("ACTIVE");
+    expect(user.emailVerifiedAt).toBeNull();
+    expect(user.sessions).toEqual([]);
+
+    const loginResponse = await login(new Request("http://localhost/api/auth/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    }));
+    const signedIn = await expectApiSuccess<{ id: string; roles: string[] }>(loginResponse);
+    expect(signedIn).toMatchObject({ id: created.id, roles: ["BORROWER", "INVESTOR"] });
+    expect(loginResponse.headers.get("set-cookie")).toContain("nexus_session=");
+    expect(JSON.stringify(created)).not.toContain(password);
+  });
+
+  it("AUTH-09 rejects duplicate email addresses without creating another account", async () => {
+    const email = `${randomUUID()}@registration.test`;
+    const password = "registration password 2026";
+    const payload = {
+      email,
+      password,
+      roles: ["INVESTOR"],
+      investorProfile: { displayName: "Registration Investor" },
+    };
+    const first = await register(new Request("http://localhost/api/auth/register", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload),
+    }));
+    const created = await expectApiSuccess<{ id: string }>(first, 201);
+    createdUserIds.push(created.id);
+
+    const duplicate = await register(new Request("http://localhost/api/auth/register", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload),
+    }));
+    await expectApiError(duplicate, { status: 409, code: "EMAIL_ALREADY_REGISTERED" });
+    await expect(prisma.user.count({ where: { email: { equals: email, mode: "insensitive" } } })).resolves.toBe(1);
+  });
+
+  it("AUTH-10 rejects administrator registration and weak passwords before persistence", async () => {
+    const adminEmail = `${randomUUID()}@registration.test`;
+    const adminResponse = await register(new Request("http://localhost/api/auth/register", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email: adminEmail, password: "valid registration password", roles: ["ADMIN"] }),
+    }));
+    await expectApiError(adminResponse, { status: 400, code: "VALIDATION_ERROR" });
+    await expect(prisma.user.count({ where: { email: adminEmail } })).resolves.toBe(0);
+
+    const weakEmail = `${randomUUID()}@registration.test`;
+    const weakResponse = await register(new Request("http://localhost/api/auth/register", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        email: weakEmail,
+        password: "short",
+        roles: ["INVESTOR"],
+        investorProfile: { displayName: "New investor" },
+      }),
+    }));
+    await expectApiError(weakResponse, { status: 400, code: "VALIDATION_ERROR" });
+    await expect(prisma.user.count({ where: { email: weakEmail } })).resolves.toBe(0);
   });
 });

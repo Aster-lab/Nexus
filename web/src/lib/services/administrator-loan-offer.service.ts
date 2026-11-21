@@ -5,6 +5,7 @@ import {
 } from "../contracts/platform-policy";
 import { prisma } from "../prisma";
 import { requireFinancialAdministrator } from "./financial-authorization.service";
+import { createInAppNotification } from "./notification.service";
 
 export class AdministratorLoanOfferError extends Error {
   constructor(readonly code: string, message: string) {
@@ -51,6 +52,7 @@ export async function issueAdministratorLoanOffer(input: {
             requestedTermMonths: true,
           },
         },
+        borrowerProfile: { select: { userId: true } },
       },
     });
     if (!application) fail("APPLICATION_NOT_FOUND", "Application not found.");
@@ -137,6 +139,13 @@ export async function issueAdministratorLoanOffer(input: {
         status: true,
         createdAt: true,
       },
+    });
+    await createInAppNotification(tx, {
+      userId: application.borrowerProfile.userId,
+      category: "OFFER",
+      title: "A loan offer is ready",
+      content: "You have a new offer to review. Check its full terms and expiry before deciding.",
+      actionPath: "/borrower/offers",
     });
     await tx.auditLog.create({
       data: {

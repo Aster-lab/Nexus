@@ -6,7 +6,7 @@ Protected user APIs accept a valid session token as the `nexus_session` cookie o
 
 NEXUS supports local email/password login and configurable OpenID Connect sign-in. OAuth identities must have a verified email matching exactly one existing active NEXUS user. The first successful OAuth sign-in links the provider subject to that user; OAuth does not create accounts or assign roles. The OAuth callback uses PKCE and state checks. API authorization rechecks the NEXUS user and roles on every request.
 
-Local passwords use a versioned scrypt hash (`scrypt$v1$...`). Existing accounts need a hash in this format before local login is enabled. This implementation does not include public registration, password reset, or email verification workflows.
+Local passwords use a versioned scrypt hash (`scrypt$v1$...`). Existing accounts need a hash in this format before local login is enabled. Self-registration is open for borrower and investor roles; administrator roles remain administrator-created. Registration activates accounts immediately for the MVP. New accounts leave `emailVerifiedAt` unset so a future verification workflow can add a verification requirement without changing the account/profile structure. Password reset and email-verification delivery are not implemented.
 
 Configure `NEXTAUTH_SECRET` (at least 32 random characters), `NEXTAUTH_URL`, `NEXUS_OIDC_ISSUER`, `NEXUS_OIDC_CLIENT_ID`, and `NEXUS_OIDC_CLIENT_SECRET` in deployment secrets. The issuer must be HTTPS outside localhost. When the OIDC settings are absent, local login remains available and the OAuth provider is not registered.
 
@@ -21,6 +21,37 @@ Strict JSON body:
 ```
 
 Returns the caller's ID, email, active roles, borrower/investor profile summaries, and session expiry. The password is never returned. The email/password failure response is generic. Passwords must contain 12–128 characters when stored with `hashPassword`.
+
+## `POST /api/auth/register`
+
+Creates an active local account and one or both supported self-service roles. `ADMIN` is never accepted as a self-selected role. The endpoint normalizes email to lowercase, rejects an existing email with `409 EMAIL_ALREADY_REGISTERED`, hashes the password with the existing scrypt mechanism, and creates the user, role assignments, and selected profile(s) atomically. It does not create a session; users sign in through the normal login endpoint after registration.
+
+Strict JSON body:
+
+```json
+{
+  "email": "borrower@example.test",
+  "password": "a long secure passphrase",
+  "roles": ["BORROWER", "INVESTOR"],
+  "borrowerProfile": {
+    "legalName": "Example Borrower",
+    "phone": "+66 80 123 4567",
+    "address": {
+      "schema_version": "borrower_profile_address.v1",
+      "line1": "12 Example Road",
+      "line2": null,
+      "subdistrict": null,
+      "district": "Pathum Wan",
+      "province": "Bangkok",
+      "postal_code": "10330",
+      "country_code": "TH"
+    }
+  },
+  "investorProfile": { "displayName": "Example Investor" }
+}
+```
+
+Each role requires its matching profile object; profile objects for unselected roles are rejected. Passwords must contain 12–128 characters. The response is `201` with the new user ID, normalized email, active roles, and profile summaries. Registration is same-origin when an `Origin` header is present.
 
 ## `POST /api/auth/logout`
 

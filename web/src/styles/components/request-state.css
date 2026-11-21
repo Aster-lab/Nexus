@@ -1,0 +1,71 @@
+.nexus-request-state {
+  display: grid;
+  gap: 0.5rem;
+  width: 100%;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  color: var(--foreground);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+}
+
+.nexus-request-state__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.nexus-request-state__description {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.nexus-request-state--loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 4rem;
+  color: var(--muted);
+}
+
+.nexus-request-state__spinner {
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: nexus-spin 0.8s linear infinite;
+}
+
+.nexus-request-state--error {
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
+}
+
+.nexus-request-state--unavailable {
+  border-left: 4px solid var(--primary);
+}
+
+.nexus-request-state__action {
+  width: fit-content;
+  margin-top: 0.25rem;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.nexus-request-state__action:hover {
+  color: var(--primary);
+}
+
+@keyframes nexus-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nexus-request-state__spinner {
+    animation: none;
+  }
+}

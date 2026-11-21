@@ -62,7 +62,7 @@ All money displayed by the frontend must remain a decimal satang string at the A
 | Submit repayment | `POST /api/borrower/repayments` | Available; require `Idempotency-Key`; show success only after persisted POSTED response. |
 | Receipt detail | `GET /api/borrower/repayments/{repaymentId}/receipt` | Available for a known repayment ID. |
 | Borrower wallet/activity | `GET /api/borrower/wallet` | Available and paginated. |
-| Repayment history list | No borrower collection endpoint found | Current receipt lookup requires a repayment ID; full repayment history is an API gap unless the dashboard can use another documented response. |
+| Repayment history list | `GET /api/borrower/repayments` | Added during WP9.3 follow-up; borrower-scoped and paginated with persisted repayment, installment, and ledger references. |
 
 ### Investor workflows
 
@@ -101,7 +101,7 @@ All money displayed by the frontend must remain a decimal satang string at the A
 2. **No frontend API client or data-state components.** WP9.2 needs a common envelope parser, cookie handling, error mapping, abort behavior, and loading/error/empty/success states.
 3. **No explicit theme switch.** Current CSS only follows `prefers-color-scheme`. WP9 must support light/dark selection and persist a user preference without flash; use semantic CSS variables for `#0A3C6E`, `#1783C1`, white, and charcoal with accessible contrast variants.
 4. **Prediction remains unavailable.** The current artifacts are legacy LendingClub v1; the NEXUS THB v2 model needs an authorized labeled training dataset. The UI must show manual review without a fake risk score.
-5. **Borrower repayment history lacks a list API.** Receipt retrieval by ID exists, but there is no borrower repayment collection route in the current route inventory.
+5. **Borrower repayment history gap resolved during WP9.3 follow-up.** `GET /api/borrower/repayments` now provides borrower-scoped persisted history with pagination.
 6. **Administrator aggregate dashboard data is not available as one API.** Do not compute financial totals from partial pages in the frontend.
 7. **No browser/component test runner is installed/configured.** Existing Vitest configuration is Node-only. Add a decision on the frontend test stack before building integrated workflows.
 8. **Stale authentication API guide corrected.** `docs/api/api-overview.md` claimed session issuance was absent. Local login/logout and optional OIDC are implemented; the guide now points to the authentication contract.

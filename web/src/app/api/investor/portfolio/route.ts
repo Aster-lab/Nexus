@@ -10,18 +10,30 @@ export async function GET(request: Request): Promise<Response> {
   try {
     const identity = await requireInvestor(request);
     const investorProfileId = identity.investorProfile.id;
-    const [investments, contributions, payouts, wallet] = await Promise.all([
-      prisma.investment.findMany({ where: { investorProfileId }, select: { id: true, status: true } }),
-      prisma.investmentContribution.findMany({ where: { investment: { investorProfileId }, ledgerTransaction: { status: "POSTED" } }, select: { amountSatang: true } }),
-      prisma.investorPayout.findMany({ where: { investorProfileId, status: "COMPLETED", ledgerTransaction: { status: "POSTED" } }, select: { principalSatang: true, interestSatang: true } }),
+    const [investmentCounts, contributions, payouts, wallet] = await Promise.all([
+      prisma.investment.groupBy({
+        by: ["status"],
+        where: { investorProfileId },
+        _count: { _all: true },
+      }),
+      prisma.investmentContribution.aggregate({
+        where: { investment: { investorProfileId }, ledgerTransaction: { status: "POSTED" } },
+        _sum: { amountSatang: true },
+      }),
+      prisma.investorPayout.aggregate({
+        where: { investorProfileId, status: "COMPLETED", ledgerTransaction: { status: "POSTED" } },
+        _sum: { principalSatang: true, interestSatang: true },
+      }),
       prisma.wallet.findFirst({ where: { ownerUserId: identity.userId, ownerPlatformAccountId: null }, select: { balanceSatang: true, currency: true, status: true } }),
     ]);
-    const invested = contributions.reduce((sum, row) => sum + row.amountSatang, 0n);
-    const principalReceived = payouts.reduce((sum, row) => sum + row.principalSatang, 0n);
-    const interestReceived = payouts.reduce((sum, row) => sum + row.interestSatang, 0n);
+    const invested = contributions._sum.amountSatang ?? 0n;
+    const principalReceived = payouts._sum.principalSatang ?? 0n;
+    const interestReceived = payouts._sum.interestSatang ?? 0n;
+    const activeInvestmentCount = investmentCounts.find((row) => row.status === "ACTIVE")?._count._all ?? 0;
+    const completedInvestmentCount = investmentCounts.find((row) => row.status === "COMPLETED")?._count._all ?? 0;
     return apiSuccessResponse({
       investorProfileId,
-      investmentCounts: { active: investments.filter((row) => row.status === "ACTIVE").length, completed: investments.filter((row) => row.status === "COMPLETED").length },
+      investmentCounts: { active: activeInvestmentCount, completed: completedInvestmentCount },
       totalInvestedPrincipalSatang: invested.toString(),
       principalReceivedSatang: principalReceived.toString(),
       interestReceivedSatang: interestReceived.toString(),

@@ -49,8 +49,11 @@ describe("WP9 shared browser API client", () => {
       success: false,
       error: { code: "UNAUTHENTICATED", message: "Sign in required." },
     }, { status: 401 }));
-    await expect(apiGet("/api/auth/me", { fetcher })).rejects.toBeInstanceOf(ApiClientError);
+    const onUnauthorized = vi.fn();
+    await expect(apiGet("/api/auth/me", { fetcher, onUnauthorized })).rejects.toBeInstanceOf(ApiClientError);
     expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(onUnauthorized).toHaveBeenCalledOnce();
+    expect(onUnauthorized).toHaveBeenCalledWith(expect.objectContaining({ status: 401, code: "UNAUTHENTICATED" }));
   });
 
   it("sends JSON writes and preserves the caller's idempotency key", async () => {
@@ -64,15 +67,17 @@ describe("WP9 shared browser API client", () => {
       { loanId: "loan-1", amountSatang: "125000" },
       { idempotencyKey: "repayment-attempt-1", fetcher },
     );
-    expect(fetcher).toHaveBeenCalledWith("/api/borrower/repayments", expect.objectContaining({
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    const [requestPath, init] = fetcher.mock.calls[0];
+    expect(requestPath).toBe("/api/borrower/repayments");
+    expect(init).toMatchObject({
       method: "POST",
       credentials: "same-origin",
-      headers: expect.objectContaining({
-        "content-type": "application/json",
-        "Idempotency-Key": "repayment-attempt-1",
-      }),
       body: JSON.stringify({ loanId: "loan-1", amountSatang: "125000" }),
-    }));
+    });
+    const headers = new Headers(init?.headers);
+    expect(headers.get("content-type")).toBe("application/json");
+    expect(headers.get("Idempotency-Key")).toBe("repayment-attempt-1");
   });
 
   it("rejects URLs outside the same-origin API namespace", async () => {

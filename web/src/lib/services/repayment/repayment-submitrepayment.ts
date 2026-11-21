@@ -14,6 +14,7 @@ import {
   generateRepaymentReceipt,
   type RepaymentReceipt,
 } from "./repayment-receipt";
+import { createInAppNotification } from "../notification.service";
 
 const CURRENCY = "THB";
 const REPAYMENT_CLEARING_ACCOUNT_CODE = "2300";
@@ -874,6 +875,14 @@ async function submitRepaymentInTransaction(
   if (persistedTotal !== input.amountSatang) {
     throw new Error("Persisted repayment allocations do not reconcile.");
   }
+
+  await createInAppNotification(tx, {
+    userId: input.borrowerUserId,
+    category: "REPAYMENT",
+    title: "Repayment confirmed",
+    content: "Your repayment has been posted. View repayment history for the installment breakdown and receipt.",
+    actionPath: "/borrower/repayments",
+  });
 
   await tx.auditLog.create({
     data: {

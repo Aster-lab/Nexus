@@ -3,8 +3,9 @@ import { z } from "zod";
 import { authenticateLocalCredentials } from "../../../../lib/auth/local-credentials";
 import { ApiError, apiErrorResponseFrom } from "../../../../lib/api/errors";
 import { API_SESSION_COOKIE_NAME } from "../../../../lib/api/authentication";
-import { apiSuccessResponse } from "../../../../lib/api/responses";
+import { apiErrorResponse, apiSuccessResponse } from "../../../../lib/api/responses";
 import { parseJsonBody } from "../../../../lib/api/validation";
+import { authRateLimitSubjects, consumeAuthRateLimit } from "../../../../lib/api/auth-rate-limit";
 import { prisma } from "../../../../lib/prisma";
 
 export const runtime = "nodejs";
@@ -27,6 +28,15 @@ export async function POST(request: Request): Promise<Response> {
   try {
     enforceSameOriginWhenPresent(request);
     const body = await parseJsonBody(request, loginSchema);
+    const rateLimit = await consumeAuthRateLimit(
+      "AUTH_LOGIN_ATTEMPT",
+      authRateLimitSubjects(request, body.email, { maxAttempts: 8, windowSeconds: 900 }, { maxAttempts: 60, windowSeconds: 900 }),
+    );
+    if (rateLimit.limited) {
+      const response = apiErrorResponse("RATE_LIMITED", "Too many sign-in attempts. Try again later.", 429);
+      response.headers.set("Retry-After", String(rateLimit.retryAfterSeconds));
+      return response;
+    }
     const identity = await authenticateLocalCredentials(body.email, body.password);
     if (!identity) throw new ApiError("UNAUTHENTICATED", "Email or password is incorrect.", 401);
 

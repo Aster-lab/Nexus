@@ -84,7 +84,7 @@ class RiskEngine:
             self, X_raw :Union[np.ndarray,list,pd.DataFrame]
     ) -> List[Dict]:
         if isinstance(X_raw,pd.DataFrame):
-            if list(X_raw.columns) != FEATURE_NAMES:
+            if tuple(X_raw.columns) != FEATURE_NAMES:
                 raise ValueError(f"DataFrame columns do not match expected feature names: {FEATURE_NAMES}")
             X_raw_np = X_raw.to_numpy()
         else:

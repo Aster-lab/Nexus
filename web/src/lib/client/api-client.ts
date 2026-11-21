@@ -30,6 +30,7 @@ export class ApiClientError extends Error {
 export interface ApiRequestOptions extends Omit<RequestInit, "headers"> {
   headers?: HeadersInit;
   fetcher?: typeof fetch;
+  onUnauthorized?: (error: ApiClientError) => void;
 }
 
 export interface ApiPostOptions extends Omit<ApiRequestOptions, "method" | "body"> {
@@ -68,7 +69,7 @@ function toHeaderRecord(input?: HeadersInit): Record<string, string> {
 
 export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<ApiSuccessEnvelope<T>> {
   assertSameOriginApiPath(path);
-  const { fetcher = fetch, headers: suppliedHeaders, ...init } = options;
+  const { fetcher = fetch, headers: suppliedHeaders, onUnauthorized, ...init } = options;
   const headers = toHeaderRecord(suppliedHeaders);
   if (init.body !== undefined && !Object.keys(headers).some((name) => name.toLowerCase() === "content-type")) {
     headers["content-type"] = "application/json";
@@ -96,12 +97,20 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     if (!isRecord(payload.error) || typeof payload.error.code !== "string" || typeof payload.error.message !== "string") {
       throw invalidResponse(response.status);
     }
-    throw new ApiClientError(
+    const apiError = new ApiClientError(
       response.status,
       payload.error.code,
       payload.error.message,
       Array.isArray(payload.error.details) ? payload.error.details : undefined,
     );
+    if (response.status === 401) {
+      try {
+        onUnauthorized?.(apiError);
+      } catch {
+        // Preserve the API failure even if a page-level expiry handler fails.
+      }
+    }
+    throw apiError;
   }
 
   if (
@@ -130,12 +139,25 @@ export function apiGet<T>(path: string, options: Omit<ApiRequestOptions, "method
 
 export function apiPost<T, TBody>(path: string, body: TBody, options: ApiPostOptions = {}) {
   const headers = toHeaderRecord(options.headers);
-  if (options.idempotencyKey !== undefined) headers["Idempotency-Key"] = options.idempotencyKey;
-  const { idempotencyKey: _idempotencyKey, ...requestOptions } = options;
+  const { idempotencyKey, ...requestOptions } = options;
+  if (idempotencyKey !== undefined) {
+    if (idempotencyKey.trim().length === 0 || idempotencyKey.length > 255) {
+      throw new TypeError("Idempotency key must contain between 1 and 255 characters");
+    }
+    headers["Idempotency-Key"] = idempotencyKey;
+  }
   return apiRequest<T>(path, {
     ...requestOptions,
     method: "POST",
     headers,
+    body: JSON.stringify(body),
+  });
+}
+
+export function apiPatch<T, TBody>(path: string, body: TBody, options: Omit<ApiRequestOptions, "method" | "body"> = {}) {
+  return apiRequest<T>(path, {
+    ...options,
+    method: "PATCH",
     body: JSON.stringify(body),
   });
 }

@@ -20,6 +20,8 @@ Success (`201`) includes `predictionRecordId`, `featureSnapshotId`, `modelVersio
 
 Returns the persisted evaluation only to the borrower who owns the associated application. A missing or non-owned result returns `404`.
 
+There is no list endpoint for a borrower's earlier evaluations. A client can reload a particular persisted evaluation only when it has its `evaluationId`.
+
 ## Investor recommendations
 
 ### `POST /api/ml/investor-recommendations`
@@ -31,6 +33,8 @@ The response (`201`) includes `recommendationRunId`, `modelVersionId`, request c
 ### `GET /api/ml/investor-recommendations`
 
 Returns the investor's latest run. Optional query: `runId=<uuid>` to retrieve a specific run owned by the investor. Foreign or unknown run IDs return `404`. Results for loans no longer eligible are hidden and `isStale` indicates that some persisted recommendations were omitted.
+
+Recommendation preferences are managed through `GET` and `PUT /api/investor/preferences`; the recommendation request itself accepts no client-supplied candidates or preference body.
 
 ## Service-to-service prediction persistence
 

@@ -100,16 +100,16 @@ export function buildNexusRiskFeatures(input: {
   };
 
   const metadata = {
-    annual_income: "THB/year from verified recurring income",
-    dti: "percent: annual verified debt payments / annual verified income",
+    annual_income: "THB/year",
+    dti: "%",
     loan_amount: "THB",
-    acc_open_past_24mths: "bureau account count, prior 24 months",
-    bc_util: "bankcard balance / bankcard credit limit",
-    lti: "THB loan amount / THB annual income",
-    interest_burden: "(THB loan amount * annual rate) / (THB annual income + 1)",
-    credit_score: `bureau-native score from ${credit.bureau_name}`,
+    acc_open_past_24mths: "count",
+    bc_util: "ratio",
+    lti: "ratio",
+    interest_burden: "ratio",
+    credit_score: "bureau-native score",
     int_rate: "annual rate proportion",
-    revol_util: "revolving balance / revolving credit limit",
+    revol_util: "ratio",
     term_months: "months",
   };
   const sourceMapping = {

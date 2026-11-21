@@ -1,0 +1,313 @@
+@layer components {
+  .admin-workspace-shell {
+    @apply mx-auto flex w-full max-w-[100rem] flex-1 flex-col gap-5 px-4 py-5 sm:px-6 lg:flex-row lg:gap-8 lg:px-8 lg:py-8;
+  }
+
+  .admin-navigation {
+    @apply flex shrink-0 gap-1 overflow-x-auto rounded-xl border border-border bg-card p-2 lg:sticky lg:top-6 lg:h-fit lg:w-60 lg:flex-col;
+  }
+
+  .admin-navigation__label {
+    @apply hidden px-3 pb-2 pt-3 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground lg:block;
+  }
+
+  .admin-navigation__link {
+    @apply inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-foreground no-underline transition-colors hover:bg-secondary lg:w-full;
+  }
+
+  .admin-navigation__link--active {
+    @apply bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground;
+  }
+
+  .admin-workspace-content {
+    @apply min-w-0 flex-1;
+  }
+
+  .admin-page {
+    @apply mx-auto w-full max-w-7xl space-y-7 pb-10;
+  }
+
+  .admin-page__header {
+    @apply flex flex-col justify-between gap-4 sm:flex-row sm:items-center;
+  }
+
+  .admin-page__header h1 {
+    @apply mt-1 text-3xl font-bold tracking-tight text-foreground sm:text-4xl;
+  }
+
+  .admin-eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.16em] text-accent;
+  }
+
+  .admin-muted {
+    @apply mt-1 text-sm leading-6 text-muted-foreground;
+  }
+
+  .admin-metric-grid {
+    @apply grid gap-4 sm:grid-cols-2 xl:grid-cols-4;
+  }
+
+  .admin-metric-card {
+    @apply min-w-0;
+  }
+
+  .admin-metric-card__header {
+    @apply flex-row items-center gap-3 pb-3;
+  }
+
+  .admin-metric-card__icon {
+    @apply flex size-10 items-center justify-center rounded-xl bg-secondary text-primary;
+  }
+
+  .admin-metric-card__header h2 {
+    @apply leading-5;
+  }
+
+  .admin-metric-card__value {
+    @apply text-3xl font-bold tracking-tight text-foreground;
+  }
+
+  .admin-text-link {
+    @apply mt-4 inline-flex min-h-9 items-center gap-1 text-sm font-semibold text-primary no-underline hover:underline;
+  }
+
+  .admin-activity-grid {
+    @apply grid gap-4 xl:grid-cols-2;
+  }
+
+  .admin-activity-card {
+    @apply min-w-0;
+  }
+
+  .admin-activity-list {
+    @apply divide-y divide-border;
+  }
+
+  .admin-activity-row {
+    @apply flex flex-col justify-between gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center;
+  }
+
+  .admin-activity-row__title {
+    @apply block text-sm font-semibold text-foreground;
+  }
+
+  .admin-activity-row__end {
+    @apply flex flex-wrap items-center gap-2 sm:justify-end;
+  }
+
+  .admin-filter-bar {
+    @apply flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-end;
+  }
+
+  .admin-form-label {
+    @apply grid gap-1.5 text-sm font-semibold text-foreground;
+  }
+
+  .admin-form-control {
+    @apply min-h-10 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring;
+  }
+
+  .admin-table-wrap {
+    @apply w-full overflow-x-auto rounded-xl border border-border bg-card;
+  }
+
+  .admin-table {
+    @apply w-full min-w-[48rem] border-collapse text-left text-sm;
+  }
+
+  .admin-table th {
+    @apply border-b border-border bg-secondary/60 px-4 py-3 font-semibold text-muted-foreground;
+  }
+
+  .admin-table td {
+    @apply border-b border-border px-4 py-3 align-middle last:border-0;
+  }
+
+  .admin-detail-grid {
+    @apply grid gap-4 md:grid-cols-2 xl:grid-cols-3;
+  }
+
+  .admin-danger-note {
+    @apply rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive;
+  }
+
+  .admin-success-note {
+    @apply rounded-lg border border-success/30 bg-success/10 p-3 text-sm font-medium text-success;
+  }
+
+  .admin-pagination {
+    @apply flex flex-col justify-between gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center;
+  }
+
+  .admin-pagination > div {
+    @apply flex gap-2;
+  }
+
+  .admin-table__primary-link {
+    @apply m-0 font-semibold;
+  }
+
+  .admin-decision-form {
+    @apply grid max-w-2xl gap-4;
+  }
+
+  .admin-decision-form textarea {
+    @apply min-h-24 resize-y;
+  }
+
+  .admin-detail-metrics {
+    @apply grid gap-3 sm:grid-cols-2;
+  }
+
+  .admin-detail-metric {
+    @apply grid gap-1 rounded-lg border border-border bg-background p-3;
+  }
+
+  .admin-detail-metric span {
+    @apply text-xs font-medium text-muted-foreground;
+  }
+
+  .admin-detail-metric strong {
+    @apply text-lg font-semibold text-foreground;
+  }
+
+  .admin-history-list {
+    @apply grid gap-4;
+  }
+
+  .admin-history-list li {
+    @apply border-l-2 border-accent pl-3;
+  }
+
+  .admin-history-list p {
+    @apply my-1 text-sm text-muted-foreground;
+  }
+
+  .admin-action-button {
+    @apply mt-4;
+  }
+
+  .admin-row-details {
+    @apply min-w-24;
+  }
+
+  .admin-row-details summary {
+    @apply cursor-pointer font-semibold text-primary;
+  }
+
+  .admin-repayment-detail {
+    @apply fixed inset-4 z-20 max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-xl border border-border bg-card p-5 shadow-2xl sm:inset-x-[10%] sm:inset-y-[8%] lg:inset-x-[20%];
+  }
+
+  .admin-repayment-detail__grid {
+    @apply grid gap-3 sm:grid-cols-2;
+  }
+
+  .admin-repayment-detail__grid > div {
+    @apply min-w-0 rounded-lg bg-background p-3;
+  }
+
+  .admin-repayment-detail dt {
+    @apply text-xs font-semibold text-muted-foreground;
+  }
+
+  .admin-repayment-detail dd {
+    @apply mt-1 break-all text-sm text-foreground;
+  }
+
+  .admin-filter-error {
+    @apply text-sm font-medium text-destructive;
+  }
+
+  .admin-table__strong {
+    @apply block font-semibold text-foreground;
+  }
+
+  .admin-filter-bar--compact {
+    @apply mb-4 p-0;
+  }
+
+  .admin-financial-report {
+    @apply grid gap-5;
+  }
+
+  .admin-financial-report h2 {
+    @apply mt-2 text-base font-semibold text-foreground;
+  }
+
+  .admin-financial-report__status {
+    @apply flex flex-wrap items-center gap-3;
+  }
+
+  .admin-financial-report__metrics {
+    @apply grid gap-3 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  .admin-financial-report__metrics > div {
+    @apply rounded-lg border border-border bg-background p-3;
+  }
+
+  .admin-financial-report__metrics dt {
+    @apply text-xs font-medium capitalize text-muted-foreground;
+  }
+
+  .admin-financial-report__metrics dd {
+    @apply mt-1 text-lg font-semibold text-foreground;
+  }
+
+  .admin-financial-report__issues {
+    @apply grid gap-3;
+  }
+
+  .admin-financial-report__issues li {
+    @apply rounded-lg border border-border bg-background p-3;
+  }
+
+  .admin-financial-report__issues p {
+    @apply mt-1 text-sm text-muted-foreground;
+  }
+
+  .admin-user-status-action {
+    @apply flex min-w-52 items-center gap-2;
+  }
+
+  .admin-success-message {
+    @apply my-3 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm text-foreground;
+  }
+
+  .admin-confirm-backdrop {
+    @apply fixed inset-0 z-40 grid place-items-center bg-black/50 p-4;
+  }
+
+  .admin-confirm-dialog {
+    @apply w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl;
+  }
+
+  .admin-confirm-dialog h2 {
+    @apply text-lg font-semibold text-foreground;
+  }
+
+  .admin-confirm-dialog p {
+    @apply my-4 text-sm text-muted-foreground;
+  }
+
+  .admin-confirm-dialog > div {
+    @apply flex justify-end gap-2;
+  }
+
+  .admin-audit-filters {
+    @apply mb-5 grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6;
+  }
+
+  .admin-audit-record {
+    @apply mt-3 grid gap-1 break-all rounded-md bg-background p-3 text-xs;
+  }
+
+  .admin-audit-record dt {
+    @apply mt-2 font-semibold text-muted-foreground;
+  }
+
+  .admin-audit-record dd {
+    @apply text-foreground;
+  }
+}

@@ -1,9 +1,10 @@
 
 import CredentialsProvider from "next-auth/providers/credentials";
-import OAuthProvider from "next-auth/providers/oauth";
 import type { DefaultSession, NextAuthOptions } from "next-auth";
+import type { OAuthConfig } from "next-auth/providers/oauth";
 import { authenticateLocalCredentials } from "./auth/local-credentials";
 import { linkVerifiedOAuthIdentity } from "./auth/oauth-identity";
+import { checkCredentialsLoginRateLimit } from "./api/auth-rate-limit";
 
 declare module "next-auth" {
   interface Session {
@@ -37,7 +38,7 @@ export function createNexusOidcProvider(config: NexusOidcConfig) {
     throw new Error("The OAuth issuer must use HTTPS outside localhost.");
   }
   const issuer = issuerUrl.toString().replace(/\/$/, "");
-  return OAuthProvider<NexusOidcProfile>({
+  return {
     id: "nexus-oidc",
     name: "Organization SSO",
     type: "oauth",
@@ -49,7 +50,7 @@ export function createNexusOidcProvider(config: NexusOidcConfig) {
     idToken: true,
     checks: ["pkce", "state"],
     authorization: { params: { scope: "openid email profile" } },
-    profile(profile) {
+    profile(profile: NexusOidcProfile) {
       return {
         id: profile.sub,
         name: profile.name ?? profile.email ?? null,
@@ -57,7 +58,7 @@ export function createNexusOidcProvider(config: NexusOidcConfig) {
         image: profile.picture ?? null,
       };
     },
-  });
+  } satisfies OAuthConfig<NexusOidcProfile>;
 }
 
 function configuredOidcProvider() {
@@ -79,6 +80,7 @@ const providers: NextAuthOptions["providers"] = [
       const email = typeof credentials?.email === "string" ? credentials.email : "";
       const password = typeof credentials?.password === "string" ? credentials.password : "";
       if (!email || !password) return null;
+      if ((await checkCredentialsLoginRateLimit(email)).limited) return null;
       const user = await authenticateLocalCredentials(email, password);
       return user ? { id: user.id, email: user.email, name: user.borrowerProfile?.legalName ?? user.investorProfile?.displayName ?? user.email } : null;
     },

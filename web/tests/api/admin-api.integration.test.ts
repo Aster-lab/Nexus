@@ -9,8 +9,12 @@ import { GET as getLoan } from "../../src/app/api/admin/loans/[loanId]/route";
 import { GET as getFunding } from "../../src/app/api/admin/loans/[loanId]/funding/route";
 import { POST as disburseLoan } from "../../src/app/api/admin/loans/[loanId]/disburse/route";
 import { GET as listRepayments } from "../../src/app/api/admin/repayments/route";
+import { GET as listRepaymentAllocations } from "../../src/app/api/admin/repayments/[repaymentId]/allocations/route";
 import { GET as listPayouts, POST as processPayout } from "../../src/app/api/admin/payouts/route";
+import { GET as listPendingPayoutAllocations } from "../../src/app/api/admin/payout-allocations/route";
 import { GET as getReconciliation } from "../../src/app/api/admin/reconciliation/route";
+import { GET as listAdminWallets } from "../../src/app/api/admin/wallets/route";
+import { GET as listAdminLedgerTransactions } from "../../src/app/api/admin/ledger-transactions/route";
 import { GET as listAuditLogs } from "../../src/app/api/admin/audit-logs/route";
 import { GET as listUsers } from "../../src/app/api/admin/users/route";
 import { PATCH as updateUser } from "../../src/app/api/admin/users/[userId]/route";
@@ -163,6 +167,24 @@ afterEach(async () => {
 });
 
 describe("API-05 administrator APIs", () => {
+  it("API-05-20 lists wallet balances and ownership references for administrators", async () => {
+    const admin = await createIdentity("ADMIN");
+    const wallets = await expectApiSuccess<Array<{ id: string; balanceSatang: string; currency: string; status: string }>>(await listAdminWallets(apiRequest(admin, "http://localhost/api/admin/wallets?page=1&limit=10")));
+    expect(wallets.length).toBeGreaterThan(0);
+    expect(wallets.every((wallet) => /^\d+$/.test(wallet.balanceSatang) && wallet.currency.length === 3)).toBe(true);
+  });
+
+  it("API-05-21 lists posted ledger transactions and balanced entry references read-only", async () => {
+    const admin = await createIdentity("ADMIN");
+    const rows = await expectApiSuccess<Array<{ status: string; entries: Array<{ amountSatang: string; entryType: string }> }>>(await listAdminLedgerTransactions(apiRequest(admin, "http://localhost/api/admin/ledger-transactions?page=1&limit=10&status=POSTED")));
+    expect(rows.every((row) => row.status === "POSTED" && row.entries.every((entry) => /^\d+$/.test(entry.amountSatang)))).toBe(true);
+  });
+
+  it("API-05-22 denies platform wallet and ledger visibility to borrowers", async () => {
+    const borrower = await createIdentity("BORROWER");
+    await expectApiError(await listAdminWallets(apiRequest(borrower, "http://localhost/api/admin/wallets")), { status: 403, code: "FORBIDDEN" });
+    await expectApiError(await listAdminLedgerTransactions(apiRequest(borrower, "http://localhost/api/admin/ledger-transactions")), { status: 403, code: "FORBIDDEN" });
+  });
   it("API-05-01 lists applications for an administrator", async () => {
     const admin = await createIdentity();
     const applicationId = await createSubmittedApplication();
@@ -184,6 +206,8 @@ describe("API-05 administrator APIs", () => {
     const response = await decideApplication(apiRequest(admin, `http://localhost/api/admin/applications/${applicationId}/decision`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ decision: "APPROVED", reason: "Meets underwriting criteria" }) }), { params: Promise.resolve({ applicationId }) });
     await expectApiSuccess<{ status: string }>(response, 200);
     expect(await prisma.loanApplication.findUniqueOrThrow({ where: { id: applicationId }, select: { status: true } })).toEqual({ status: "APPROVED" });
+    const application = await prisma.loanApplication.findUniqueOrThrow({ where: { id: applicationId }, select: { borrowerProfile: { select: { userId: true } } } });
+    await expect(prisma.notification.findFirst({ where: { userId: application.borrowerProfile.userId, category: "APPLICATION_STATUS", actionPath: `/borrower/applications/${applicationId}` } })).resolves.toMatchObject({ status: "UNREAD", title: "Application approved" });
   });
 
   it("API-05-18 issues a policy-compliant offer for an approved application and audits the actor", async () => {
@@ -221,6 +245,8 @@ describe("API-05 administrator APIs", () => {
       applicationVersionId: persistedOffer.applicationVersionId,
       principalSatang: "300000",
     });
+    const application = await prisma.loanApplication.findUniqueOrThrow({ where: { id: applicationId }, select: { borrowerProfile: { select: { userId: true } } } });
+    await expect(prisma.notification.findFirst({ where: { userId: application.borrowerProfile.userId, category: "OFFER", actionPath: "/borrower/offers" } })).resolves.toMatchObject({ status: "UNREAD", title: "A loan offer is ready" });
   });
 
   it("API-05-04 records an administrator rejection decision", async () => {
@@ -229,6 +255,8 @@ describe("API-05 administrator APIs", () => {
     const response = await decideApplication(apiRequest(admin, `http://localhost/api/admin/applications/${applicationId}/decision`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ decision: "REJECTED", reason: "Insufficient repayment capacity" }) }), { params: Promise.resolve({ applicationId }) });
     await expectApiSuccess<{ status: string }>(response, 200);
     expect(await prisma.loanApplication.findUniqueOrThrow({ where: { id: applicationId }, select: { status: true } })).toEqual({ status: "REJECTED" });
+    const application = await prisma.loanApplication.findUniqueOrThrow({ where: { id: applicationId }, select: { borrowerProfile: { select: { userId: true } } } });
+    await expect(prisma.notification.findFirst({ where: { userId: application.borrowerProfile.userId, category: "APPLICATION_STATUS" } })).resolves.toMatchObject({ status: "UNREAD", title: "Application update" });
   });
 
   it("API-05-05 rejects an unsupported application decision", async () => {
@@ -281,16 +309,54 @@ describe("API-05 administrator APIs", () => {
   it("API-05-11 lists repayment records with their posted ledger references", async () => {
     const admin = await createIdentity();
     const { context } = await createPendingAllocation();
-    const rows = await expectApiSuccess<Array<{ loanId: string; ledgerTransactionId: string }>>(await listRepayments(apiRequest(admin, "http://localhost/api/admin/repayments")));
-    expect(rows.some((row) => row.loanId === context.loan.id && row.ledgerTransactionId)).toBe(true);
+    const rows = await expectApiSuccess<Array<{ id: string; loanId: string; ledgerTransactionId: string; payoutAllocationCount: number }>>(await listRepayments(apiRequest(admin, `http://localhost/api/admin/repayments?loanId=${context.loan.id}`)));
+    const repayment = rows.find((row) => row.loanId === context.loan.id);
+    expect(repayment?.ledgerTransactionId).toBeTruthy();
+    expect(repayment?.payoutAllocationCount).toBe(1);
+  });
+
+  it("API-05-23 pages repayment allocations for administrator repayment details", async () => {
+    const admin = await createIdentity();
+    const { allocationId } = await createPendingAllocation();
+    const allocation = await prisma.payoutAllocation.findUniqueOrThrow({ where: { id: allocationId }, select: { repaymentId: true } });
+    const response = await listRepaymentAllocations(apiRequest(admin, `http://localhost/api/admin/repayments/${allocation.repaymentId}/allocations?page=1&limit=1`), { params: Promise.resolve({ repaymentId: allocation.repaymentId }) });
+    const result = await expectApiSuccess<Array<{ id: string; repaymentId: string }>>(response);
+    expect(result).toContainEqual(expect.objectContaining({ id: allocationId, repaymentId: allocation.repaymentId }));
   });
 
   it("API-05-12 processes an eligible investor payout through WP7", async () => {
     const admin = await createIdentity();
     const { allocationId } = await createPendingAllocation();
+    const pendingBefore = await expectApiSuccess<Array<{ id: string }>>(
+      await listPendingPayoutAllocations(apiRequest(admin, "http://localhost/api/admin/payout-allocations")),
+    );
+    expect(pendingBefore.some((row) => row.id === allocationId)).toBe(true);
     const response = await processPayout(apiRequest(admin, "http://localhost/api/admin/payouts", { method: "POST", headers: { "content-type": "application/json", "idempotency-key": `api05-payout-${randomUUID()}` }, body: JSON.stringify({ payoutAllocationId: allocationId }) }));
     const payout = await expectApiSuccess<{ investorPayoutId: string; status: string }>(response, 201);
     expect(payout.status).toBe("COMPLETED");
+    const pendingAfter = await expectApiSuccess<Array<{ id: string }>>(
+      await listPendingPayoutAllocations(apiRequest(admin, "http://localhost/api/admin/payout-allocations")),
+    );
+    expect(pendingAfter.some((row) => row.id === allocationId)).toBe(false);
+  });
+
+  it("API-05-19 lists unpaid allocations with their persisted source and payout eligibility", async () => {
+    const admin = await createIdentity();
+    const { context, allocationId } = await createPendingAllocation();
+    const rows = await expectApiSuccess<Array<{
+      id: string;
+      amountSatang: string;
+      investor: { investorProfileId: string; status: string };
+      repayment: { id: string; loanId: string; status: string; ledgerTransaction: { status: string } };
+      eligibility: { canProcess: boolean; code: string | null };
+    }>>(await listPendingPayoutAllocations(apiRequest(admin, "http://localhost/api/admin/payout-allocations?page=1&limit=10&sortBy=createdAt&sortOrder=desc")));
+    const row = rows.find((item) => item.id === allocationId);
+    expect(row).toMatchObject({
+      amountSatang: expect.any(String),
+      investor: { status: "ACTIVE" },
+      repayment: { loanId: context.loan.id, status: "POSTED", ledgerTransaction: { status: "POSTED" } },
+      eligibility: { canProcess: true, code: null },
+    });
   });
 
   it("API-05-13 reuses a duplicate payout request", async () => {
@@ -319,6 +385,7 @@ describe("API-05 administrator APIs", () => {
   it("API-05-16 rejects non-administrator access", async () => {
     const borrower = await createIdentity("BORROWER");
     await expectApiError(await listLoans(apiRequest(borrower, "http://localhost/api/admin/loans")), { status: 403, code: "FORBIDDEN" });
+    await expectApiError(await listPendingPayoutAllocations(apiRequest(borrower, "http://localhost/api/admin/payout-allocations")), { status: 403, code: "FORBIDDEN" });
   });
 
   it("API-05-17 rejects user role escalation through user administration", async () => {

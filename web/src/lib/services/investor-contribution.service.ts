@@ -1,5 +1,6 @@
 import {Prisma} from "../../generated/prisma/client";
 import {prisma} from "../prisma";
+import { createInAppNotification } from "./notification.service";
 
 const ESCROW_ACCOUNT_CODE = "2200";
 const CURRENCY = "THB";
@@ -126,6 +127,7 @@ async function postWithinTransaction(
 
     const loan = await tx.loan.findUnique({
         where: {id: input.loanId},
+        include: { borrowerProfile: { select: { userId: true } } },
     });
 
     const now = new Date();
@@ -284,6 +286,14 @@ async function postWithinTransaction(
         idempotencyKey: input.idempotencyKey,
         },
     });
+
+    await createInAppNotification(tx, {
+        userId: input.userId,
+        category: "INVESTMENT",
+        title: "Investment contribution confirmed",
+        content: "Your contribution has been posted to the loan's funding escrow. Track it in your portfolio.",
+        actionPath: "/investor/portfolio",
+    });
     
     await tx.escrowTransaction.create({
         data: {
@@ -331,10 +341,33 @@ async function postWithinTransaction(
     });
 
     if (updatedLoan.fundedSatang === updatedLoan.principalSatang) {
-        await tx.loan.updateMany({
+        const completedFunding = await tx.loan.updateMany({
         where: { id: loan.id, status: "FUNDING" },
         data: { status: "FUNDED", fundedAt: now },
         });
+
+        if (completedFunding.count === 1) {
+            await createInAppNotification(tx, {
+                userId: loan.borrowerProfile.userId,
+                category: "LOAN_STATUS",
+                title: "Your loan is fully funded",
+                content: "Funding is complete. Your loan will proceed through the platform's disbursement process.",
+                actionPath: "/borrower/loans",
+            });
+            const investors = await tx.investment.findMany({
+                where: { loanId: loan.id, status: "ACTIVE" },
+                select: { investorProfile: { select: { userId: true } } },
+            });
+            for (const investor of investors) {
+                await createInAppNotification(tx, {
+                    userId: investor.investorProfile.userId,
+                    category: "INVESTMENT",
+                    title: "A loan you backed is fully funded",
+                    content: "Funding is complete for a loan in your portfolio. You can follow its status from your investments.",
+                    actionPath: "/investor/portfolio",
+                });
+            }
+        }
 
         await tx.escrowAccount.updateMany({
         where: { id: escrow.id, status: "OPEN" },

@@ -25,11 +25,14 @@ Every `/api/admin/*` route requires an authenticated session with the persisted 
 
 - `GET /api/admin/repayments`: paginated repayment monitoring with installment, allocation, and ledger status details. Filters: `status=POSTED|REVERSED` and `loanId=<uuid>`; sort by `receivedAt` or `createdAt`.
 - `GET /api/admin/payouts`: paginated payouts; filters `status` and `investorProfileId`; sort by `createdAt` or `completedAt`.
+- `GET /api/admin/payout-allocations`: paginated unpaid allocations with investor, investment, repayment, installment, and source-ledger references. It reports current payout eligibility as advisory state; the posting service rechecks every rule transactionally.
 - `POST /api/admin/payouts`: body `{ "payoutAllocationId": "<uuid>" }` and required `Idempotency-Key`. Calls the WP7 payout service; no direct wallet or ledger updates are exposed.
 
 ## Reconciliation and audit
 
 - `GET /api/admin/reconciliation`: read-only financial and payout reconciliation reports. Reports discrepancies; never repairs records.
+- `GET /api/admin/wallets`: read-only paginated wallet projections with owner/platform-account references. Supports `status`, `currency`, `ownerUserId`, `ownerPlatformAccountId`, `sortBy=createdAt|balanceSatang`, and `sortOrder` filters.
+- `GET /api/admin/ledger-transactions`: read-only paginated ledger transactions and their entries. Supports `status`, `transactionType`, `referenceType`, `referenceId`, `sortBy=createdAt|postedAt`, and `sortOrder` filters. Entry amounts are satang strings; this endpoint never changes ledger or wallet state.
 - `GET /api/admin/audit-logs`: paginated persisted audit history; filters `action`, `targetType`, `targetId`, and `actorUserId`; sort by `createdAt`.
 
 ## User administration

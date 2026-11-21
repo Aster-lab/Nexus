@@ -88,6 +88,7 @@ export const NexusRiskFeaturesSchema = z.object({
   revol_util: finiteNumber.nonnegative(), // ratio; may exceed 1 for over-limit accounts
   term_months: z.number().int().positive(),
 }).strict();
+export type NexusRiskFeatures = z.infer<typeof NexusRiskFeaturesSchema>;
 
 const NexusFeatureMetadataByNameSchema = z.object({
   annual_income: z.string().min(1),

@@ -194,39 +194,7 @@ export async function createRepaymentTestContext(
   const fixture = await createInvestorContributionFixture({
     administratorUserId,
   });
-  // Fund the investor wallet so the investor can contribute.
-  await fundInvestorWallet({
-    walletId: fixture.investorWallet.id,
-    administratorUserId,
-    amountSatang: fixture.loan.principalSatang,
-  });
-
-  // Create a genuine investment and contribution while the loan
-  // is still in FUNDING status.
-  const contribution = await postInvestorContribution({
-    userId: fixture.investorUser.id,
-    loanId: fixture.loan.id,
-    amountSatang: fixture.loan.principalSatang,
-    idempotencyKey: fixture.idempotencyKey,
-  });
-
-  const borrowerWallet = await prisma.wallet.upsert({
-    where: {
-      ownerUserId: fixture.borrowerUser.id,
-    },
-    update: {},
-    create: {
-      ownerUserId: fixture.borrowerUser.id,
-      currency: "THB",
-      balanceSatang: 0n,
-      status: "ACTIVE",
-    },
-  });
-
-  // Use the shared helper to create/activate the clearing wallet
-  // and preserve all original shared account states.
   const repaymentAccounts = await activateRepaymentTestAccounts();
-
   const operations =
     options.operations ?? defaultRepaymentTestContextOperations;
 
@@ -234,6 +202,35 @@ export async function createRepaymentTestContext(
     `repayment-test-opening-${randomUUID()}`;
 
   try {
+    // The shared opening-balance source starts inactive in the seed. Activate
+    // it before funding the investor wallet, then restore its prior state in
+    // the context cleanup below.
+    await fundInvestorWallet({
+      walletId: fixture.investorWallet.id,
+      administratorUserId,
+      amountSatang: fixture.loan.principalSatang,
+    });
+
+    // Create a genuine investment and contribution while the loan
+    // is still in FUNDING status.
+    await postInvestorContribution({
+      userId: fixture.investorUser.id,
+      loanId: fixture.loan.id,
+      amountSatang: fixture.loan.principalSatang,
+      idempotencyKey: fixture.idempotencyKey,
+    });
+
+    const borrowerWallet = await prisma.wallet.upsert({
+      where: { ownerUserId: fixture.borrowerUser.id },
+      update: {},
+      create: {
+        ownerUserId: fixture.borrowerUser.id,
+        currency: "THB",
+        balanceSatang: 0n,
+        status: "ACTIVE",
+      },
+    });
+
     const disbursedAt = new Date("2026-01-15T00:00:00.000Z");
 
     const loan = await prisma.loan.update({

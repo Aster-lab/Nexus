@@ -5,22 +5,22 @@ import pytest
 from pathlib import Path
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 CONFIG_PATH = (
     BASE_DIR / "config" / "recommendation_config.json"
 )
 
 INVESTOR_PATH = (
-    BASE_DIR / "data" / "recommendation" / "investor.json"
+    BASE_DIR / "fixtures" / "recommendation" / "investor.json"
 )
 
 LOAN_PATH = (
-    BASE_DIR / "data" / "recommendation" / "loan.json"
+    BASE_DIR / "fixtures" / "recommendation" / "loan.json"
 )
 
 INVESTMENT_PATH = (
-    BASE_DIR / "data" / "recommendation" / "investment.json"
+    BASE_DIR / "fixtures" / "recommendation" / "investment.json"
 )
 
 #loading real data

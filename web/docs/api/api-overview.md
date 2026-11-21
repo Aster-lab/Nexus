@@ -14,7 +14,7 @@ Session-protected routes accept the opaque session token through either:
 
 The token is validated against its hash in the existing `Session` table. The server derives the user ID and active roles from that session. A request body, query parameter, or role header cannot establish identity. See [authentication](authentication.md).
 
-The browser can establish a local session through `POST /api/auth/login` and end it through `POST /api/auth/logout`. Configured OpenID Connect sign-in is handled by NextAuth routes. OAuth links only to an existing active NEXUS user with a verified matching email; account provisioning remains outside these endpoints. See [authentication](authentication.md) for configuration and behavior.
+Borrowers and investors can create local accounts through `POST /api/auth/register`, then establish a session through `POST /api/auth/login` and end it through `POST /api/auth/logout`. Registration cannot grant administrator access. Configured OpenID Connect sign-in is handled by NextAuth routes and links only to an existing active NEXUS user with a verified matching email. See [authentication](authentication.md) for configuration and behavior.
 
 ## Response envelopes
 
@@ -81,6 +81,7 @@ Collection endpoints that support pagination accept `page` (default `1`), `limit
 | `/api/admin/*` | Authenticated user with `ADMIN` role. |
 | `/api/ml/borrower-evaluation*` | Borrower role for borrower-facing evaluation and retrieval. |
 | `/api/ml/investor-recommendations` | Active investor role and profile. |
+| `/api/investor/preferences` | Active investor role and profile; reads or replaces only the caller's recommendation preferences. |
 | `/api/applications/[applicationId]/predictions` | Service-to-service bearer token; not a browser/user session endpoint. |
 
 ## Important integration notes
@@ -89,4 +90,5 @@ Collection endpoints that support pagination accept `page` (default `1`), `limit
 - Repayment submission, investment contribution, payout, and disbursement require an `Idempotency-Key`; see [wallet and financial APIs](wallet-and-financial-api.md).
 - Investor marketplace responses omit borrower identity and internal underwriting data.
 - Reconciliation endpoints are read-only and report discrepancies; they do not repair financial records.
+- Wallet activity is derived from the authenticated borrower's/investor's wallet and includes posted ledger entries only. Administrator wallet and ledger listing APIs are read-only.
 - Runtime tests and production build have not been verified. See the WP8 final status report.

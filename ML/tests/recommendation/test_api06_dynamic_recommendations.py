@@ -14,7 +14,7 @@ REQUEST = {
         "risk_tier": ["TIER_A", "TIER_B"],
         "interest_rate": {"min": 5, "max": 25},
         "loan_duration": {"min": 3, "max": 36},
-        "investment_amount": {"min": 10000, "max": 1000000},
+        "investment_amount": {"min": 10000, "max": 50000},
         "loan_purpose": ["education", "business"],
     },
     "candidates": [

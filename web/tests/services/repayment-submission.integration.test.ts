@@ -506,6 +506,8 @@ describe("REP — repayment submission", () => {
       amount,
     );
     await expectWalletMovement(context, amount, beforeWallets);
+    await expect(prisma.notification.findMany({ where: { userId: context.borrowerUser.id, category: "REPAYMENT" } })).resolves.toHaveLength(1);
+    await expect(prisma.notification.findFirst({ where: { userId: context.borrowerUser.id, category: "REPAYMENT", actionPath: "/borrower/repayments" } })).resolves.toMatchObject({ status: "UNREAD", title: "Repayment confirmed" });
   });
 
   it("REP-02: applies an interest-only payment before principal", async () => {

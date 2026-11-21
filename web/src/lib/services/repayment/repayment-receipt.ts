@@ -17,11 +17,15 @@ export interface RepaymentReceiptItem {
 
 export interface RepaymentReceipt {
   receiptId: string;
+  borrower: { legalName: string };
   loanId: string;
   ledgerTransactionId: string;
   status: "POSTED";
+  repaymentDate: Date;
   receiptTimestamp: Date;
   totalReceivedSatang: bigint;
+  principalSatang: bigint;
+  interestSatang: bigint;
   repaymentIds: string[];
   repayments: RepaymentReceiptItem[];
 }
@@ -74,6 +78,7 @@ export async function generateRepaymentReceipt(
               paidInterestSatang: true,
             },
           },
+          loan: { select: { borrowerProfile: { select: { legalName: true } } } },
         },
       },
     },
@@ -125,6 +130,8 @@ export async function generateRepaymentReceipt(
     (total, repayment) => total + repayment.totalSatang,
     0n,
   );
+  const principalSatang = repayments.reduce((total, repayment) => total + repayment.principalSatang, 0n);
+  const interestSatang = repayments.reduce((total, repayment) => total + repayment.interestSatang, 0n);
   const debitEntries = transaction.entries.filter(
     (entry) => entry.entryType === "DEBIT",
   );
@@ -168,11 +175,15 @@ export async function generateRepaymentReceipt(
 
   return {
     receiptId: transaction.id,
+    borrower: { legalName: repayments[0].loan.borrowerProfile.legalName },
     loanId: transaction.referenceId,
     ledgerTransactionId: transaction.id,
     status: "POSTED",
+    repaymentDate: transaction.postedAt,
     receiptTimestamp: transaction.postedAt,
     totalReceivedSatang,
+    principalSatang,
+    interestSatang,
     repaymentIds: receiptItems.map((item) => item.repaymentId),
     repayments: receiptItems,
   };

@@ -6,7 +6,6 @@ import math
 import hmac
 from typing import Any, Dict, List, Optional,Union,Literal
 from fastapi import Body,Depends,FastAPI,Header,HTTPException,status
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field,field_validator,model_validator
 from feature_contract import FEATURE_SCHEMA_VERSION, PREDICTION_OUTPUT_SCHEMA_VERSION, PREDICTION_RESPONSE_SCHEMA_VERSION
 from predict import FEATURE_NAMES,RiskEngine
@@ -42,14 +41,6 @@ app = FastAPI(
     description = 'Product REST API for hybrid SOM-GBDT laon risk tiering algorithm',
     lifespan = lifespan,
 )
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=['*'],
-    allow_credentials= True,
-    allow_methods=['*'],
-    allow_headers=['*'],
-)
-
 #Validation
 class LoanApplicationSchema(BaseModel):
     model_config = ConfigDict(extra="forbid",allow_inf_nan = False, strict = True,)

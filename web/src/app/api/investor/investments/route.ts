@@ -24,10 +24,59 @@ export async function GET(request: Request): Promise<Response> {
     const pagination = parsePagination(new URL(request.url).searchParams, { sortFields: ["createdAt"] });
     const where = { investorProfileId: identity.investorProfile.id };
     const [rows, total] = await Promise.all([
-      prisma.investment.findMany({ where, orderBy: { createdAt: pagination.sortOrder }, skip: pagination.offset, take: pagination.limit, include: { loan: { select: { id: true, status: true, principalSatang: true, annualInterestRate: true, termMonths: true } }, contributions: { orderBy: { createdAt: "asc" }, select: { id: true, amountSatang: true, createdAt: true, ledgerTransaction: { select: { status: true } } } }, payoutAllocation: { select: { id: true, principalSatang: true, interestSatang: true } } } }),
+      prisma.investment.findMany({
+        where,
+        orderBy: { createdAt: pagination.sortOrder },
+        skip: pagination.offset,
+        take: pagination.limit,
+        include: {
+          loan: { select: { id: true, status: true, principalSatang: true, annualInterestRate: true, termMonths: true } },
+          contributions: {
+            orderBy: { createdAt: "desc" },
+            take: 5,
+            select: { id: true, amountSatang: true, createdAt: true, ledgerTransaction: { select: { status: true } } },
+          },
+          payoutAllocation: {
+            orderBy: { createdAt: "desc" },
+            take: 5,
+            select: { id: true, principalSatang: true, interestSatang: true },
+          },
+        },
+      }),
       prisma.investment.count({ where }),
     ]);
-    return apiPaginatedResponse(rows.map((row) => ({ ...row, loan: { ...row.loan, principalSatang: row.loan.principalSatang.toString(), annualInterestRate: row.loan.annualInterestRate.toString() }, contributions: row.contributions.map((contribution) => ({ ...contribution, amountSatang: contribution.amountSatang.toString() })), payoutAllocation: row.payoutAllocation.map((allocation) => ({ ...allocation, principalSatang: allocation.principalSatang.toString(), interestSatang: allocation.interestSatang.toString() })) })), pagination, total);
+    const investmentIds = rows.map((row) => row.id);
+    const [postedContributionTotals, contributionCounts, allocationCounts] = await Promise.all([
+      prisma.investmentContribution.groupBy({
+        by: ["investmentId"],
+        where: { investmentId: { in: investmentIds }, ledgerTransaction: { status: "POSTED" } },
+        _sum: { amountSatang: true },
+      }),
+      prisma.investmentContribution.groupBy({
+        by: ["investmentId"],
+        where: { investmentId: { in: investmentIds } },
+        _count: { _all: true },
+      }),
+      prisma.payoutAllocation.groupBy({
+        by: ["investmentId"],
+        where: { investmentId: { in: investmentIds } },
+        _count: { _all: true },
+      }),
+    ]);
+    const postedTotalByInvestment = new Map(postedContributionTotals.map((item) => [item.investmentId, item._sum.amountSatang ?? 0n]));
+    const contributionCountByInvestment = new Map(contributionCounts.map((item) => [item.investmentId, item._count._all]));
+    const allocationCountByInvestment = new Map(allocationCounts.map((item) => [item.investmentId, item._count._all]));
+    return apiPaginatedResponse(rows.map((row) => ({
+      ...row,
+      totalContributedSatang: (postedTotalByInvestment.get(row.id) ?? 0n).toString(),
+      contributionCount: contributionCountByInvestment.get(row.id) ?? 0,
+      hasMoreContributions: (contributionCountByInvestment.get(row.id) ?? 0) > row.contributions.length,
+      payoutAllocationCount: allocationCountByInvestment.get(row.id) ?? 0,
+      hasMorePayoutAllocations: (allocationCountByInvestment.get(row.id) ?? 0) > row.payoutAllocation.length,
+      loan: { ...row.loan, principalSatang: row.loan.principalSatang.toString(), annualInterestRate: row.loan.annualInterestRate.toString() },
+      contributions: row.contributions.map((contribution) => ({ ...contribution, amountSatang: contribution.amountSatang.toString() })),
+      payoutAllocation: row.payoutAllocation.map((allocation) => ({ ...allocation, principalSatang: allocation.principalSatang.toString(), interestSatang: allocation.interestSatang.toString() })),
+    })), pagination, total);
   } catch (error) { return apiErrorResponseFrom(error); }
 }
 

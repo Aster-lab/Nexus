@@ -258,6 +258,9 @@ describe("Opening Balance + Investor Contribution integration", () => {
       expect(
         entries.some((entry) => entry.walletId === escrowWallet.id),
       ).toBe(true);
+
+      await expect(prisma.notification.findFirst({ where: { userId: fixture.investorUser.id, category: "INVESTMENT", actionPath: "/investor/portfolio" } }))
+        .resolves.toMatchObject({ status: "UNREAD", title: "Investment contribution confirmed" });
     });
 
     it("updates the loan funded amount and escrow held amount", async () => {
@@ -640,6 +643,11 @@ describe("Opening Balance + Investor Contribution integration", () => {
         escrowBefore.heldSatang + remainingSatang,
       );
       expect(escrowAfter.status).toBe("FULLY_FUNDED");
+
+      await expect(prisma.notification.findFirst({ where: { userId: fixture.borrowerUser.id, category: "LOAN_STATUS", actionPath: "/borrower/loans" } }))
+        .resolves.toMatchObject({ status: "UNREAD", title: "Your loan is fully funded" });
+      await expect(prisma.notification.findFirst({ where: { userId: fixture.investorUser.id, category: "INVESTMENT", title: "A loan you backed is fully funded" } }))
+        .resolves.toMatchObject({ status: "UNREAD", actionPath: "/investor/portfolio" });
 
       expect(investorWalletAfter.balanceSatang).toBe(0n);
       expect(escrowWalletAfter.balanceSatang).toBe(

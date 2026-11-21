@@ -86,7 +86,7 @@ def test_preference_snapshot_is_versioned_and_timezone_aware():
 
 
 def test_candidate_snapshot_contract_matches_repository_loan_fixture():
-    fixture = Path(__file__).resolve().parents[2] / "data" / "recommendation" / "loan.json"
+    fixture = Path(__file__).resolve().parents[1] / "fixtures" / "recommendation" / "loan.json"
     loans = json.loads(fixture.read_text(encoding="utf-8"))
     snapshot = RecommendationRunCandidateSnapshot.model_validate({
         "schema_version": "nexus_recommendation_candidates_snapshot.v1",

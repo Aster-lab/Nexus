@@ -58,14 +58,28 @@ function applicationResult<T extends {
   id: string;
   borrowerProfileId: string;
   status: string;
+  createdAt: Date;
+  updatedAt: Date;
   submittedAt: Date | null;
+  closedAt: Date | null;
+  financialReviews: Array<{ id: string; decision: string; reason: string; createdAt: Date }>;
+  informationRequests: Array<{ id: string; requestDetails: Prisma.JsonValue; status: string; createdAt: Date }>;
   currentVersion: { id: string; versionNumber: number; requestedPrincipalSatang: bigint; requestedTermMonths: number; submittedData: Prisma.JsonValue } | null;
 }>(application: T) {
   return {
     id: application.id,
     borrowerProfileId: application.borrowerProfileId,
     status: application.status,
+    createdAt: application.createdAt,
+    updatedAt: application.updatedAt,
     submittedAt: application.submittedAt,
+    closedAt: application.closedAt,
+    permissions: {
+      canEdit: application.status === "DRAFT",
+      canSubmit: application.status === "DRAFT" && application.currentVersion !== null,
+    },
+    financialReviews: application.financialReviews,
+    informationRequests: application.informationRequests,
     currentVersion: application.currentVersion ? {
       id: application.currentVersion.id,
       versionNumber: application.currentVersion.versionNumber,
@@ -80,7 +94,12 @@ const applicationSelect = {
   id: true,
   borrowerProfileId: true,
   status: true,
+  createdAt: true,
+  updatedAt: true,
   submittedAt: true,
+  closedAt: true,
+  financialReviews: { select: { id: true, decision: true, reason: true, createdAt: true }, orderBy: { createdAt: "desc" } },
+  informationRequests: { select: { id: true, requestDetails: true, status: true, createdAt: true }, orderBy: { createdAt: "desc" } },
   currentVersion: {
     select: {
       id: true,

@@ -321,6 +321,8 @@ describe("PAY — investor payout processing", () => {
     const before = wallet.balanceSatang;
     await payout(context, allocation);
     expect((await prisma.wallet.findUniqueOrThrow({ where: { id: wallet.id } })).balanceSatang).toBe(before + principalOnly);
+    await expect(prisma.notification.findFirst({ where: { userId: allocation.investment.investorProfile.userId, category: "PAYOUT", actionPath: "/investor/payouts" } }))
+      .resolves.toMatchObject({ status: "UNREAD", title: "Investor payout completed" });
   });
 
   it("PAY-08 transfers an interest-only allocation", async () => {

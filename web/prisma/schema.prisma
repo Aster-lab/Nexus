@@ -609,6 +609,7 @@ model SecurityEvent {
 
   @@index([userId, createdAt])
   @@index([severity, createdAt])
+  @@index([eventType, sourceReference, createdAt])
   @@map("security_events")
 }
 
@@ -899,6 +900,7 @@ model LedgerTransaction {
 
   // Posted headers are immutable; reversals use a separate compensating transaction linked here.
   @@index([status, createdAt])
+  @@index([status, postedAt])
   @@index([referenceType, referenceId])
   @@map("ledger_transactions")
 }
@@ -1121,6 +1123,7 @@ model Repayment {
   @@index([installmentId])
   @@index([ledgerTransactionId])
   @@index([reversalOfRepaymentId])
+  @@index([status, receivedAt])
   // Component totals and immutable repayment history are enforced by SQL migration.
   @@map("repayments")
 }
@@ -1142,6 +1145,7 @@ model PayoutAllocation {
   @@unique([repaymentId, investmentId])
   // Principal/interest allocation totals and investment-loan consistency are enforced by SQL.
   @@index([investmentId])
+  @@index([repaymentId, createdAt])
   @@map("payout_allocations")
 }
 
@@ -1371,6 +1375,7 @@ model Notification {
   category  String             @db.VarChar(60)
   title     String             @db.VarChar(255)
   content   String
+  actionPath String?            @map("action_path") @db.VarChar(500)
   status    NotificationStatus @default(UNREAD)
   createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
 

@@ -1,0 +1,23 @@
+.nexus-shell-account .nexus-notification-center > button {
+  width: 2.65rem;
+  min-height: 2.65rem;
+  padding: 0.5rem;
+  color: var(--foreground);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.65rem;
+}
+
+.nexus-shell-account .nexus-notification-center > button:hover {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-color: var(--border);
+}
+
+@media (max-width: 34rem) {
+  .nexus-notification-panel {
+    position: fixed;
+    top: 4.25rem;
+    right: 0.75rem;
+  }
+}

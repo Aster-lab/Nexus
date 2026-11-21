@@ -1,0 +1,16 @@
+.nexus-register-page {
+  min-height: calc(100dvh - 4.75rem);
+  align-items: start;
+  padding-block: clamp(1.5rem, 5vw, 3.5rem);
+  background:
+    radial-gradient(ellipse at 85% 4%, color-mix(in srgb, #1783c1 14%, transparent) 0, transparent 38%),
+    radial-gradient(ellipse at 8% 88%, color-mix(in srgb, #0a3c6e 9%, transparent) 0, transparent 36%),
+    var(--background);
+}
+
+@media (max-width: 34rem) {
+  .nexus-register-page {
+    min-height: calc(100dvh - 4rem);
+    padding-inline: 0.75rem;
+  }
+}
