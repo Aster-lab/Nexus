@@ -9,19 +9,16 @@ import { Card, CardContent, CardDescription, CardHeader } from "../ui/card";
 import { Button, buttonVariants } from "../ui/button";
 import { ApiClientError, apiPost } from "../../lib/client/api-client";
 import { getRoleHomePath, safeInAppReturnPath } from "../../lib/client/auth-access";
-import { useAuth } from "./auth-provider";
+import { useAuth, type AuthIdentity } from "./auth-provider";
 
-interface LoginResponse {
-  id: string;
-  email: string;
-  roles: string[];
+interface LoginResponse extends AuthIdentity {
   expiresAt: string;
 }
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { refresh } = useAuth();
+  const { establishSession } = useAuth();
   const [oauthAvailable, setOauthAvailable] = useState(false);
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -50,12 +47,12 @@ export function LoginForm() {
     setError(null);
     const data = new FormData(event.currentTarget);
     try {
-      await apiPost<LoginResponse, { email: string; password: string }>("/api/auth/login", {
+      const response = await apiPost<LoginResponse, { email: string; password: string }>("/api/auth/login", {
         email: String(data.get("email") ?? "").trim(),
         password: String(data.get("password") ?? ""),
       });
-      const identity = await refresh();
-      if (!identity) throw new Error("Your sign-in succeeded, but we could not confirm your active account. Please try again.");
+      const identity = response.data;
+      establishSession(identity);
       const destination = safeInAppReturnPath(searchParams.get("returnTo")) ?? getRoleHomePath(identity.roles) ?? "/login";
       router.replace(destination);
       router.refresh();

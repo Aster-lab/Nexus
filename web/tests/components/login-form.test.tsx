@@ -7,7 +7,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock("next-auth/react", () => ({ signIn: vi.fn(), getProviders: vi.fn(async () => null) }));
-vi.mock("../../src/components/auth/auth-provider", () => ({ useAuth: () => ({ refresh: vi.fn() }) }));
+vi.mock("../../src/components/auth/auth-provider", () => ({ useAuth: () => ({ establishSession: vi.fn() }) }));
 
 import { LoginForm } from "../../src/components/auth/login-form";
 

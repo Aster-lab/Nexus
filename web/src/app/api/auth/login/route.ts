@@ -25,19 +25,33 @@ function enforceSameOriginWhenPresent(request: Request): void {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const startedAt = performance.now();
+  let phaseStartedAt = startedAt;
+  const timings: string[] = [];
+  const mark = (name: string) => {
+    timings.push(`${name};dur=${Math.max(0, performance.now() - phaseStartedAt).toFixed(1)}`);
+    phaseStartedAt = performance.now();
+  };
+  const withTimings = (response: Response) => {
+    response.headers.set("Server-Timing", [...timings, `app;dur=${(performance.now() - startedAt).toFixed(1)}`].join(", "));
+    return response;
+  };
   try {
     enforceSameOriginWhenPresent(request);
     const body = await parseJsonBody(request, loginSchema);
+    mark("validate");
     const rateLimit = await consumeAuthRateLimit(
       "AUTH_LOGIN_ATTEMPT",
       authRateLimitSubjects(request, body.email, { maxAttempts: 8, windowSeconds: 900 }, { maxAttempts: 60, windowSeconds: 900 }),
     );
+    mark("rate-limit");
     if (rateLimit.limited) {
       const response = apiErrorResponse("RATE_LIMITED", "Too many sign-in attempts. Try again later.", 429);
       response.headers.set("Retry-After", String(rateLimit.retryAfterSeconds));
-      return response;
+      return withTimings(response);
     }
     const identity = await authenticateLocalCredentials(body.email, body.password);
+    mark("credentials");
     if (!identity) throw new ApiError("UNAUTHENTICATED", "Email or password is incorrect.", 401);
 
     const rawToken = randomBytes(32).toString("base64url");
@@ -57,6 +71,7 @@ export async function POST(request: Request): Promise<Response> {
         select: { id: true },
       });
     });
+    mark("session");
     if (!session) throw new ApiError("UNAUTHENTICATED", "Email or password is incorrect.", 401);
 
     const response = apiSuccessResponse({
@@ -72,8 +87,8 @@ export async function POST(request: Request): Promise<Response> {
       "Set-Cookie",
       `${API_SESSION_COOKIE_NAME}=${encodeURIComponent(rawToken)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_LIFETIME_SECONDS}${secure}`,
     );
-    return response;
+    return withTimings(response);
   } catch (error) {
-    return apiErrorResponseFrom(error);
+    return withTimings(apiErrorResponseFrom(error));
   }
 }

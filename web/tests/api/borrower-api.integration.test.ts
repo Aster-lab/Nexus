@@ -17,6 +17,7 @@ import { GET as getLoan } from "../../src/app/api/borrower/loans/[loanId]/route"
 import { GET as getSchedule } from "../../src/app/api/borrower/loans/[loanId]/schedule/route";
 import { GET as getPayableSummary } from "../../src/app/api/borrower/loans/[loanId]/payable/route";
 import { GET as getBorrowerDashboard } from "../../src/app/api/borrower/dashboard/route";
+import { GET as getBorrowerDashboardOverview } from "../../src/app/api/borrower/dashboard/overview/route";
 import { GET as getBorrowerWallet } from "../../src/app/api/borrower/wallet/route";
 import {
   GET as listRepayments,
@@ -631,6 +632,27 @@ describe("API-03 borrower application APIs", () => {
       upcomingInstallments: [],
       overdueInstallments: [],
     });
+  });
+
+  it("DASH-08 loads all borrower dashboard sections through one authenticated overview request", async () => {
+    const setup = await createDueRepaymentContext();
+    const result = await expectApiSuccess<{
+      summary: { status: string; data?: { activeLoanCount: number } };
+      applications: { status: string; data?: unknown[] };
+      loans: { status: string; data?: Array<{ id: string; principalSatang: string }> };
+      repayments: { status: string; data?: unknown[] };
+      wallet: { status: string; data?: { wallet: null | { balanceSatang: string }; transactions: unknown[] } };
+    }>(await getBorrowerDashboardOverview(borrowerRequest(
+      setup.borrower,
+      "http://localhost/api/borrower/dashboard/overview",
+    )));
+
+    expect(result.summary.status).toBe("success");
+    expect(result.summary.data?.activeLoanCount).toBeGreaterThan(0);
+    expect(result.applications.status).toBe("success");
+    expect(result.loans.data).toContainEqual(expect.objectContaining({ id: setup.context.loan.id }));
+    expect(result.repayments.status).toBe("success");
+    expect(result.wallet.status).toBe("success");
   });
 
   it("DASH-07 rejects an authenticated investor from the borrower dashboard", async () => {

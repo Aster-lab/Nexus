@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto";
+import { Prisma } from "../../generated/prisma/client";
 import { prisma } from "../prisma";
 
 export type AuthRateLimitSubjectKind = "EMAIL" | "IP";
@@ -59,14 +60,16 @@ export async function consumeAuthRateLimit(
     const lockKeys = uniqueRecords
       .map(({ sourceReference }) => `${eventType}:${sourceReference}`)
       .sort();
-    for (const lockKey of lockKeys) {
-      await tx.$queryRaw<Array<{ locked: number }>>`
-        WITH acquired AS MATERIALIZED (
-          SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))
-        )
-        SELECT 1 AS locked FROM acquired
-      `;
-    }
+    const lockValues = lockKeys.map((lockKey) => Prisma.sql`(${lockKey})`);
+    await tx.$queryRaw<Array<{ locked: number }>>(Prisma.sql`
+      WITH lock_keys(lock_key) AS (VALUES ${Prisma.join(lockValues)}),
+      acquired AS MATERIALIZED (
+        SELECT pg_advisory_xact_lock(hashtextextended(lock_key, 0))
+        FROM lock_keys
+        ORDER BY lock_key
+      )
+      SELECT COUNT(*)::int AS locked FROM acquired
+    `);
 
     const windows: Array<{
       subject: AuthRateLimitSubject;
@@ -74,15 +77,33 @@ export async function consumeAuthRateLimit(
       limited: boolean;
       retryAfterSeconds: number;
     }> = [];
+    const windowValues = uniqueRecords.map(({ subject, sourceReference }) => Prisma.sql`(
+      ${sourceReference},
+      CAST(${new Date(now.getTime() - subject.windowSeconds * 1000)} AS timestamptz),
+      ${subject.maxAttempts}
+    )`);
+    const usages = await tx.$queryRaw<Array<{
+      sourceReference: string;
+      maxAttempts: number;
+      attempts: number;
+      oldestAttempt: Date | null;
+    }>>(Prisma.sql`
+      WITH limits(source_reference, window_start, max_attempts) AS (VALUES ${Prisma.join(windowValues)})
+      SELECT limits.source_reference AS "sourceReference",
+        limits.max_attempts AS "maxAttempts",
+        COUNT(events.id)::int AS attempts,
+        MIN(events.created_at) AS "oldestAttempt"
+      FROM limits
+      LEFT JOIN security_events AS events
+        ON events.event_type = ${eventType}
+        AND events.source_reference = limits.source_reference
+        AND events.created_at >= limits.window_start
+      GROUP BY limits.source_reference, limits.max_attempts
+    `);
+    const usageBySource = new Map(usages.map((usage) => [usage.sourceReference, usage]));
     for (const { subject, sourceReference } of uniqueRecords) {
-      const windowStart = new Date(now.getTime() - subject.windowSeconds * 1000);
-      const [usage] = await tx.$queryRaw<Array<{ attempts: number; oldestAttempt: Date | null }>>`
-        SELECT COUNT(*)::int AS attempts, MIN(created_at) AS "oldestAttempt"
-        FROM security_events
-        WHERE event_type = ${eventType}
-          AND source_reference = ${sourceReference}
-          AND created_at >= ${windowStart}
-      `;
+      const usage = usageBySource.get(sourceReference);
+      if (!usage) throw new Error("Authentication rate-limit query returned an incomplete result.");
       const limited = usage.attempts >= subject.maxAttempts;
       const retryAt = usage.oldestAttempt
         ? new Date(usage.oldestAttempt.getTime() + subject.windowSeconds * 1000)

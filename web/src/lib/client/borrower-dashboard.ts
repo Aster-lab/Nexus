@@ -3,6 +3,7 @@ import { formatSatang as formatSatangAmount } from "./financial-format";
 import type { BorrowerWalletResult } from "./borrower-wallet";
 
 export const BORROWER_DASHBOARD_PATHS = {
+  overview: "/api/borrower/dashboard/overview",
   summary: "/api/borrower/dashboard",
   applications: "/api/borrower/applications?page=1&limit=5&sortBy=createdAt&sortOrder=desc",
   loans: "/api/borrower/loans?page=1&limit=5&sortBy=createdAt&sortOrder=desc",
@@ -185,12 +186,26 @@ export async function loadBorrowerDashboard(
   }
   if (cached && cacheKey) borrowerDashboardCache.delete(cacheKey);
 
-  const entries = await Promise.all(keys.map(async (key) => {
-    const resource = await loadBorrowerDashboardResource(key, fetcher, signal);
-    onResource?.(key, resource);
-    return [key, resource] as const;
-  }));
-  const data = Object.assign(createInitialBorrowerDashboardData(), Object.fromEntries(entries));
+  let data: BorrowerDashboardData;
+  try {
+    const response = await fetcher<BorrowerDashboardData>(BORROWER_DASHBOARD_PATHS.overview, { signal });
+    const overview = response.data;
+    if (!overview || typeof overview !== "object" ||
+      !keys.every((key) => overview[key] && typeof overview[key] === "object" && "status" in overview[key])) {
+      throw new ApiClientError(502, "INVALID_DASHBOARD_RESPONSE", "The server returned an unexpected dashboard response.");
+    }
+    data = overview;
+  } catch (error) {
+    const message = errorMessage(error);
+    data = {
+      summary: { status: "error", message },
+      applications: { status: "error", message },
+      loans: { status: "error", message },
+      repayments: { status: "error", message },
+      wallet: { status: "error", message },
+    };
+  }
+  for (const key of keys) onResource?.(key, data[key]);
   if (cacheKey && !signal?.aborted && keys.every((key) => data[key].status === "success")) {
     borrowerDashboardCache.set(cacheKey, { expiresAt: Date.now() + DASHBOARD_CACHE_TTL_MS, data });
   }

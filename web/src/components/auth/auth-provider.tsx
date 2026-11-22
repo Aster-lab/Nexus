@@ -18,6 +18,7 @@ interface AuthContextValue {
   status: AuthStatus;
   error: string | null;
   refresh: () => Promise<AuthIdentity | null>;
+  establishSession: (identity: AuthIdentity) => void;
   signOut: () => void;
 }
 
@@ -34,6 +35,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIdentity(null);
     setError(null);
     setStatus("unauthenticated");
+  }, []);
+
+  const establishSession = useCallback((nextIdentity: AuthIdentity) => {
+    // Ignore any in-flight session check that started before the login completed.
+    requestSequence.current += 1;
+    setIdentity(nextIdentity);
+    setError(null);
+    setStatus("authenticated");
   }, []);
 
   const refresh = useCallback(async (): Promise<AuthIdentity | null> => {
@@ -61,9 +70,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [signOut]);
 
-  useEffect(() => { queueMicrotask(() => { void refresh(); }); }, [refresh]);
+  useEffect(() => {
+    // The credentials login response already carries the authoritative identity.
+    // Avoid an unauthenticated /api/auth/me request on the login page.
+    if (window.location.pathname === "/login") return;
+    queueMicrotask(() => { void refresh(); });
+  }, [refresh]);
 
-  const value = useMemo(() => ({ identity, status, error, refresh, signOut }), [identity, status, error, refresh, signOut]);
+  const value = useMemo(() => ({ identity, status, error, refresh, establishSession, signOut }), [identity, status, error, refresh, establishSession, signOut]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
