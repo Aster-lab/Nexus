@@ -16,6 +16,8 @@ const TARGET_TYPE = "LOAN";
 
 const REQUEST_SCHEMA = "loan_disbursement_request.v1";
 const APPROVAL_SCHEMA = "loan_disbursement_approval.v1";
+const CONSENT_ACTION = "LOAN_DISBURSEMENT_CONSENTED";
+const CONSENT_SCHEMA = "loan_disbursement_consent.v1";
 
 export class LoanDisbursementApprovalError extends Error {
   constructor(
@@ -82,6 +84,106 @@ async function assertEligibleLoan(
   }
 }
 
+async function assertBorrowerConsent(
+  tx: Parameters<typeof assertAdministrator>[0],
+  loanId: string,
+): Promise<void> {
+  const loan = await tx.loan.findUnique({
+    where: { id: loanId },
+    select: {
+      principalSatang: true,
+      borrowerProfile: { select: { userId: true } },
+    },
+  });
+  if (!loan) fail("Loan was not found.", "LOAN_NOT_FOUND");
+
+  const consent = await tx.auditLog.findFirst({
+    where: {
+      actorUserId: loan.borrowerProfile.userId,
+      action: CONSENT_ACTION,
+      targetType: TARGET_TYPE,
+      targetId: loanId,
+      outcome: "SUCCESS",
+      newValues: { path: ["schemaVersion"], equals: CONSENT_SCHEMA },
+    },
+    select: { id: true, newValues: true },
+  });
+  const consentValues = consent?.newValues as
+    | { confirmedPrincipalSatang?: unknown; currency?: unknown }
+    | null;
+  if (
+    !consent || !consentValues ||
+    consentValues.confirmedPrincipalSatang !== loan.principalSatang.toString() ||
+    consentValues.currency !== "THB"
+  ) {
+    fail("Borrower confirmation is required before disbursement.", "BORROWER_CONSENT_REQUIRED");
+  }
+}
+
+export async function recordBorrowerDisbursementConsent(input: {
+  loanId: string;
+  borrowerUserId: string;
+}) {
+  if (!input.loanId || !input.borrowerUserId) {
+    fail("Loan and borrower IDs are required.", "INVALID_REFERENCE");
+  }
+
+  return withSerializableRetry(() => prisma.$transaction(async (tx) => {
+    await lockLoan(tx, input.loanId);
+    const loan = await tx.loan.findUnique({
+      where: { id: input.loanId },
+      select: {
+        id: true,
+        status: true,
+        principalSatang: true,
+        fundedSatang: true,
+        disbursedAt: true,
+        borrowerProfile: { select: { userId: true } },
+      },
+    });
+    if (!loan || loan.borrowerProfile.userId !== input.borrowerUserId) {
+      fail("Loan was not found.", "LOAN_NOT_FOUND");
+    }
+    if (loan.status !== "FUNDED" || loan.fundedSatang !== loan.principalSatang) {
+      fail("Loan must be fully funded before confirming disbursement.", "INVALID_LOAN_STATUS");
+    }
+    if (loan.disbursedAt) fail("Loan has already been disbursed.", "ALREADY_DISBURSED");
+
+    const existing = await tx.auditLog.findFirst({
+      where: {
+        actorUserId: input.borrowerUserId,
+        action: CONSENT_ACTION,
+        targetType: TARGET_TYPE,
+        targetId: input.loanId,
+        outcome: "SUCCESS",
+        newValues: { path: ["schemaVersion"], equals: CONSENT_SCHEMA },
+      },
+      select: { id: true, createdAt: true },
+    });
+    if (existing) {
+      return { id: existing.id, loanId: input.loanId, confirmedAt: existing.createdAt, alreadyConfirmed: true };
+    }
+
+    const consent = await tx.auditLog.create({
+      data: {
+        actorUserId: input.borrowerUserId,
+        action: CONSENT_ACTION,
+        targetType: TARGET_TYPE,
+        targetId: input.loanId,
+        oldValues: { status: "FUNDED", disbursedAt: null },
+        newValues: {
+          schemaVersion: CONSENT_SCHEMA,
+          confirmedPrincipalSatang: loan.principalSatang.toString(),
+          currency: "THB",
+        },
+        outcome: "SUCCESS",
+      },
+      select: { id: true, createdAt: true },
+    });
+    return { id: consent.id, loanId: input.loanId, confirmedAt: consent.createdAt, alreadyConfirmed: false };
+  }, FINANCIAL_TRANSACTION_OPTIONS));
+}
+
 export async function requestLoanDisbursement(input: {
   loanId: string;
   requesterUserId: string;
@@ -98,6 +200,7 @@ export async function requestLoanDisbursement(input: {
       await assertAdministrator(tx, input.requesterUserId);
       await lockLoan(tx, input.loanId);
       await assertEligibleLoan(tx, input.loanId);
+      await assertBorrowerConsent(tx, input.loanId);
 
       return tx.auditLog.create({
         data: {
@@ -177,6 +280,7 @@ export async function approveLoanDisbursement(input: {
 
         await lockLoan(tx, loanId);
         await assertEligibleLoan(tx, loanId);
+        await assertBorrowerConsent(tx, loanId);
 
         // The requester must still be an active administrator.
         if (!request.actorUserId) {

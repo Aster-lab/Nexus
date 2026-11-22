@@ -5,7 +5,6 @@ import {Prisma} from "../../src/generated/prisma/client";
 import {prisma} from "../../src/lib/prisma";
 
 const ESCROW_ACCOUNT_CODE = "2200";
-const OPENING_BALANCE_SOURCE_CODE = "1300";
 const CURRENCY = "THB";
 
 const DEFAULT_AMOUNT =  100_000n;
@@ -56,6 +55,34 @@ export async function fundInvestorWallet({
     idempotencyKey: `test-opening-balance-${randomUUID()}`,
     reason: "Initial simulated balance for integration testing",
   });
+}
+
+/** Temporarily enables the shared escrow account for integration journeys. */
+export async function activateEscrowAccountForTests() {
+  const account = await prisma.platformAccount.findUniqueOrThrow({
+    where: { accountCode: ESCROW_ACCOUNT_CODE },
+    select: { id: true, status: true },
+  });
+  const wallet = await prisma.wallet.upsert({
+    where: { ownerPlatformAccountId: account.id },
+    update: {},
+    create: { ownerPlatformAccountId: account.id, currency: CURRENCY, balanceSatang: 0n, status: "CLOSED" },
+    select: { id: true, status: true },
+  });
+  await prisma.platformAccount.update({ where: { id: account.id }, data: { status: "ACTIVE" } });
+  await prisma.wallet.update({ where: { id: wallet.id }, data: { status: "ACTIVE" } });
+
+  let cleaned = false;
+  return {
+    accountId: account.id,
+    walletId: wallet.id,
+    cleanup: async () => {
+      if (cleaned) return;
+      await prisma.wallet.update({ where: { id: wallet.id }, data: { status: wallet.status } });
+      await prisma.platformAccount.update({ where: { id: account.id }, data: { status: account.status } });
+      cleaned = true;
+    },
+  };
 }
 
 export async function createInvestorContributionFixture({

@@ -1,0 +1,39 @@
+.nexus-shell-body { display: flex; flex: 1; min-height: 0; }
+.nexus-main { min-width: 0; flex: 1; padding: 0 1.25rem 1.5rem; }
+.workspace-sidebar {
+  position: sticky; top: 0; display: flex; width: 18rem; min-width: 18rem; height: calc(100dvh - 4.75rem);
+  flex-direction: column; gap: 1.2rem; padding: 1.35rem 0.9rem; overflow: auto;
+  background: var(--surface); border-right: 1px solid var(--border); transition: width 180ms ease, min-width 180ms ease;
+}
+.workspace-sidebar--collapsed { width: 4.75rem; min-width: 4.75rem; padding-inline: 0.55rem; }
+.workspace-sidebar__top { display: flex; min-height: 3rem; align-items: center; justify-content: space-between; gap: 0.5rem; padding-inline: 0.35rem; }
+.workspace-sidebar__section { display: grid; min-width: 0; gap: 0.15rem; color: var(--muted); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; line-height: 1.25; text-transform: uppercase; }
+.workspace-sidebar__section strong { overflow: hidden; font-size: 0.78rem; text-overflow: ellipsis; white-space: nowrap; }
+.workspace-sidebar__section small { font-size: 0.67rem; font-weight: 600; letter-spacing: 0.13em; }
+.workspace-sidebar--collapsed .workspace-sidebar__section { width: 100%; text-align: center; }
+.workspace-sidebar__toggle { display: inline-grid; width: 2.35rem; height: 2.35rem; flex: 0 0 auto; place-items: center; color: var(--foreground); background: transparent; border: 1px solid transparent; border-radius: 0.65rem; cursor: pointer; }
+.workspace-sidebar__toggle:hover { background: var(--secondary); border-color: var(--border); }
+.workspace-sidebar__links { display: grid; gap: 0.25rem; }
+.workspace-sidebar__link { display: flex; min-height: 3rem; align-items: center; gap: 0.85rem; padding: 0.7rem 0.85rem; overflow: hidden; color: var(--foreground); border: 1px solid transparent; border-radius: 0.7rem; font-size: 0.92rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.workspace-sidebar__link:hover { background: color-mix(in srgb, var(--accent) 9%, transparent); border-color: var(--border); }
+.workspace-sidebar__link--active { color: var(--primary-foreground); background: var(--primary); }
+.workspace-sidebar__link--active:hover { background: var(--primary); }
+.workspace-sidebar__link svg { flex: 0 0 auto; }
+.workspace-sidebar--collapsed .workspace-sidebar__link { justify-content: center; padding-inline: 0; }
+.workspace-sidebar--collapsed .workspace-sidebar__link span { display: none; }
+.workspace-sidebar-mobile-trigger, .workspace-sidebar-backdrop, .workspace-sidebar__mobile-close { display: none; }
+@media (max-width: 52rem) {
+  .nexus-shell-body { display: block; }
+  .nexus-main { padding: 0 0 1rem; }
+  .workspace-sidebar-mobile-trigger { display: inline-flex; min-height: 2.65rem; align-items: center; gap: 0.55rem; margin: 0.65rem 1rem 0; padding: 0.45rem 0.75rem; color: var(--foreground); background: var(--surface); border: 1px solid var(--border); border-radius: 0.7rem; font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+  .workspace-sidebar { position: fixed; z-index: 50; top: 0; bottom: 0; left: 0; width: min(19rem, 86vw); min-width: 0; height: 100dvh; padding: 1.1rem; transform: translateX(-105%); transition: transform 180ms ease; box-shadow: 0 18px 60px #0003; }
+  .workspace-sidebar--collapsed { width: min(19rem, 86vw); min-width: 0; padding-inline: 1.1rem; }
+  .workspace-sidebar--mobile-open { transform: translateX(0); }
+  .workspace-sidebar--collapsed .workspace-sidebar__section { width: auto; text-align: left; }
+  .workspace-sidebar--collapsed .workspace-sidebar__link { justify-content: flex-start; padding-inline: 0.75rem; }
+  .workspace-sidebar--collapsed .workspace-sidebar__link span { display: inline; }
+  .workspace-sidebar__desktop-toggle { display: none; }
+  .workspace-sidebar__mobile-close { display: inline-grid; }
+  .workspace-sidebar-backdrop { position: fixed; z-index: 49; inset: 0; display: block; background: #02061799; border: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .workspace-sidebar, .workspace-sidebar__link { transition: none; } }

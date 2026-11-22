@@ -128,8 +128,21 @@ export function AdminLoanDetailPage({ loanId }: { loanId: string }) {
     return () => { current = false; };
   }, [loanId]);
 
+  async function refreshLoanDetails() {
+    setLoanState("loading");
+    setLoanError("");
+    try {
+      const response = await loadAdminLoan(loanId);
+      setLoan(response.data);
+      setLoanState("success");
+    } catch (error) {
+      setLoanError(error instanceof ApiClientError ? error.message : "Loan details could not be refreshed.");
+      setLoanState("error");
+    }
+  }
+
   async function disburse() {
-    if (!loan || !canAdminDisburseLoan(loan.status) || !reason.trim() || submitting) return;
+    if (!loan || !canAdminDisburseLoan(loan.status, loan.disbursementConsentAt) || !reason.trim() || submitting) return;
     if (!window.confirm("Submit this disbursement for posting? The backend will recheck loan eligibility and record the result.")) return;
     setSubmitting(true);
     setConfirmation("");
@@ -155,11 +168,11 @@ export function AdminLoanDetailPage({ loanId }: { loanId: string }) {
   if (loanState === "error" || !loan) return <section className="admin-page"><ErrorState title="Loan unavailable" message={loanError || "The loan could not be found."} /><Link href="/admin/loans">Return to loans</Link></section>;
 
   return <section className="admin-page">
-    <header className="admin-page__header"><div><Link className="admin-text-link" href="/admin/loans">← Loans</Link><p className="admin-eyebrow">Loan operations</p><h1>{loan.borrowerProfile.legalName}</h1><p className="admin-muted">Loan reference {loan.id}</p></div><Badge variant={loan.status === "ACTIVE" ? "success" : "outline"}>{loan.status}</Badge></header>
+    <header className="admin-page__header"><div><Link className="admin-text-link" href="/admin/loans">← Loans</Link><p className="admin-eyebrow">Loan operations</p><h1>{loan.borrowerProfile.legalName}</h1><p className="admin-muted">Loan reference {loan.id}</p></div><div className="flex items-center gap-3"><Badge variant={loan.status === "ACTIVE" ? "success" : "outline"}>{loan.status}</Badge><Button variant="outline" size="sm" onClick={() => void refreshLoanDetails()}>Refresh status</Button></div></header>
     <div className="admin-detail-grid">
       <Card><CardHeader><CardTitle>Loan summary</CardTitle><CardDescription>Persisted loan terms and borrower reference.</CardDescription></CardHeader><CardContent><div className="admin-detail-metrics"><Metric label="Principal" value={formatSatang(loan.principalSatang)} /><Metric label="Funded" value={formatSatang(loan.fundedSatang)} /><Metric label="Annual rate" value={`${(Number(loan.annualInterestRate) * 100).toFixed(2)}%`} /><Metric label="Term" value={`${loan.termMonths} months`} /></div><p className="admin-muted">Borrower {loan.borrowerProfile.user.email}</p><p className="admin-muted">Disbursed {loan.disbursedAt ? new Date(loan.disbursedAt).toLocaleString() : "Not disbursed"}</p></CardContent></Card>
       <Card><CardHeader><CardTitle>Status history</CardTitle><CardDescription>Backend-recorded status changes.</CardDescription></CardHeader><CardContent>{loan.statusHistory.length ? <ol className="admin-history-list">{loan.statusHistory.map((item, index) => <li key={`${item.createdAt}-${index}`}><strong>{item.previousStatus ?? "Created"} → {item.newStatus}</strong><p>{item.reason}</p><small>{new Date(item.createdAt).toLocaleString()}</small></li>)}</ol> : <p className="admin-muted">No status history returned.</p>}</CardContent></Card>
-      {canAdminDisburseLoan(loan.status) ? <Card><CardHeader><CardTitle>Disbursement</CardTitle><CardDescription>The existing WP5 service controls funding eligibility and posting.</CardDescription></CardHeader><CardContent><label className="admin-form-label" htmlFor="disbursement-reason">Reason<input className="admin-form-control" id="disbursement-reason" maxLength={1000} required value={reason} onChange={(event) => setReason(event.target.value)} /></label>{loanError ? <p className="admin-danger-note" role="alert">{loanError}</p> : null}{confirmation ? <p className="admin-success-note" role="status">{confirmation}</p> : null}<Button className="admin-action-button" disabled={!reason.trim() || submitting} onClick={() => void disburse()}>{submitting ? "Submitting…" : "Confirm disbursement"}</Button></CardContent></Card> : null}
+      {loan.status === "FUNDED" ? <Card><CardHeader><CardTitle>Disbursement</CardTitle><CardDescription>The borrower must confirm release before an administrator can post the simulated wallet credit.</CardDescription></CardHeader><CardContent>{loan.disbursementConsentAt ? <><p className="admin-success-note" role="status">Borrower confirmation recorded {new Date(loan.disbursementConsentAt).toLocaleString()}.</p><label className="admin-form-label" htmlFor="disbursement-reason">Reason<input className="admin-form-control" id="disbursement-reason" maxLength={1000} required value={reason} onChange={(event) => setReason(event.target.value)} /></label>{loanError ? <p className="admin-danger-note" role="alert">{loanError}</p> : null}{confirmation ? <p className="admin-success-note" role="status">{confirmation}</p> : null}<Button className="admin-action-button" disabled={!canAdminDisburseLoan(loan.status, loan.disbursementConsentAt) || !reason.trim() || submitting} onClick={() => void disburse()}>{submitting ? "Submitting…" : "Confirm disbursement"}</Button></> : <p className="admin-muted" role="status">Waiting for the borrower to confirm disbursement in their loan details.</p>}</CardContent></Card> : null}
     </div>
     <Card><CardHeader><CardTitle>Funding and escrow</CardTitle><CardDescription>Funding transaction details returned by the administrator API.</CardDescription></CardHeader><CardContent>{fundingState === "loading" ? <LoadingState label="Loading funding details" /> : null}{fundingState === "error" ? <ErrorState title="Funding details unavailable" message={fundingError} /> : null}{fundingState === "success" && funding ? <FundingContent funding={funding} /> : null}</CardContent></Card>
     <Card><CardHeader><CardTitle>Repayment and installment activity</CardTitle><CardDescription>Latest persisted repayment rows, installment states, and linked ledger status.</CardDescription></CardHeader><CardContent>{repaymentState === "loading" ? <LoadingState label="Loading repayment activity" /> : null}{repaymentState === "error" ? <ErrorState title="Repayment activity unavailable" message={repaymentError} /> : null}{repaymentState === "success" ? <RepaymentActivity rows={repayments} /> : null}</CardContent></Card>

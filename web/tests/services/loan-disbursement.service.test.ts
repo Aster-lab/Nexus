@@ -17,6 +17,7 @@ import { postInvestorContribution } from "../../src/lib/services/investor-contri
 import {
   requestLoanDisbursement,
   approveLoanDisbursement,
+  recordBorrowerDisbursementConsent,
 } from "../../src/lib/services/loan-disbursement-approval.service";
 
 import {
@@ -138,6 +139,10 @@ describe("Loan Disbursement integration", () => {
     const borrowerWallet = await createBorrowerWallet();
 
     await fundLoan(fixture.loan.principalSatang);
+    await recordBorrowerDisbursementConsent({
+      loanId: fixture.loan.id,
+      borrowerUserId: fixture.borrowerUser.id,
+    });
 
     const request = await requestLoanDisbursement({
       requesterUserId: administratorUserId,
@@ -364,6 +369,10 @@ describe("Loan Disbursement integration", () => {
     it("rejects disbursement without administrator approval", async () => {
       await createBorrowerWallet();
       await fundLoan(fixture.loan.principalSatang);
+      await recordBorrowerDisbursementConsent({
+        loanId: fixture.loan.id,
+        borrowerUserId: fixture.borrowerUser.id,
+      });
 
       const request = await requestLoanDisbursement({
         requesterUserId: administratorUserId,
@@ -385,6 +394,34 @@ describe("Loan Disbursement integration", () => {
 
       expect(loan.status).toBe("FUNDED");
       expect(loan.disbursedAt).toBeNull();
+    });
+
+    it("requires borrower confirmation before an administrator can request release", async () => {
+      await createBorrowerWallet();
+      await fundLoan(fixture.loan.principalSatang);
+
+      await expect(requestLoanDisbursement({
+        requesterUserId: administratorUserId,
+        loanId: fixture.loan.id,
+        reason: "Attempt without borrower consent",
+      })).rejects.toMatchObject({ code: "BORROWER_CONSENT_REQUIRED" });
+      expect(await prisma.auditLog.count({
+        where: { action: "LOAN_DISBURSEMENT_REQUESTED", targetId: fixture.loan.id },
+      })).toBe(0);
+
+      const firstConsent = await recordBorrowerDisbursementConsent({
+        loanId: fixture.loan.id,
+        borrowerUserId: fixture.borrowerUser.id,
+      });
+      const repeatedConsent = await recordBorrowerDisbursementConsent({
+        loanId: fixture.loan.id,
+        borrowerUserId: fixture.borrowerUser.id,
+      });
+      expect(repeatedConsent.id).toBe(firstConsent.id);
+      expect(repeatedConsent.alreadyConfirmed).toBe(true);
+      expect(await prisma.auditLog.count({
+        where: { action: "LOAN_DISBURSEMENT_CONSENTED", targetId: fixture.loan.id },
+      })).toBe(1);
     });
 
     it("rejects an underfunded loan", async () => {

@@ -40,6 +40,16 @@ export interface AdminApplicationDetails extends AdminApplicationListItem {
     createdAt: string;
   }>;
   informationRequests: Array<{ id: string; status: string; requestDetails: unknown; dueAt: string | null; createdAt: string }>;
+  loanOffers: Array<{
+    id: string;
+    status: "ISSUED" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "CANCELLED";
+    principalSatang: string;
+    annualInterestRate: string;
+    termMonths: number;
+    expiresAt: string;
+    createdAt: string;
+    loan: { id: string; status: string } | null;
+  }>;
 }
 
 export interface AdminApplicationsQuery {

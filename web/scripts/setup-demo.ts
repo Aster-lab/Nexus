@@ -7,6 +7,7 @@ import { seedPlatformAccounts } from "../prisma/seed/platform-accounts.seed";
 import { seedPlatformPolicies } from "../prisma/seed/platform-policies.seed";
 import { seedRoles } from "../prisma/seed/roles.seed";
 import { createDemoAccounts } from "./create-demo-accounts";
+import { activateDemoLoanPolicies } from "./demo-policy-activation";
 import { assertDemoDatabase } from "./demo-environment";
 
 export async function setupDemo(): Promise<void> {
@@ -37,9 +38,11 @@ export async function setupDemo(): Promise<void> {
   await seedPlatformPolicies();
   await seedPlatformAccounts();
   const credentials = await createDemoAccounts();
+  await activateDemoLoanPolicies();
 
   console.log("\nDemo accounts are ready. Credentials are shown once; they are not stored in plaintext.");
   for (const account of credentials) console.log(`${account.email}  ${account.password}`);
+  console.log("Initial loan, interest, repayment, and fee policies are approved for this isolated demo database.");
   console.log("Use these accounts only while the application is connected to .env.demo.");
 }
 

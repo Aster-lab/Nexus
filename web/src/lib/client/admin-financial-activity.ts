@@ -6,6 +6,7 @@ export interface AdminWalletRow {
   id: string; currency: string; balanceSatang: string; status: string; createdAt: string; updatedAt: string;
   ownerUser: null | { id: string; email: string; borrowerProfile: null | { legalName: string }; investorProfile: null | { id: string; displayName: string } };
   ownerPlatformAccount: null | { id: string; accountCode: string; accountName: string; accountType: string; status: string };
+  openingBalance: null | { id: string; amountSatang: string; postedAt: string; reason: string };
 }
 export interface AdminLedgerEntryRow {
   id: string; walletId: string | null; platformAccountId: string | null; entryType: string; amountSatang: string; currency: string;

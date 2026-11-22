@@ -202,9 +202,8 @@ export async function createRepaymentTestContext(
     `repayment-test-opening-${randomUUID()}`;
 
   try {
-    // The shared opening-balance source starts inactive in the seed. Activate
-    // it before funding the investor wallet, then restore its prior state in
-    // the context cleanup below.
+    // Ensure the configured opening-balance source is enabled for this
+    // fixture, then restore its prior state during context cleanup.
     await fundInvestorWallet({
       walletId: fixture.investorWallet.id,
       administratorUserId,

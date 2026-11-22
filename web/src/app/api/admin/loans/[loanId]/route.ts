@@ -14,6 +14,21 @@ export async function GET(request: Request, context: { params: Promise<{ loanId:
     const { loanId } = validateRouteParams(await context.params, z.object({ loanId: z.uuid() }).strict());
     const row = await prisma.loan.findUnique({ where: { id: loanId }, select: { id: true, status: true, principalSatang: true, fundedSatang: true, annualInterestRate: true, termMonths: true, fundingDeadline: true, fundedAt: true, disbursedAt: true, createdAt: true, borrowerProfile: { select: { id: true, legalName: true, phone: true, user: { select: { id: true, email: true, accountStatus: true } } } }, escrowAccount: { select: { id: true, status: true, heldSatang: true, platformWalletId: true } }, statusHistory: { orderBy: { createdAt: "desc" }, select: { previousStatus: true, newStatus: true, reason: true, changedByUserId: true, createdAt: true } } } });
     if (!row) throw new ApiError("NOT_FOUND", "Loan not found.", 404);
-    return apiSuccessResponse({ ...row, principalSatang: row.principalSatang.toString(), fundedSatang: row.fundedSatang.toString(), annualInterestRate: row.annualInterestRate.toString(), escrowAccount: row.escrowAccount ? { ...row.escrowAccount, heldSatang: row.escrowAccount.heldSatang.toString() } : null });
+    const consent = await prisma.auditLog.findFirst({
+      where: {
+        actorUserId: row.borrowerProfile.user.id,
+        action: "LOAN_DISBURSEMENT_CONSENTED",
+        targetType: "LOAN",
+        targetId: row.id,
+        outcome: "SUCCESS",
+        newValues: { path: ["schemaVersion"], equals: "loan_disbursement_consent.v1" },
+      },
+      select: { createdAt: true, newValues: true },
+    });
+    const consentValues = consent?.newValues as { confirmedPrincipalSatang?: unknown; currency?: unknown } | null;
+    const hasCurrentConsent = !!consent && !!consentValues &&
+      consentValues.confirmedPrincipalSatang === row.principalSatang.toString() &&
+      consentValues.currency === "THB";
+    return apiSuccessResponse({ ...row, disbursementConsentAt: hasCurrentConsent ? consent.createdAt : null, principalSatang: row.principalSatang.toString(), fundedSatang: row.fundedSatang.toString(), annualInterestRate: row.annualInterestRate.toString(), escrowAccount: row.escrowAccount ? { ...row.escrowAccount, heldSatang: row.escrowAccount.heldSatang.toString() } : null });
   } catch (error) { return apiErrorResponseFrom(error); }
 }

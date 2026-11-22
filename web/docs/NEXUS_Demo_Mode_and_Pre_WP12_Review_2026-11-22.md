@@ -1,7 +1,7 @@
 # NEXUS Demo Mode and Pre-WP12 Review
 
-Date: 2026-11-21  
-Status: Demo database guard and account bootstrap implemented; synthetic financial scenario remains undecided. WP12 optimization is scoped for audit, not yet implemented.
+Date: 2026-11-22  
+Status: Demo database guard and account bootstrap implemented. Administrator-controlled simulated wallet funding is available in source. Synthetic loan/repayment history remains intentionally unseeded. WP12 optimization is scoped for audit, not yet implemented.
 
 ## Demo mode decisions
 
@@ -15,6 +15,11 @@ Status: Demo database guard and account bootstrap implemented; synthetic financi
 
 - `.env.demo.example` documents the dedicated local connection. Copy it to `.env.demo` and fill in the local `nexus_app` password. The local `.env.demo` file is ignored by Git.
 - `npm run demo:setup` validates the database, requires the exact confirmation `SET UP NEXUS DEMO`, deploys migrations, seeds platform roles/policies/accounts, refuses to provision over existing user data, and creates one administrator, borrower, and investor. It then prints each generated password once.
+- Fresh setup seeds account 1300 as the active THB opening-balance asset. Migration `20261121160000_activate_opening_balance_source` activates only the exact approved account definition in existing isolated databases. It does not credit any wallet.
+- Fresh setup and reset approve and activate only the seeded version-one `LOAN_OFFER_POLICY`, `LOAN_INTEREST_POLICY`, `PLATFORM_FEE_POLICY`, and `REPAYMENT_POLICY` versions for the isolated demo. The guarded activation validates the demo environment, requires the active `demo-admin@nexus.local` account, rejects unexpected/edited versions, and records the admin actor in audit logs. This enables application/offer/schedule demo workflows without changing production policy state. It does not activate the notification policy or any future policy versions.
+- For an existing demo database, `npm.cmd run demo:activate-policies` uses `.env.demo`, verifies the same loopback/database/environment guard, requires interactive confirmation `ACTIVATE NEXUS DEMO POLICIES`, and activates only the approved initial lending policies. It does not reset data or credentials.
+- Borrower and investor profiles receive active zero-balance THB wallets. Migration `20261121150000_provision_user_wallets` backfills existing profiles without ledger entries or funds.
+- An authorized administrator can use **Admin → Financial → Wallet balances → Assign initial balance**. The action requires a reason and confirmation and posts through the atomic ledger-backed opening-balance service. It does not directly edit a wallet balance. Each recipient wallet can receive one opening balance; later corrections require the existing compensation process.
 - `npm run demo:reset` only operates against the guarded demo database. It permanently resets that database after the exact confirmation `RESET NEXUS DEMO`, recreates the platform seed, and prints newly generated credentials.
 - `npm run demo:start` starts Next.js with `.env.demo` loaded.
 - The application shell displays a responsive light/dark notice that marks the environment and its balances, investments, and transactions as simulated.
@@ -25,21 +30,18 @@ Status: Demo database guard and account bootstrap implemented; synthetic financi
 1. Create an empty local PostgreSQL database named `nexus_demo` owned by the local application role.
 2. Copy `.env.demo.example` to `.env.demo`, set the local password, and replace both secret placeholders with different random values of at least 32 characters.
 3. Run `npm run demo:setup` from the `web` directory and save the generated passwords securely.
-4. Run `npm run demo:start`, then sign in with one of the three demo accounts.
-5. To discard the demo data and create new accounts, run `npm run demo:reset` and save the newly displayed passwords.
+4. Run `npm run demo:start`, then sign in with the exact email and password printed by setup. Generated emails are `demo-admin@nexus.local`, `demo-borrower@nexus.local`, and `demo-investor@nexus.local`; the `demo-` prefix is part of each address.
+5. If using an existing demo database after updating code, first run `npm.cmd run demo:migrate`, then `npm.cmd run demo:activate-policies` and enter the exact confirmation above. Confirm its output reports `127.0.0.1/nexus_demo` and all four policies as `ACTIVE`. This preserves demo accounts and financial records.
+6. Stop any previously running Next.js server, then start the UI with `npm.cmd run demo:start`. Plain `npm run dev` uses `.env` and may connect to a different database, which would still show the policy as unavailable.
+7. To discard all demo data and create new accounts, use `npm.cmd run demo:reset` only when you intend to delete the disposable database contents; save the newly displayed passwords.
 
 Never put hosted or production database credentials in `.env.demo`.
 
 ## Demo data boundary and open decision
 
-The setup currently creates demo identities and role profiles. It does not create financial transactions or fabricated loan/repayment histories. The platform policy seed creates initial policy versions in `PROPOSED` status; application and offer services require active policies, and the current API inventory has no administrator policy-activation route. Directly inserting fake loans, repayments, allocations, or ledger records would bypass the normal financial lifecycle and could make the demo inconsistent.
+The setup creates demo identities and role profiles but does not create fabricated loan/repayment histories. Admins can assign an initial simulated wallet balance through the approved posting path after migrations are applied. Demo setup activates the narrowly allowlisted initial lending policies, while the regular policy seed leaves them proposed for other environments. Directly inserting fake loans, repayments, allocations, or ledger records would bypass the normal financial lifecycle and could make the demo inconsistent.
 
-Before adding populated borrower/investor financial dashboards, choose one safe route:
-
-1. Keep this demo at account/profile level and let the presenter use supported workflows after the relevant policies have been activated through an authorized process; or
-2. Add an explicit demo-only policy activation/provisioning workflow, then build synthetic scenarios by invoking the existing application, funding, disbursement, repayment, and payout services.
-
-The second option gives a fuller demonstration, but requires approving policy governance for the isolated demo environment. No financial records are fabricated by this implementation.
+No financial records are fabricated by this implementation. A fuller demonstration can be built later by invoking the existing application, funding, disbursement, repayment, and payout services. Email notifications are excluded from the accepted MVP scope; in-app workflow notifications remain available.
 
 ## Pre-WP12 optimization baseline
 

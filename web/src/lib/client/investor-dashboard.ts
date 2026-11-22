@@ -1,4 +1,5 @@
 import { ApiClientError, apiGet, type ApiPagination, type ApiSuccessEnvelope } from "./api-client";
+import type { InvestorWalletResult } from "./investor-wallet";
 
 const RECENT_LIMIT = 5;
 
@@ -6,6 +7,7 @@ export const INVESTOR_DASHBOARD_PATHS = {
   portfolio: "/api/investor/portfolio",
   investments: `/api/investor/investments?page=1&limit=${RECENT_LIMIT}&sortBy=createdAt&sortOrder=desc`,
   payouts: `/api/investor/payouts?page=1&limit=${RECENT_LIMIT}&sortBy=createdAt&sortOrder=desc`,
+  wallet: `/api/investor/wallet?page=1&limit=${RECENT_LIMIT}&sortBy=createdAt&sortOrder=desc`,
 } as const;
 
 export const INVESTOR_DASHBOARD_REFRESH_EVENT = "nexus:investor-dashboard-refresh";
@@ -55,13 +57,14 @@ export interface InvestorDashboardData {
   portfolio: InvestorDashboardValue<InvestorDashboardPortfolio>;
   investments: InvestorDashboardList<InvestorDashboardInvestment>;
   payouts: InvestorDashboardList<InvestorDashboardPayout>;
+  wallet: InvestorDashboardValue<InvestorWalletResult>;
 }
 
 export type InvestorDashboardKey = keyof InvestorDashboardData;
 export type InvestorDashboardFetcher = <T>(path: string, options?: { signal?: AbortSignal }) => Promise<ApiSuccessEnvelope<T>>;
 
 export function createInitialInvestorDashboardData(): InvestorDashboardData {
-  return { portfolio: { status: "loading" }, investments: { status: "loading" }, payouts: { status: "loading" } };
+  return { portfolio: { status: "loading" }, investments: { status: "loading" }, payouts: { status: "loading" }, wallet: { status: "loading" } };
 }
 
 function errorMessage(error: unknown): string {
@@ -83,6 +86,13 @@ export async function loadInvestorDashboardResource<K extends InvestorDashboardK
       }
       return { status: "success", data: response.data } as InvestorDashboardData[K];
     }
+    if (key === "wallet") {
+      const response = await fetcher<InvestorWalletResult>(path, { signal });
+      if (!response.data || typeof response.data !== "object" || !Array.isArray(response.data.transactions)) {
+        return { status: "error", message: "The server returned an unexpected wallet response." } as InvestorDashboardData[K];
+      }
+      return { status: "success", data: response.data } as InvestorDashboardData[K];
+    }
     const response = await fetcher<InvestorDashboardInvestment[] | InvestorDashboardPayout[]>(path, { signal });
     if (!Array.isArray(response.data)) {
       return { status: "error", message: "The server returned an unexpected list response." } as InvestorDashboardData[K];
@@ -98,7 +108,7 @@ export async function loadInvestorDashboard(
   signal?: AbortSignal,
   onResource?: <K extends InvestorDashboardKey>(key: K, resource: InvestorDashboardData[K]) => void,
 ): Promise<InvestorDashboardData> {
-  const keys: InvestorDashboardKey[] = ["portfolio", "investments", "payouts"];
+  const keys: InvestorDashboardKey[] = ["portfolio", "investments", "payouts", "wallet"];
   const entries = await Promise.all(keys.map(async (key) => {
     const resource = await loadInvestorDashboardResource(key, fetcher, signal);
     onResource?.(key, resource);

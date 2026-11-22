@@ -4,6 +4,59 @@ import { LoanOfferPolicyValuesSchema } from "../contracts/platform-policy";
 import { prisma } from "../prisma";
 
 type TransactionClient = Prisma.TransactionClient;
+const MAX_APPLICATION_TRANSACTION_ATTEMPTS = 4;
+
+function isSerializationConflict(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as {
+    code?: unknown;
+    message?: unknown;
+    meta?: {
+      code?: unknown;
+      driverAdapterError?: {
+        originalCode?: unknown;
+        cause?: { originalCode?: unknown };
+      };
+    };
+  };
+  return candidate.code === "P2034" || candidate.code === "40001" ||
+    candidate.meta?.code === "40001" ||
+    candidate.meta?.driverAdapterError?.originalCode === "40001" ||
+    candidate.meta?.driverAdapterError?.cause?.originalCode === "40001" ||
+    (candidate.code === "P2010" && typeof candidate.message === "string" && /\b40001\b/.test(candidate.message));
+}
+
+function isApplicationVersionNumberConflict(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { code?: unknown; meta?: { target?: unknown } };
+  if (candidate.code !== "P2002") return false;
+  const target = candidate.meta?.target;
+  if (Array.isArray(target)) {
+    return target.includes("application_id") && target.includes("version_number");
+  }
+  return typeof target === "string" &&
+    target.includes("application_versions_application_id_version_number");
+}
+
+async function runApplicationTransaction<T>(
+  operation: (tx: TransactionClient) => Promise<T>,
+): Promise<T> {
+  for (let attempt = 1; attempt <= MAX_APPLICATION_TRANSACTION_ATTEMPTS; attempt += 1) {
+    try {
+      return await prisma.$transaction(operation, {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        maxWait: 10_000,
+        timeout: 20_000,
+      });
+    } catch (error) {
+      const retryable = isSerializationConflict(error) || isApplicationVersionNumberConflict(error);
+      if (!retryable || attempt === MAX_APPLICATION_TRANSACTION_ATTEMPTS) throw error;
+      const backoffWindowMs = 40 * 2 ** (attempt - 1);
+      await new Promise((resolve) => setTimeout(resolve, Math.floor(Math.random() * backoffWindowMs)));
+    }
+  }
+  throw new Error("Application transaction retry limit exceeded.");
+}
 
 export class BorrowerApplicationError extends Error {
   constructor(readonly code: string) {
@@ -116,7 +169,7 @@ export async function createBorrowerApplication(input: {
   borrowerProfileId: string;
   snapshot: ApplicationSnapshot;
 }) {
-  return prisma.$transaction(async (tx) => {
+  return runApplicationTransaction(async (tx) => {
     const profile = await tx.borrowerProfile.findUnique({
       where: { id: input.borrowerProfileId },
       select: { userId: true },
@@ -144,7 +197,7 @@ export async function createBorrowerApplication(input: {
       data: { currentVersionId: version.id },
       select: applicationSelect,
     }));
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  });
 }
 
 export async function updateBorrowerDraftApplication(input: {
@@ -153,7 +206,7 @@ export async function updateBorrowerDraftApplication(input: {
   applicationId: string;
   snapshot: ApplicationSnapshot;
 }) {
-  return prisma.$transaction(async (tx) => {
+  return runApplicationTransaction(async (tx) => {
     await lockApplication(tx, input.applicationId);
     const application = await tx.loanApplication.findUnique({
       where: { id: input.applicationId },
@@ -185,14 +238,14 @@ export async function updateBorrowerDraftApplication(input: {
       data: { currentVersionId: version.id },
       select: applicationSelect,
     }));
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  });
 }
 
 export async function submitBorrowerApplication(input: {
   borrowerProfileId: string;
   applicationId: string;
 }) {
-  return prisma.$transaction(async (tx) => {
+  return runApplicationTransaction(async (tx) => {
     await lockApplication(tx, input.applicationId);
     const application = await tx.loanApplication.findUnique({
       where: { id: input.applicationId },
@@ -214,5 +267,5 @@ export async function submitBorrowerApplication(input: {
       data: { status: "SUBMITTED", submittedAt },
       select: applicationSelect,
     }));
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  });
 }

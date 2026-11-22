@@ -17,6 +17,7 @@ export interface AdminLoanListItem {
 }
 
 export interface AdminLoanDetails extends AdminLoanListItem {
+  disbursementConsentAt: string | null;
   borrowerProfile: AdminLoanListItem["borrowerProfile"] & { phone: string | null; user: { id: string; email: string; accountStatus: string } };
   escrowAccount: null | { id: string; status: string; heldSatang: string; platformWalletId: string };
   statusHistory: Array<{ previousStatus: string | null; newStatus: string; reason: string; changedByUserId: string; createdAt: string }>;
@@ -105,6 +106,8 @@ export async function requestAdminLoanDisbursement(
   return poster(getAdminLoanDisbursementPath(loanId), { reason }, { idempotencyKey });
 }
 
-export function canAdminDisburseLoan(status: string): boolean { return status === "FUNDED"; }
+export function canAdminDisburseLoan(status: string, borrowerConsentAt: string | null): boolean {
+  return status === "FUNDED" && borrowerConsentAt !== null;
+}
 
 export function getAdminLoanPagination(response: ApiSuccessEnvelope<unknown[]>): ApiPagination | undefined { return response.pagination; }

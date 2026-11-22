@@ -36,6 +36,81 @@ export interface BorrowerApplicationFormValues {
   purpose: string;
 }
 
+const APPLICATION_FORM_FIELDS = [
+  "legalName", "phone", "addressLine1", "addressLine2", "subdistrict", "district", "province", "postalCode",
+  "countryCode", "employmentStatus", "employerName", "occupation", "monthsInRole", "amountBaht", "termMonths", "purpose",
+] as const satisfies readonly (keyof BorrowerApplicationFormValues)[];
+const APPLICATION_FORM_STORAGE_VERSION = 1;
+
+export type BorrowerApplicationFormStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+
+function getApplicationFormSessionStorage(): BorrowerApplicationFormStorage | null {
+  try {
+    return typeof window === "undefined" ? null : window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+export function borrowerApplicationFormStorageKey(userId: string): string {
+  return `nexus:borrower-application-form:v${APPLICATION_FORM_STORAGE_VERSION}:${userId}`;
+}
+
+export function loadBorrowerApplicationFormDraft(
+  userId: string,
+  storage: BorrowerApplicationFormStorage | null = getApplicationFormSessionStorage(),
+): BorrowerApplicationFormValues | null {
+  if (!storage || !userId) return null;
+  const key = borrowerApplicationFormStorageKey(userId);
+  try {
+    const raw = storage.getItem(key);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      storage.removeItem(key);
+      return null;
+    }
+    const record = parsed as { version?: unknown; values?: unknown };
+    if (record.version !== APPLICATION_FORM_STORAGE_VERSION || typeof record.values !== "object" || record.values === null || Array.isArray(record.values)) {
+      storage.removeItem(key);
+      return null;
+    }
+    const values = record.values as Record<string, unknown>;
+    if (!APPLICATION_FORM_FIELDS.every((field) => typeof values[field] === "string")) {
+      storage.removeItem(key);
+      return null;
+    }
+    return Object.fromEntries(APPLICATION_FORM_FIELDS.map((field) => [field, values[field]])) as unknown as BorrowerApplicationFormValues;
+  } catch {
+    return null;
+  }
+}
+
+export function saveBorrowerApplicationFormDraft(
+  userId: string,
+  values: BorrowerApplicationFormValues,
+  storage: BorrowerApplicationFormStorage | null = getApplicationFormSessionStorage(),
+): void {
+  if (!storage || !userId) return;
+  try {
+    storage.setItem(borrowerApplicationFormStorageKey(userId), JSON.stringify({ version: APPLICATION_FORM_STORAGE_VERSION, values }));
+  } catch {
+    // Storage can be disabled or full; the form remains usable in memory.
+  }
+}
+
+export function clearBorrowerApplicationFormDraft(
+  userId: string,
+  storage: BorrowerApplicationFormStorage | null = getApplicationFormSessionStorage(),
+): void {
+  if (!storage || !userId) return;
+  try {
+    storage.removeItem(borrowerApplicationFormStorageKey(userId));
+  } catch {
+    // Storage can be unavailable in privacy-restricted browsers.
+  }
+}
+
 export type BorrowerApplicationFormErrors = Partial<Record<keyof BorrowerApplicationFormValues, string>>;
 
 export interface BorrowerApplicationListItem {

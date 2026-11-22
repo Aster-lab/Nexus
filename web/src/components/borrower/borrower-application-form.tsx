@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ChangeEvent, type InputHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useState, type ChangeEvent, type InputHTMLAttributes, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, FileCheck2 } from "lucide-react";
 import { useAuth } from "../auth/auth-provider";
 import { Badge } from "../ui/badge";
@@ -10,10 +10,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui
 import {
   BORROWER_APPLICATION_TERMS,
   buildBorrowerApplicationSnapshot,
+  clearBorrowerApplicationFormDraft,
   createApplicationSubmissionLock,
   createBorrowerApplicationDraft,
   getApplicationErrorMessage,
+  loadBorrowerApplicationFormDraft,
   parseBahtAmountToSatang,
+  saveBorrowerApplicationFormDraft,
   validateBorrowerApplicationForm,
   type BorrowerApplicationFormErrors,
   type BorrowerApplicationFormValues,
@@ -103,6 +106,8 @@ export function BorrowerApplicationForm() {
   const [errors, setErrors] = useState<BorrowerApplicationFormErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [draft, setDraft] = useState<ApplicationDraftResult | null>(null);
+  const [formDraftOwner, setFormDraftOwner] = useState<string | null>(null);
+  const [restoredDraft, setRestoredDraft] = useState(false);
   const [values, setValues] = useState<BorrowerApplicationFormValues>(() => ({
     legalName: identity?.borrowerProfile?.legalName ?? "",
     phone: identity?.borrowerProfile?.phone ?? "",
@@ -122,6 +127,33 @@ export function BorrowerApplicationForm() {
     purpose: "",
   }));
   const [submissionLock] = useState(() => createApplicationSubmissionLock());
+
+  useEffect(() => {
+    const userId = identity?.id;
+    if (!userId) return;
+    const profileName = identity.borrowerProfile?.legalName ?? "";
+    const profilePhone = identity.borrowerProfile?.phone ?? "";
+    queueMicrotask(() => {
+      const saved = loadBorrowerApplicationFormDraft(userId);
+      if (saved) {
+        setValues(saved);
+        setRestoredDraft(true);
+      } else {
+        setValues((current) => ({
+          ...current,
+          legalName: current.legalName || profileName,
+          phone: current.phone || profilePhone,
+        }));
+        setRestoredDraft(false);
+      }
+      setFormDraftOwner(userId);
+    });
+  }, [identity?.borrowerProfile?.legalName, identity?.borrowerProfile?.phone, identity?.id]);
+
+  useEffect(() => {
+    if (!identity?.id || formDraftOwner !== identity.id || step === "success") return;
+    saveBorrowerApplicationFormDraft(identity.id, values);
+  }, [formDraftOwner, identity?.id, step, values]);
 
   function update<K extends keyof BorrowerApplicationFormValues>(field: K, value: BorrowerApplicationFormValues[K]) {
     setValues((current) => ({ ...current, [field]: value }));
@@ -149,6 +181,8 @@ export function BorrowerApplicationForm() {
       setApiError(null);
       try {
         const response = await createBorrowerApplicationDraft(buildBorrowerApplicationSnapshot(values));
+        if (identity?.id) clearBorrowerApplicationFormDraft(identity.id);
+        setRestoredDraft(false);
         setDraft(response.data);
         setStep("success");
         notifyBorrowerDashboardMutationComplete();
@@ -199,11 +233,12 @@ export function BorrowerApplicationForm() {
         <CardTitle>{step === "edit" ? "Application information" : "Review your application"}</CardTitle>
         <CardDescription>
           {step === "edit"
-            ? "All fields marked with an asterisk are required by the current application contract. Optional fields are sent as null when left blank."
+            ? "Unsubmitted details are saved in this browser tab and restored after refresh. They are cleared after the draft is successfully created."
             : "Check these details before saving your application as a draft."}
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {restoredDraft && step === "edit" ? <p className="mb-5 rounded-md border border-primary/20 bg-primary/5 p-3 text-sm text-primary" role="status">Your unfinished application was restored in this tab.</p> : null}
         {apiError ? <div className="mb-5 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">{apiError}</div> : null}
 
         {step === "edit" ? <form className="space-y-8" onSubmit={(event) => event.preventDefault()} noValidate>

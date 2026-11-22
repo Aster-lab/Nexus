@@ -5,7 +5,7 @@ Every `/api/admin/*` route requires an authenticated session with the persisted 
 ## Applications
 
 - `GET /api/admin/applications`: paginated list; filters `status`; sort by `createdAt`, `updatedAt`, or `submittedAt`.
-- `GET /api/admin/applications/{applicationId}`: detail, current version, borrower, reviews, and information requests.
+- `GET /api/admin/applications/{applicationId}`: detail, current version, borrower, reviews, information requests, and chronological loan-offer history (including linked loan state when present).
 - `POST /api/admin/applications/{applicationId}/decision`: strict body:
 
 ```json
@@ -19,7 +19,7 @@ Every `/api/admin/*` route requires an authenticated session with the persisted 
 - `GET /api/admin/loans`: paginated loans; `status` filter; sort by `createdAt`, `fundingDeadline`, or `principalSatang`.
 - `GET /api/admin/loans/{loanId}`: loan, borrower, escrow summary, and status history.
 - `GET /api/admin/loans/{loanId}/funding`: funding and escrow transaction history.
-- `POST /api/admin/loans/{loanId}/disburse`: body `{ "reason": "Approved disbursement" }` and required `Idempotency-Key` (1–255 characters). The endpoint composes existing request, approval, and posting services. A matching posted request returns the existing transaction; a conflicting key is rejected.
+- `POST /api/admin/loans/{loanId}/disburse`: body `{ "reason": "Approved disbursement" }` and required `Idempotency-Key` (1–255 characters). Requires the borrower-owned loan to be fully funded and the borrower's explicit disbursement confirmation to be present in audit history. The endpoint composes administrator request, approval, and financial posting, then ensures the repayment schedule exists before returning success. The response includes the posted transaction and schedule references. A matching posted request reuses the transaction and completes missing schedule generation; a conflicting key is rejected.
 
 ## Repayments and payouts
 
@@ -32,6 +32,7 @@ Every `/api/admin/*` route requires an authenticated session with the persisted 
 
 - `GET /api/admin/reconciliation`: read-only financial and payout reconciliation reports. Reports discrepancies; never repairs records.
 - `GET /api/admin/wallets`: read-only paginated wallet projections with owner/platform-account references. Supports `status`, `currency`, `ownerUserId`, `ownerPlatformAccountId`, `sortBy=createdAt|balanceSatang`, and `sortOrder` filters.
+- `POST /api/admin/opening-balances`: posts one administrator-controlled initial simulated THB balance to an active user-owned wallet. Body: `{ "walletId": "<uuid>", "amountSatang": "2000000", "reason": "..." }`; requires `Idempotency-Key`. The route calls the opening-balance ledger service; direct wallet edits are not exposed. Account 1300 must be the exact active THB opening-balance asset account.
 - `GET /api/admin/ledger-transactions`: read-only paginated ledger transactions and their entries. Supports `status`, `transactionType`, `referenceType`, `referenceId`, `sortBy=createdAt|postedAt`, and `sortOrder` filters. Entry amounts are satang strings; this endpoint never changes ledger or wallet state.
 - `GET /api/admin/audit-logs`: paginated persisted audit history; filters `action`, `targetType`, `targetId`, and `actorUserId`; sort by `createdAt`.
 

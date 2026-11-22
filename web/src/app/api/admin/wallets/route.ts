@@ -24,9 +24,9 @@ export async function GET(request: Request): Promise<Response> {
     };
     const orderBy = pagination.sortBy === "balanceSatang" ? { balanceSatang: pagination.sortOrder } : { createdAt: pagination.sortOrder };
     const [rows, total] = await Promise.all([
-      prisma.wallet.findMany({ where, orderBy, skip: pagination.offset, take: pagination.limit, select: { id: true, currency: true, balanceSatang: true, status: true, createdAt: true, updatedAt: true, ownerUser: { select: { id: true, email: true, borrowerProfile: { select: { legalName: true } }, investorProfile: { select: { id: true, displayName: true } } } }, ownerPlatformAccount: { select: { id: true, accountCode: true, accountName: true, accountType: true, status: true } } } }),
+      prisma.wallet.findMany({ where, orderBy, skip: pagination.offset, take: pagination.limit, select: { id: true, currency: true, balanceSatang: true, status: true, createdAt: true, updatedAt: true, ownerUser: { select: { id: true, email: true, borrowerProfile: { select: { legalName: true } }, investorProfile: { select: { id: true, displayName: true } } } }, ownerPlatformAccount: { select: { id: true, accountCode: true, accountName: true, accountType: true, status: true } }, OpeningBalance: { select: { id: true, amountSatang: true, postedAt: true, reason: true } } } }),
       prisma.wallet.count({ where }),
     ]);
-    return apiPaginatedResponse(rows.map((row) => ({ ...row, balanceSatang: row.balanceSatang.toString() })), pagination, total);
+    return apiPaginatedResponse(rows.map(({ OpeningBalance, ...row }) => ({ ...row, balanceSatang: row.balanceSatang.toString(), openingBalance: OpeningBalance ? { ...OpeningBalance, amountSatang: OpeningBalance.amountSatang.toString() } : null })), pagination, total);
   } catch (error) { return apiErrorResponseFrom(error); }
 }

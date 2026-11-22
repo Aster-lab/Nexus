@@ -1,11 +1,13 @@
 import { ApiClientError, apiGet, type ApiPagination, type ApiSuccessEnvelope } from "./api-client";
 import { formatSatang as formatSatangAmount } from "./financial-format";
+import type { BorrowerWalletResult } from "./borrower-wallet";
 
 export const BORROWER_DASHBOARD_PATHS = {
   summary: "/api/borrower/dashboard",
   applications: "/api/borrower/applications?page=1&limit=5&sortBy=createdAt&sortOrder=desc",
   loans: "/api/borrower/loans?page=1&limit=5&sortBy=createdAt&sortOrder=desc",
   repayments: "/api/borrower/repayments?page=1&limit=5&sortBy=receivedAt&sortOrder=desc",
+  wallet: "/api/borrower/wallet?page=1&limit=5&sortBy=createdAt&sortOrder=desc",
 } as const;
 
 export const BORROWER_DASHBOARD_REFRESH_EVENT = "nexus:borrower-dashboard-refresh";
@@ -82,6 +84,7 @@ export interface BorrowerDashboardData {
   applications: DashboardResource<BorrowerApplicationSummary>;
   loans: DashboardResource<BorrowerLoanSummary>;
   repayments: DashboardResource<BorrowerRepaymentSummary>;
+  wallet: DashboardValueResource<BorrowerWalletResult>;
 }
 
 export type DashboardResourceKey = keyof BorrowerDashboardData;
@@ -101,6 +104,7 @@ export function createInitialBorrowerDashboardData(): BorrowerDashboardData {
     applications: { status: "loading" },
     loans: { status: "loading" },
     repayments: { status: "loading" },
+    wallet: { status: "loading" },
   };
 }
 
@@ -143,6 +147,17 @@ export async function loadBorrowerDashboardResource<K extends DashboardResourceK
   signal?: AbortSignal,
 ): Promise<BorrowerDashboardData[K]> {
   if (key === "summary") return await loadSummary(fetcher, signal) as BorrowerDashboardData[K];
+  if (key === "wallet") {
+    try {
+      const response = await fetcher<BorrowerWalletResult>(BORROWER_DASHBOARD_PATHS.wallet, { signal });
+      if (!response.data || typeof response.data !== "object" || !Array.isArray(response.data.transactions)) {
+        return { status: "error", message: "The server returned an unexpected wallet response." } as BorrowerDashboardData[K];
+      }
+      return { status: "success", data: response.data } as BorrowerDashboardData[K];
+    } catch (error) {
+      return { status: "error", message: errorMessage(error) } as BorrowerDashboardData[K];
+    }
+  }
   return await loadList(
     BORROWER_DASHBOARD_PATHS[key],
     fetcher,
@@ -155,7 +170,7 @@ export async function loadBorrowerDashboard(
   signal?: AbortSignal,
   onResource?: DashboardResourceUpdate,
 ): Promise<BorrowerDashboardData> {
-  const keys: DashboardResourceKey[] = ["summary", "applications", "loans", "repayments"];
+  const keys: DashboardResourceKey[] = ["summary", "applications", "loans", "repayments", "wallet"];
   const entries = await Promise.all(keys.map(async (key) => {
     const resource = await loadBorrowerDashboardResource(key, fetcher, signal);
     onResource?.(key, resource);

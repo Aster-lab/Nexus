@@ -30,6 +30,7 @@ export async function GET(request: Request, context: { params: Promise<{ loanId:
         fundedAt: true,
         disbursedAt: true,
         createdAt: true,
+        borrowerProfile: { select: { userId: true } },
         repaymentSchedule: {
           select: {
             id: true,
@@ -50,6 +51,23 @@ export async function GET(request: Request, context: { params: Promise<{ loanId:
       },
     });
     if (!loan) throw new ApiError("NOT_FOUND", "The requested loan was not found.", 404);
+    const disbursementConsent = await prisma.auditLog.findFirst({
+      where: {
+        actorUserId: loan.borrowerProfile.userId,
+        action: "LOAN_DISBURSEMENT_CONSENTED",
+        targetType: "LOAN",
+        targetId: loan.id,
+        outcome: "SUCCESS",
+        newValues: { path: ["schemaVersion"], equals: "loan_disbursement_consent.v1" },
+      },
+      select: { createdAt: true, newValues: true },
+    });
+    const consentValues = disbursementConsent?.newValues as
+      | { confirmedPrincipalSatang?: unknown; currency?: unknown }
+      | null;
+    const hasCurrentConsent = !!disbursementConsent && !!consentValues &&
+      consentValues.confirmedPrincipalSatang === loan.principalSatang.toString() &&
+      consentValues.currency === "THB";
     const installments = loan.repaymentSchedule?.currentVersion?.installments ?? [];
     let outstandingPrincipal = 0n;
     let outstandingInterest = 0n;
@@ -73,6 +91,7 @@ export async function GET(request: Request, context: { params: Promise<{ loanId:
       fundingDeadline: loan.fundingDeadline,
       fundedAt: loan.fundedAt,
       disbursedAt: loan.disbursedAt,
+      disbursementConsentAt: hasCurrentConsent ? disbursementConsent.createdAt : null,
       createdAt: loan.createdAt,
       outstandingPrincipalSatang: loan.repaymentSchedule?.currentVersion ? outstandingPrincipal.toString() : null,
       outstandingInterestSatang: loan.repaymentSchedule?.currentVersion ? outstandingInterest.toString() : null,

@@ -15,19 +15,29 @@ const ROLE_NAVIGATION: Record<NexusRole, RoleNavigationItem[]> = {
   BORROWER: [
     { label: "Overview", href: "/borrower" },
     { label: "Applications", href: "/borrower/applications" },
-    { label: "Loans and repayments", href: "/borrower/loans" },
+    { label: "Offers", href: "/borrower/offers" },
+    { label: "Loans", href: "/borrower/loans" },
+    { label: "Repayment history", href: "/borrower/repayments" },
+    { label: "Wallet", href: "/borrower/wallet" },
   ],
   INVESTOR: [
     { label: "Overview", href: "/investor" },
     { label: "Marketplace", href: "/investor/marketplace" },
     { label: "Portfolio", href: "/investor/portfolio" },
+    { label: "Allocations", href: "/investor/allocations" },
     { label: "Payout history", href: "/investor/payouts" },
     { label: "Wallet", href: "/investor/wallet" },
+    { label: "Recommendations", href: "/investor/recommendations" },
   ],
   ADMIN: [
-    { label: "Operations", href: "/admin" },
+    { label: "Dashboard", href: "/admin" },
     { label: "Applications", href: "/admin/applications" },
-    { label: "Administration", href: "/admin/operations" },
+    { label: "Loans", href: "/admin/loans" },
+    { label: "Repayments", href: "/admin/repayments" },
+    { label: "Investor payouts", href: "/admin/payouts" },
+    { label: "Financial overview", href: "/admin/financial" },
+    { label: "Users", href: "/admin/users" },
+    { label: "Audit logs", href: "/admin/audit-logs" },
   ],
 };
 

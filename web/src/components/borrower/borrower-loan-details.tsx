@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { AlertCircle, ArrowLeft, CalendarDays, RefreshCw } from "lucide-react";
+import { AlertCircle, ArrowLeft, CalendarDays, CheckCircle2, RefreshCw } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Button, buttonVariants } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { formatDashboardDate, formatDashboardStatus, formatSatang } from "../../lib/client/borrower-dashboard";
 import { getApplicationErrorMessage } from "../../lib/client/borrower-applications";
-import { loadBorrowerLoan, loadBorrowerSchedule, type BorrowerLoanDetails, type BorrowerRepaymentSchedule } from "../../lib/client/borrower-loans";
+import { confirmBorrowerDisbursement, loadBorrowerLoan, loadBorrowerSchedule, type BorrowerLoanDetails, type BorrowerRepaymentSchedule } from "../../lib/client/borrower-loans";
 
 function SummaryItem({ label, children }: { label: string; children: ReactNode }) {
   return <div className="min-w-0"><dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</dt><dd className="mt-1 break-words text-sm font-semibold text-foreground">{children ?? "—"}</dd></div>;
@@ -25,6 +25,10 @@ export function BorrowerLoanDetailsPage({ loanId }: { loanId: string }) {
   const [scheduleLoading, setScheduleLoading] = useState(false);
   const [loanError, setLoanError] = useState<string | null>(null);
   const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [consentPending, setConsentPending] = useState(false);
+  const [consentError, setConsentError] = useState<string | null>(null);
+  const [consentMessage, setConsentMessage] = useState<string | null>(null);
 
   const refreshSchedule = useCallback(async () => {
     setScheduleLoading(true);
@@ -56,6 +60,22 @@ export function BorrowerLoanDetailsPage({ loanId }: { loanId: string }) {
 
   useEffect(() => { queueMicrotask(() => { void refreshLoan(); }); }, [refreshLoan]);
 
+  const handleDisbursementConsent = async () => {
+    setConsentPending(true);
+    setConsentError(null);
+    setConsentMessage(null);
+    try {
+      await confirmBorrowerDisbursement(loanId);
+      setConsentChecked(false);
+      setConsentMessage("Your confirmation is recorded. An administrator can now release the loan to your simulated wallet.");
+      await refreshLoan();
+    } catch (cause) {
+      setConsentError(getApplicationErrorMessage(cause));
+    } finally {
+      setConsentPending(false);
+    }
+  };
+
   if (loanLoading && !loan) return <main className="mx-auto grid w-full max-w-6xl gap-5 px-4 py-8 sm:px-6"><div className="h-8 w-1/3 animate-pulse rounded bg-muted"/><div className="h-60 animate-pulse rounded-xl bg-muted"/></main>;
   if (!loan) return <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6"><Card><CardContent className="grid justify-items-center gap-3 py-10 text-center"><AlertCircle className="size-8 text-destructive"/><h1 className="text-xl font-semibold">Loan unavailable</h1><p role="alert" className="max-w-lg text-sm text-muted-foreground">{loanError ?? "We could not load this loan."}</p><div className="flex gap-2"><Button variant="outline" onClick={() => void refreshLoan()}>Retry</Button><Link href="/borrower/loans" className={buttonVariants({ variant: "outline" })}>Back to loans</Link></div></CardContent></Card></main>;
 
@@ -65,6 +85,15 @@ export function BorrowerLoanDetailsPage({ loanId }: { loanId: string }) {
     <Link href="/borrower/loans" className="inline-flex w-fit items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4"/>All loans</Link>
     <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="text-sm text-muted-foreground">Loan reference</p><h1 className="mt-1 break-all text-2xl font-bold tracking-tight sm:text-3xl">{loan.id}</h1><p className="mt-2 text-sm text-muted-foreground">Opened {formatDashboardDate(loan.disbursedAt ?? loan.createdAt)}</p></div><div className="flex items-center gap-3"><Badge variant={statusVariant}>{formatDashboardStatus(loan.status)}</Badge>{loan.disbursedAt && (loan.status === "ACTIVE" || loan.status === "DELINQUENT") ? <Link href={`/borrower/loans/${loan.id}/repay`} className={buttonVariants()}>Make repayment</Link> : null}</div></header>
     {loanError ? <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">{loanError}</div> : null}
+    {loan.status === "FUNDED" && !loan.disbursedAt ? <Card><CardHeader><CardTitle className="flex items-center gap-2"><CheckCircle2 className="size-5 text-primary"/>Confirm loan disbursement</CardTitle><CardDescription>The loan is fully funded. Your confirmation allows an administrator to release the simulated funds to your NEXUS wallet.</CardDescription></CardHeader><CardContent className="grid gap-4">
+      <p className="rounded-lg bg-muted/50 p-4 text-sm">Loan amount: <strong>{formatSatang(loan.originalPrincipalSatang)}</strong>. This is a simulated wallet credit; it is not a bank deposit or withdrawable real-world money.</p>
+      {loan.disbursementConsentAt ? <p className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm text-foreground">Your confirmation is recorded. An administrator can now release the funds.</p> : <>
+        <label className="flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1 size-4 accent-primary" checked={consentChecked} onChange={(event) => setConsentChecked(event.target.checked)} disabled={consentPending}/><span>I confirm that I have reviewed the approved loan amount and authorize NEXUS to release the fully funded simulated loan to my NEXUS wallet.</span></label>
+        {consentError ? <p role="alert" className="text-sm text-destructive">{consentError}</p> : null}
+        <Button className="w-fit" disabled={!consentChecked || consentPending} onClick={() => void handleDisbursementConsent()}>{consentPending ? "Saving confirmation…" : "Confirm disbursement"}</Button>
+      </>}
+      {consentMessage ? <p role="status" aria-live="polite" className="text-sm text-primary">{consentMessage}</p> : null}
+    </CardContent></Card> : null}
     <Card><CardHeader><CardTitle>Loan summary</CardTitle><CardDescription>Balances and dates are returned by the loan service from the current persisted schedule.</CardDescription></CardHeader><CardContent><dl className="grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3"><SummaryItem label="Original principal"><Money value={loan.originalPrincipalSatang}/></SummaryItem><SummaryItem label="Outstanding principal"><Money value={loan.outstandingPrincipalSatang}/></SummaryItem><SummaryItem label="Outstanding balance"><Money value={loan.outstandingBalanceSatang}/></SummaryItem><SummaryItem label="Principal paid"><Money value={loan.paidPrincipalSatang}/></SummaryItem><SummaryItem label="Interest paid"><Money value={loan.paidInterestSatang}/></SummaryItem><SummaryItem label="Total paid"><Money value={loan.totalPaidSatang}/></SummaryItem><SummaryItem label="Annual interest rate">{(Number(loan.annualInterestRate) * 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}% p.a.</SummaryItem><SummaryItem label="Term">{loan.termMonths} months</SummaryItem><SummaryItem label="Loan status">{formatDashboardStatus(loan.status)}</SummaryItem><SummaryItem label="Disbursement date">{formatDashboardDate(loan.disbursedAt)}</SummaryItem><SummaryItem label="Maturity date">{formatDashboardDate(loan.maturityDate)}</SummaryItem><SummaryItem label="Installments">{loan.installmentCount || "Schedule pending"}</SummaryItem></dl></CardContent></Card>
     <Card><CardHeader><div className="flex flex-wrap items-start justify-between gap-3"><div><CardTitle className="flex items-center gap-2"><CalendarDays className="size-5 text-primary"/>Repayment schedule</CardTitle><CardDescription>Schedule dates, amounts, and statuses come from the current backend schedule version. Due date is the scheduled payment date in the stored schedule.</CardDescription></div>{loan.disbursedAt ? <Button variant="outline" size="sm" disabled={scheduleLoading} onClick={() => void refreshSchedule()}><RefreshCw className={`size-4 ${scheduleLoading ? "animate-spin" : ""}`}/>Refresh</Button> : null}</div></CardHeader><CardContent>
       {!loan.disbursedAt ? <p className="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground">A repayment schedule will be available after the loan is disbursed.</p> : null}

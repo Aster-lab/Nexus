@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ApiClientError, apiPost } from "../../lib/client/api-client";
 import { formatSatang } from "../../lib/client/financial-format";
+import { BORROWER_APPLICATION_TERMS } from "../../lib/client/borrower-applications";
 import {
   ADMIN_APPLICATION_STATUSES,
   getAdminApplicationPath,
@@ -24,6 +25,21 @@ const PAGE_SIZE = 10;
 const INITIAL_QUERY: AdminApplicationsQuery = { page: 1, limit: PAGE_SIZE, status: "ALL", sortBy: "updatedAt", sortOrder: "desc" };
 
 function statusLabel(status: string) { return status.replaceAll("_", " "); }
+
+function satangToInput(value: string): string {
+  try {
+    const satang = BigInt(value);
+    return `${satang / 100n}.${(satang % 100n).toString().padStart(2, "0")}`;
+  } catch {
+    return "";
+  }
+}
+
+function parseThbInput(value: string): string | null {
+  const match = /^(0|[1-9]\d{0,7})(?:\.(\d{1,2}))?$/.exec(value.trim());
+  if (!match) return null;
+  return (BigInt(match[1]) * 100n + BigInt((match[2] ?? "").padEnd(2, "0") || "0")).toString();
+}
 
 export function AdminApplicationsPage() {
   const [query, setQuery] = useState(INITIAL_QUERY);
@@ -89,12 +105,28 @@ export function AdminApplicationDetailPage({ applicationId }: { applicationId: s
   const [decision, setDecision] = useState<"APPROVED" | "REJECTED">("APPROVED");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
+  const [offerPrincipal, setOfferPrincipal] = useState("");
+  const [offerTerm, setOfferTerm] = useState(String(BORROWER_APPLICATION_TERMS[0]));
+  const [offerReason, setOfferReason] = useState("");
+  const [offerError, setOfferError] = useState("");
+  const [offerNotice, setOfferNotice] = useState("");
+  const [issuingOffer, setIssuingOffer] = useState(false);
+  const [currentTime, setCurrentTime] = useState<number | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    queueMicrotask(() => { if (active) setCurrentTime(Date.now()); });
+    const interval = window.setInterval(() => setCurrentTime(Date.now()), 60_000);
+    return () => { active = false; window.clearInterval(interval); };
+  }, []);
 
   useEffect(() => {
     let current = true;
     void loadAdminApplication(applicationId).then((response) => {
       if (!current) return;
       setApplication(response.data);
+      setOfferPrincipal(response.data.currentVersion ? satangToInput(response.data.currentVersion.requestedPrincipalSatang) : "");
+      setOfferTerm(String(response.data.currentVersion?.requestedTermMonths ?? BORROWER_APPLICATION_TERMS[0]));
       setState("success");
     }).catch((caught: unknown) => {
       if (!current) return;
@@ -122,10 +154,44 @@ export function AdminApplicationDetailPage({ applicationId }: { applicationId: s
     } finally { setSaving(false); }
   }
 
+  async function issueOffer() {
+    if (!application || issuingOffer || !offerReason.trim()) return;
+    const principalSatang = parseThbInput(offerPrincipal);
+    if (!principalSatang || BigInt(principalSatang) <= 0n) {
+      setOfferError("Enter a valid positive offer amount with up to two decimal places.");
+      return;
+    }
+    const termMonths = Number(offerTerm);
+    if (!BORROWER_APPLICATION_TERMS.includes(termMonths as typeof BORROWER_APPLICATION_TERMS[number])) {
+      setOfferError("Choose one of the supported repayment terms.");
+      return;
+    }
+    if (!window.confirm(`Issue an offer for ${formatSatang(principalSatang)} over ${termMonths} months? The borrower will be able to review and accept it.`)) return;
+    setIssuingOffer(true);
+    setOfferError("");
+    setOfferNotice("");
+    try {
+      const response = await apiPost<Omit<AdminApplicationDetails["loanOffers"][number], "loan">, { principalSatang: string; termMonths: number; reason: string }>(
+        `${getAdminApplicationPath(applicationId)}/offers`,
+        { principalSatang, termMonths, reason: offerReason.trim() },
+      );
+      setApplication((current) => current ? { ...current, loanOffers: [{ ...response.data, loan: null }, ...current.loanOffers] } : current);
+      setOfferNotice(`Offer issued. It expires ${new Date(response.data.expiresAt).toLocaleString()}.`);
+      setOfferReason("");
+    } catch (caught) {
+      setOfferError(caught instanceof ApiClientError ? caught.message : "The offer was not confirmed. Refresh this application before retrying.");
+    } finally {
+      setIssuingOffer(false);
+    }
+  }
+
   if (state === "loading") return <section className="admin-page"><LoadingState label="Loading application details" /></section>;
   if (state === "error" || !application) return <section className="admin-page"><ErrorState title="Application unavailable" message={error || "The application could not be found."} /><Link href="/admin/applications">Return to applications</Link></section>;
 
   const reviewable = isAdminApplicationReviewable(application.status);
+  const activeOffer = application.loanOffers.find((offer) => offer.status === "ISSUED" && (currentTime === null || new Date(offer.expiresAt).getTime() > currentTime));
+  const acceptedOffer = application.loanOffers.some((offer) => offer.status === "ACCEPTED" || Boolean(offer.loan));
+  const offerCanBeIssued = application.status === "APPROVED" && !activeOffer && !acceptedOffer;
   return <section className="admin-page">
     <header className="admin-page__header"><div><Link href="/admin/applications" className="admin-text-link">← Applications</Link><p className="admin-eyebrow">Application review</p><h1>{application.borrowerProfile.legalName}</h1><p className="admin-muted">Reference {application.id}</p></div><Badge variant={application.status === "APPROVED" ? "success" : "outline"}>{statusLabel(application.status)}</Badge></header>
     <div className="admin-detail-grid">
@@ -144,5 +210,44 @@ export function AdminApplicationDetailPage({ applicationId }: { applicationId: s
         <Button variant={decision === "REJECTED" ? "destructive" : "default"} disabled={!reason.trim() || saving} onClick={() => void recordDecision()}>{saving ? "Saving decision…" : `Confirm ${decision.toLowerCase()}`}</Button>
       </div> : <p className="admin-muted">No decision action is available for this status.</p>}
     </CardContent></Card>
+    <Card>
+      <CardHeader><CardTitle>Loan offer</CardTitle><CardDescription>Issue terms only after approving the current application. The borrower must review and accept the offer before a funding loan is created.</CardDescription></CardHeader>
+      <CardContent className="grid gap-4">
+        {application.loanOffers.length ? <div className="grid gap-3">
+          <h2 className="text-sm font-semibold">Offer history</h2>
+          {application.loanOffers.map((offer) => <div key={offer.id} className="grid gap-1 rounded-lg border border-border p-3 text-sm sm:grid-cols-2">
+            <p><span className="text-muted-foreground">Status:</span> {statusLabel(offer.status)}</p>
+            <p><span className="text-muted-foreground">Principal:</span> {formatSatang(offer.principalSatang)}</p>
+            <p><span className="text-muted-foreground">Rate:</span> {(Number(offer.annualInterestRate) * 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}% p.a.</p>
+            <p><span className="text-muted-foreground">Term:</span> {offer.termMonths} months</p>
+            <p><span className="text-muted-foreground">Expires:</span> {new Date(offer.expiresAt).toLocaleString()}</p>
+            {offer.loan ? <p><span className="text-muted-foreground">Loan:</span> {offer.loan.id} ({statusLabel(offer.loan.status)})</p> : null}
+          </div>)}
+        </div> : null}
+        {activeOffer ? <p className="rounded-lg border border-primary/25 bg-primary/5 p-3 text-sm" role="status">An issued offer is awaiting the borrower’s review. It is valid until {new Date(activeOffer.expiresAt).toLocaleString()}.</p> : null}
+        {acceptedOffer ? <p className="rounded-lg border border-success/25 bg-success/5 p-3 text-sm">An offer has been accepted. Follow the resulting loan from the Loans workspace.</p> : null}
+        {!offerCanBeIssued && !activeOffer && !acceptedOffer ? <p className="text-sm text-muted-foreground">Approve this application first. The offer action becomes available after approval.</p> : null}
+        {offerCanBeIssued ? <form className="grid gap-4 rounded-xl border border-border p-4" onSubmit={(event) => { event.preventDefault(); void issueOffer(); }}>
+          <div><h2 className="font-semibold">Issue an offer to the borrower</h2><p className="mt-1 text-sm text-muted-foreground">The requested amount and term are prefilled. Confirm the approved offer terms and provide an issuance reason.</p></div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="admin-form-label" htmlFor="offer-principal">Offer principal (THB)
+              <input id="offer-principal" className="admin-form-control" inputMode="decimal" autoComplete="off" maxLength={11} required value={offerPrincipal} onChange={(event) => setOfferPrincipal(event.target.value)} aria-describedby="offer-policy-note" />
+            </label>
+            <label className="admin-form-label" htmlFor="offer-term">Repayment term
+              <select id="offer-term" className="admin-form-control" value={offerTerm} onChange={(event) => setOfferTerm(event.target.value)}>
+                {BORROWER_APPLICATION_TERMS.map((term) => <option key={term} value={term}>{term} months</option>)}
+              </select>
+            </label>
+          </div>
+          <p id="offer-policy-note" className="text-sm text-muted-foreground">The active platform offer and interest policies determine eligibility, annual interest, and expiry. The backend validates these terms when you issue the offer.</p>
+          <label className="admin-form-label" htmlFor="offer-reason">Issuance reason
+            <textarea id="offer-reason" className="admin-form-control" maxLength={1000} rows={3} required value={offerReason} onChange={(event) => setOfferReason(event.target.value)} />
+          </label>
+          {offerError ? <p role="alert" className="admin-danger-note">{offerError}</p> : null}
+          {offerNotice ? <p role="status" className="admin-success-note">{offerNotice}</p> : null}
+          <div><Button type="submit" disabled={!offerReason.trim() || issuingOffer}>{issuingOffer ? "Issuing offer…" : "Issue loan offer"}</Button></div>
+        </form> : null}
+      </CardContent>
+    </Card>
   </section>;
 }

@@ -8,12 +8,14 @@ import { GET as listLoans } from "../../src/app/api/admin/loans/route";
 import { GET as getLoan } from "../../src/app/api/admin/loans/[loanId]/route";
 import { GET as getFunding } from "../../src/app/api/admin/loans/[loanId]/funding/route";
 import { POST as disburseLoan } from "../../src/app/api/admin/loans/[loanId]/disburse/route";
+import { POST as confirmBorrowerDisbursement } from "../../src/app/api/borrower/loans/[loanId]/disbursement-consent/route";
 import { GET as listRepayments } from "../../src/app/api/admin/repayments/route";
 import { GET as listRepaymentAllocations } from "../../src/app/api/admin/repayments/[repaymentId]/allocations/route";
-import { GET as listPayouts, POST as processPayout } from "../../src/app/api/admin/payouts/route";
+import { POST as processPayout } from "../../src/app/api/admin/payouts/route";
 import { GET as listPendingPayoutAllocations } from "../../src/app/api/admin/payout-allocations/route";
 import { GET as getReconciliation } from "../../src/app/api/admin/reconciliation/route";
 import { GET as listAdminWallets } from "../../src/app/api/admin/wallets/route";
+import { POST as postAdminOpeningBalance } from "../../src/app/api/admin/opening-balances/route";
 import { GET as listAdminLedgerTransactions } from "../../src/app/api/admin/ledger-transactions/route";
 import { GET as listAuditLogs } from "../../src/app/api/admin/audit-logs/route";
 import { GET as listUsers } from "../../src/app/api/admin/users/route";
@@ -32,6 +34,7 @@ const lifecycleContexts: AdminContext[] = [];
 const sharedStates: Array<{ accountId: string; accountStatus: "ACTIVE" | "INACTIVE"; walletId?: string; walletStatus?: "ACTIVE" | "RESTRICTED" | "CLOSED" }> = [];
 const temporaryPolicyVersionIds: string[] = [];
 const createdOfferIds: string[] = [];
+const disbursementBorrowers = new Map<string, Admin>();
 
 async function ensureActiveOfferPolicies(actorUserId: string): Promise<void> {
   const definitions = [
@@ -127,7 +130,26 @@ async function createFundedLoanContext(admin: Admin) {
   await fundInvestorWallet({ walletId: fixture.investorWallet.id, administratorUserId: admin.userId, amountSatang: fixture.loan.principalSatang });
   await postInvestorContribution({ userId: fixture.investorUser.id, loanId: fixture.loan.id, amountSatang: fixture.loan.principalSatang, idempotencyKey: fixture.idempotencyKey });
   await prisma.wallet.create({ data: { ownerUserId: fixture.borrowerUser.id, currency: "THB", balanceSatang: 0n, status: "ACTIVE" } });
+  const borrowerRole = await prisma.role.findUniqueOrThrow({ where: { code: "BORROWER" }, select: { id: true } });
+  await prisma.userRole.create({ data: { userId: fixture.borrowerUser.id, roleId: borrowerRole.id } });
+  const borrowerToken = randomBytes(32).toString("base64url");
+  await prisma.session.create({ data: { userId: fixture.borrowerUser.id, sessionTokenHash: createHash("sha256").update(borrowerToken).digest("hex"), expiresAt: new Date(Date.now() + 3_600_000) } });
+  sessionUserIds.add(fixture.borrowerUser.id);
+  disbursementBorrowers.set(fixture.loan.id, { userId: fixture.borrowerUser.id, token: borrowerToken, roleCode: "BORROWER" });
   return fixture.loan.id;
+}
+
+async function consentToDisbursement(loanId: string) {
+  const borrower = disbursementBorrowers.get(loanId);
+  if (!borrower) throw new Error("No borrower principal exists for this loan.");
+  return confirmBorrowerDisbursement(
+    apiRequest(borrower, `http://localhost/api/borrower/loans/${loanId}/disbursement-consent`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ confirmDisbursement: true }),
+    }),
+    { params: Promise.resolve({ loanId }) },
+  );
 }
 
 async function createUnfundedLoanContext(admin: Admin) {
@@ -149,6 +171,7 @@ async function createPendingAllocation() {
 }
 
 afterEach(async () => {
+  disbursementBorrowers.clear();
   if (createdOfferIds.length) {
     await prisma.loanOffer.deleteMany({ where: { id: { in: createdOfferIds } } });
     createdOfferIds.length = 0;
@@ -167,6 +190,35 @@ afterEach(async () => {
 });
 
 describe("API-05 administrator APIs", () => {
+  it("API-05-24 posts an audited opening balance through the admin financial API", async () => {
+    const admin = await createIdentity("ADMIN");
+    const source = await prisma.platformAccount.findUniqueOrThrow({ where: { accountCode: "1300" }, select: { id: true, status: true } });
+    sharedStates.push({ accountId: source.id, accountStatus: source.status });
+    await prisma.platformAccount.update({ where: { id: source.id }, data: { status: "ACTIVE" } });
+    const target = await prisma.user.create({ data: { email: `${randomUUID()}@opening-balance.test`, accountStatus: "ACTIVE" }, select: { id: true } });
+    await prisma.investorProfile.create({ data: { userId: target.id, displayName: "Opening Balance Recipient" } });
+    const wallet = await prisma.wallet.create({ data: { ownerUserId: target.id, currency: "THB", balanceSatang: 0n, status: "ACTIVE" }, select: { id: true } });
+    const idempotencyKey = `admin-opening-${randomUUID()}`;
+    const response = await postAdminOpeningBalance(apiRequest(admin, "http://localhost/api/admin/opening-balances", {
+      method: "POST",
+      headers: { "content-type": "application/json", "idempotency-key": idempotencyKey },
+      body: JSON.stringify({ walletId: wallet.id, amountSatang: "2000000", reason: "Approved demo wallet funding" }),
+    }));
+    const posted = await expectApiSuccess<{ id: string; walletId: string; administratorUserId: string; amountSatang: string; ledgerTransactionId: string; status: string }>(response, 201);
+    expect(posted).toMatchObject({ walletId: wallet.id, administratorUserId: admin.userId, amountSatang: "2000000", status: "POSTED" });
+    await expect(prisma.wallet.findUniqueOrThrow({ where: { id: wallet.id }, select: { balanceSatang: true } })).resolves.toEqual({ balanceSatang: 2000000n });
+    await expect(prisma.auditLog.findFirst({ where: { actorUserId: admin.userId, targetId: posted.id, action: "OPENING_BALANCE_POSTED", outcome: "SUCCESS" } })).resolves.not.toBeNull();
+    await expect(prisma.ledgerEntry.count({ where: { ledgerTransactionId: posted.ledgerTransactionId } })).resolves.toBe(2);
+  });
+
+  it("API-05-25 denies non-administrators opening-balance funding", async () => {
+    const borrower = await createIdentity("BORROWER");
+    await expectApiError(await postAdminOpeningBalance(apiRequest(borrower, "http://localhost/api/admin/opening-balances", {
+      method: "POST", headers: { "content-type": "application/json", "idempotency-key": `opening-denied-${randomUUID()}` },
+      body: JSON.stringify({ walletId: randomUUID(), amountSatang: "10000", reason: "Must be denied" }),
+    })), { status: 403, code: "FORBIDDEN" });
+  });
+
   it("API-05-20 lists wallet balances and ownership references for administrators", async () => {
     const admin = await createIdentity("ADMIN");
     const wallets = await expectApiSuccess<Array<{ id: string; balanceSatang: string; currency: string; status: string }>>(await listAdminWallets(apiRequest(admin, "http://localhost/api/admin/wallets?page=1&limit=10")));
@@ -281,12 +333,65 @@ describe("API-05 administrator APIs", () => {
     expect(data).toMatchObject({ loanId, fundedSatang: "1000000", escrow: { status: "FULLY_FUNDED" } });
   });
 
+  it("exposes current borrower disbursement consent to administrators", async () => {
+    const admin = await createIdentity("ADMIN");
+    const loanId = await createFundedLoanContext(admin);
+    const getDetails = () => getLoan(
+      apiRequest(admin, `http://localhost/api/admin/loans/${loanId}`),
+      { params: Promise.resolve({ loanId }) },
+    );
+
+    const beforeConsent = await expectApiSuccess<{ disbursementConsentAt: string | null }>(await getDetails());
+    expect(beforeConsent.disbursementConsentAt).toBeNull();
+
+    await expectApiSuccess(await consentToDisbursement(loanId), 201);
+    const afterConsent = await expectApiSuccess<{ disbursementConsentAt: string | null }>(await getDetails());
+    expect(afterConsent.disbursementConsentAt).toEqual(expect.any(String));
+  });
+
   it("API-05-08 disburses an eligible fully funded loan through existing services", async () => {
     const admin = await createIdentity();
     const loanId = await createFundedLoanContext(admin);
+    await expectApiSuccess(await consentToDisbursement(loanId), 201);
     const response = await disburseLoan(apiRequest(admin, `http://localhost/api/admin/loans/${loanId}/disburse`, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": `api05-disburse-${randomUUID()}` }, body: JSON.stringify({ reason: "Approved test disbursement" }) }), { params: Promise.resolve({ loanId }) });
     const result = await expectApiSuccess<{ ledgerTransactionId: string; status: string }>(response, 201);
     expect(result.status).toBe("POSTED");
+  });
+
+  it("requires the loan-owning borrower to confirm disbursement before an administrator can release escrow", async () => {
+    const admin = await createIdentity();
+    const loanId = await createFundedLoanContext(admin);
+    const idempotencyKey = `api05-disburse-consent-${randomUUID()}`;
+    const before = await prisma.ledgerTransaction.count({ where: { referenceType: "LOAN", referenceId: loanId, transactionType: "LOAN_DISBURSEMENT" } });
+
+    await expectApiError(await disburseLoan(apiRequest(admin, `http://localhost/api/admin/loans/${loanId}/disburse`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "idempotency-key": idempotencyKey },
+      body: JSON.stringify({ reason: "Attempt release without borrower confirmation" }),
+    }), { params: Promise.resolve({ loanId }) }), { status: 409, code: "BORROWER_CONSENT_REQUIRED" });
+    expect(await prisma.ledgerTransaction.count({ where: { referenceType: "LOAN", referenceId: loanId, transactionType: "LOAN_DISBURSEMENT" } })).toBe(before);
+
+    const otherBorrower = await createIdentity("BORROWER");
+    await prisma.borrowerProfile.create({ data: { userId: otherBorrower.userId, legalName: "Unrelated borrower", address: { country: "Thailand" } } });
+    await expectApiError(await confirmBorrowerDisbursement(apiRequest(otherBorrower, `http://localhost/api/borrower/loans/${loanId}/disbursement-consent`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ confirmDisbursement: true }),
+    }), { params: Promise.resolve({ loanId }) }), { status: 404, code: "NOT_FOUND" });
+
+    const consent = await expectApiSuccess<{ loanId: string; confirmedAt: string; alreadyConfirmed: boolean }>(await consentToDisbursement(loanId), 201);
+    expect(consent.loanId).toBe(loanId);
+    expect(consent.confirmedAt).toBeTruthy();
+    expect(consent.alreadyConfirmed).toBe(false);
+    const repeated = await expectApiSuccess<{ loanId: string; alreadyConfirmed: boolean }>(await consentToDisbursement(loanId));
+    expect(repeated).toMatchObject({ loanId, alreadyConfirmed: true });
+    expect(await prisma.auditLog.count({ where: { action: "LOAN_DISBURSEMENT_CONSENTED", targetId: loanId } })).toBe(1);
+    const disbursement = await expectApiSuccess<{ status: string }>(await disburseLoan(apiRequest(admin, `http://localhost/api/admin/loans/${loanId}/disburse`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "idempotency-key": idempotencyKey },
+      body: JSON.stringify({ reason: "Release after borrower confirmation" }),
+    }), { params: Promise.resolve({ loanId }) }), 201);
+    expect(disbursement.status).toBe("POSTED");
   });
 
   it("API-05-09 rejects disbursement of an ineligible loan", async () => {
@@ -298,6 +403,7 @@ describe("API-05 administrator APIs", () => {
   it("API-05-10 reuses an idempotent disbursement result", async () => {
     const admin = await createIdentity();
     const loanId = await createFundedLoanContext(admin);
+    await expectApiSuccess(await consentToDisbursement(loanId), 201);
     const key = `api05-disburse-${randomUUID()}`;
     const submit = () => disburseLoan(apiRequest(admin, `http://localhost/api/admin/loans/${loanId}/disburse`, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": key }, body: JSON.stringify({ reason: "Approved test disbursement" }) }), { params: Promise.resolve({ loanId }) });
     const first = await expectApiSuccess<{ ledgerTransactionId: string }>(await submit(), 201);

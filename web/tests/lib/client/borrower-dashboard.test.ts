@@ -24,7 +24,9 @@ describe("WP9.4.1 borrower dashboard data", () => {
           upcomingInstallments: [],
           overdueInstallments: [],
         }
-        : [];
+        : path === BORROWER_DASHBOARD_PATHS.wallet
+          ? { wallet: { id: "wallet-1", balanceSatang: "125000", currency: "THB", status: "ACTIVE", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }, transactions: [], pagination: { page: 1, limit: 5, total: 0, totalPages: 0, hasPreviousPage: false, hasNextPage: false } }
+          : [];
       return { success: true, data: data as T, message: "Loaded" };
     };
 
@@ -34,11 +36,13 @@ describe("WP9.4.1 borrower dashboard data", () => {
     expect(dashboard.applications.status).toBe("success");
     expect(dashboard.loans.status).toBe("success");
     expect(dashboard.repayments.status).toBe("success");
+    expect(dashboard.wallet.status).toBe("success");
   });
 
   it("keeps successful sections visible when one dashboard request fails", async () => {
     const fetcher = async <T>(path: string): Promise<ApiSuccessEnvelope<T>> => {
       if (path === BORROWER_DASHBOARD_PATHS.repayments) throw new Error("network unavailable");
+      if (path === BORROWER_DASHBOARD_PATHS.wallet) return { success: true, data: { wallet: null, transactions: [] } as T, message: "Loaded" };
       return { success: true, data: [{ id: "record-1" }] as unknown as T, message: "Loaded" };
     };
 
@@ -47,6 +51,7 @@ describe("WP9.4.1 borrower dashboard data", () => {
     expect(dashboard.applications).toMatchObject({ status: "success", data: [{ id: "record-1" }] });
     expect(dashboard.loans).toMatchObject({ status: "success", data: [{ id: "record-1" }] });
     expect(dashboard.repayments).toMatchObject({ status: "error" });
+    expect(dashboard.wallet).toMatchObject({ status: "success" });
   });
 
   it("starts each dashboard panel in its own loading state", () => {
@@ -55,6 +60,7 @@ describe("WP9.4.1 borrower dashboard data", () => {
     expect(initial.applications.status).toBe("loading");
     expect(initial.loans.status).toBe("loading");
     expect(initial.repayments.status).toBe("loading");
+    expect(initial.wallet.status).toBe("loading");
   });
 
   it("publishes each completed section without waiting for the slowest request", async () => {
@@ -88,7 +94,8 @@ describe("WP9.4.1 borrower dashboard data", () => {
     expect(updates).toContain("summary");
     expect(updates).not.toContain("repayments");
     for (const path of Object.values(BORROWER_DASHBOARD_PATHS)) {
-      resolvers.get(path)?.({ success: true, data: [] as unknown as never, message: "Loaded" });
+      const data = path === BORROWER_DASHBOARD_PATHS.wallet ? { wallet: null, transactions: [] } : [];
+      resolvers.get(path)?.({ success: true, data: data as never, message: "Loaded" });
     }
     await loading;
   });

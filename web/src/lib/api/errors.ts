@@ -104,6 +104,8 @@ export function mapApiError(error: unknown): MappedApiError {
       OFFER_EXPIRED: { status: 422, code: "BUSINESS_RULE_VIOLATION", message: "The offer has expired." },
       OFFER_NOT_AVAILABLE: { status: 409, code: "OFFER_NOT_AVAILABLE", message: "The offer is not available for acceptance." },
       OFFER_ALREADY_ACCEPTED: { status: 409, code: "OFFER_ALREADY_ACCEPTED", message: "The offer has already been accepted." },
+      ESCROW_ACCOUNT_UNAVAILABLE: { status: 503, code: "SERVICE_UNAVAILABLE", message: "Loan funding is temporarily unavailable. Please try again later." },
+      ESCROW_WALLET_UNAVAILABLE: { status: 503, code: "SERVICE_UNAVAILABLE", message: "Loan funding is temporarily unavailable. Please try again later." },
       LOAN_NOT_FOUND: { status: 404, code: "NOT_FOUND", message: "The requested loan was not found." },
       INVALID_LOAN_STATUS: { status: 409, code: "LOAN_NOT_ELIGIBLE", message: "The loan is not eligible for this operation in its current state." },
       LOAN_NOT_FULLY_FUNDED: { status: 422, code: "BUSINESS_RULE_VIOLATION", message: "The loan must be fully funded before disbursement." },
@@ -112,9 +114,19 @@ export function mapApiError(error: unknown): MappedApiError {
       INVALID_APPROVAL: { status: 409, code: "INVALID_APPROVAL", message: "A valid disbursement approval is required." },
       INVALID_REQUEST: { status: 409, code: "INVALID_REQUEST", message: "A valid disbursement request is required." },
       INVALID_DISBURSEMENT_REQUEST: { status: 409, code: "INVALID_DISBURSEMENT_REQUEST", message: "A valid disbursement request is required." },
+      BORROWER_CONSENT_REQUIRED: { status: 409, code: "BORROWER_CONSENT_REQUIRED", message: "The borrower must confirm disbursement before funds can be released." },
+      INVALID_REFERENCE: { status: 400, code: "VALIDATION_ERROR", message: "A valid loan and borrower reference are required." },
       INVALID_REASON: { status: 400, code: "VALIDATION_ERROR", message: "A valid reason is required." },
       SELF_RESTRICTION_REJECTED: { status: 409, code: "SELF_RESTRICTION_REJECTED", message: "An administrator cannot restrict their own account." },
       REPAYMENT_NOT_FOUND: { status: 404, code: "NOT_FOUND", message: "The requested repayment was not found." },
+      INVALID_INPUT: { status: 400, code: "VALIDATION_ERROR", message: "Provide a valid opening-balance amount, wallet, and reason." },
+      UNAUTHORIZED: { status: 403, code: "FORBIDDEN", message: "You are not authorized to post an opening balance." },
+      SELF_FUNDING_NOT_ALLOWED: { status: 403, code: "SELF_FUNDING_NOT_ALLOWED", message: "An administrator cannot fund their own wallet." },
+      WALLET_NOT_ELIGIBLE: { status: 422, code: "WALLET_NOT_ELIGIBLE", message: "The recipient wallet is not eligible for opening-balance funding." },
+      SOURCE_ACCOUNT_UNAVAILABLE: { status: 503, code: "SOURCE_ACCOUNT_UNAVAILABLE", message: "The approved opening-balance source account is unavailable." },
+      OPENING_BALANCE_ALREADY_EXISTS: { status: 409, code: "OPENING_BALANCE_ALREADY_EXISTS", message: "This wallet already has an opening balance." },
+      IDEMPOTENCY_CONFLICT: { status: 409, code: "IDEMPOTENCY_KEY_CONFLICT", message: "The idempotency key conflicts with an earlier financial request." },
+      POSTING_FAILED: { status: 503, code: "FINANCIAL_POSTING_FAILED", message: "The opening balance could not be posted. Check the financial activity before retrying." },
     };
     const serviceError = Object.hasOwn(serviceErrors, error.code)
       ? serviceErrors[error.code]

@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
+    "test:e2e": "playwright test",
+    "test:e2e:staging": "dotenv run -f .env.staging -- playwright test",
     "pretest": "dotenv run -f .env.test -- tsx scripts/assert-db-environment.ts test",
     "test": "dotenv run -f .env.test -- vitest run",
     "pretest:watch": "dotenv run -f .env.test -- tsx scripts/assert-db-environment.ts test",
@@ -21,8 +23,11 @@
     "db:seed:test": "dotenv run -f .env.test -- tsx prisma/seed/index.ts",
     "admin:bootstrap": "dotenv run -f .env -- tsx scripts/bootstrap-admin.ts",
     "demo:setup": "dotenv run -f .env.demo -- tsx scripts/setup-demo.ts",
+    "demo:activate-policies": "dotenv run -f .env.demo -- tsx scripts/activate-demo-policies.ts",
+    "predemo:migrate": "dotenv run -f .env.demo -- tsx scripts/assert-demo-environment.ts",
+    "demo:migrate": "dotenv run -f .env.demo -- prisma migrate deploy",
     "demo:reset": "dotenv run -f .env.demo -- tsx scripts/reset-demo.ts",
-    "demo:build": "dotenv run -f .env.demo -- next build",
+    "demo:build": "dotenv run -f .env.demo -- next build --webpack",
     "demo:start": "dotenv run -f .env.demo -- next dev",
     "db:reset:dev": "dotenv run -f .env -- tsx scripts/reset-database.ts development",
     "db:reset:test": "dotenv run -f .env.test -- tsx scripts/reset-database.ts test",
@@ -58,6 +63,7 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^24.19.2",
     "@types/pg": "^8.23.1",

@@ -1,4 +1,4 @@
-import { apiGet, type ApiPagination, type ApiSuccessEnvelope } from "./api-client";
+import { apiGet, apiPost, type ApiPagination, type ApiSuccessEnvelope } from "./api-client";
 
 export const DEFAULT_BORROWER_LOANS_PAGE_SIZE = 10;
 
@@ -20,12 +20,19 @@ export interface BorrowerLoan {
 }
 
 export interface BorrowerLoanDetails extends BorrowerLoan {
+  disbursementConsentAt: string | null;
   outstandingInterestSatang: string | null;
   paidPrincipalSatang: string | null;
   paidInterestSatang: string | null;
   totalPaidSatang: string | null;
   maturityDate: string | null;
   scheduleVersionId: string | null;
+}
+
+export interface BorrowerDisbursementConsentResult {
+  loanId: string;
+  confirmedAt: string;
+  alreadyConfirmed: boolean;
 }
 
 export interface BorrowerScheduleInstallment {
@@ -104,6 +111,17 @@ export async function loadBorrowerSchedule(
   signal?: AbortSignal,
 ): Promise<ApiSuccessEnvelope<BorrowerRepaymentSchedule>> {
   return fetcher<BorrowerRepaymentSchedule>(getBorrowerSchedulePath(loanId), signal ? { signal } : undefined);
+}
+
+export async function confirmBorrowerDisbursement(
+  loanId: string,
+  fetcher: typeof fetch = fetch,
+): Promise<ApiSuccessEnvelope<BorrowerDisbursementConsentResult>> {
+  return apiPost<BorrowerDisbursementConsentResult, { confirmDisbursement: true }>(
+    `${getBorrowerLoanPath(loanId)}/disbursement-consent`,
+    { confirmDisbursement: true },
+    { fetcher },
+  );
 }
 
 export function hasBorrowerLoans(rows: readonly BorrowerLoan[], pagination?: ApiPagination): boolean {

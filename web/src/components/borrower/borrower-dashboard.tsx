@@ -16,6 +16,7 @@ import {
   WalletCards,
 } from "lucide-react";
 import { useAuth } from "../auth/auth-provider";
+import { RoleOnboardingTour } from "../shared/role-onboarding-tour";
 import { Badge } from "../ui/badge";
 import { Button, buttonVariants } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -72,6 +73,7 @@ function Panel({
   icon: Icon,
   children,
   className,
+  tourTarget,
 }: {
   title: string;
   description?: string;
@@ -80,9 +82,10 @@ function Panel({
   icon: typeof FileText;
   children: ReactNode;
   className?: string;
+  tourTarget?: string;
 }) {
   return (
-    <Card className={className}>
+    <Card className={className} data-tour-target={tourTarget}>
       <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
         <div className="flex min-w-0 items-start gap-3">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
@@ -273,6 +276,16 @@ function RepaymentsSection({ data, retry }: {
   </ul>;
 }
 
+function WalletSection({ data, retry }: { data: BorrowerDashboardData["wallet"]; retry: () => void }) {
+  if (data.status === "loading") return <SectionLoading label="wallet activity" />;
+  if (data.status === "error") return <SectionError title="Wallet activity could not be loaded" message={data.message} retry={retry} />;
+  if (!data.data.wallet) return <div className="rounded-lg bg-secondary/60 p-4 text-sm text-muted-foreground">No simulated wallet is linked to this account yet. An administrator can provision the wallet through the platform workflow.</div>;
+  return <div className="grid gap-4">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-secondary/50 p-4"><div><p className="text-sm text-muted-foreground">Available simulated wallet balance</p><p className="mt-1 text-2xl font-bold tracking-tight">{formatSatang(data.data.wallet.balanceSatang)}</p></div><Badge variant={data.data.wallet.status === "ACTIVE" ? "success" : "warning"}>{formatDashboardStatus(data.data.wallet.status)}</Badge></div>
+    {data.data.transactions.length ? <ul className="divide-y divide-border">{data.data.transactions.map((transaction) => <li key={transaction.ledgerEntryId} className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0"><div className="min-w-0"><p className="font-medium">{formatDashboardStatus(transaction.transactionType)}</p><p className="mt-1 break-all text-xs text-muted-foreground">{transaction.description || transaction.ledgerTransactionId}</p></div><p className="shrink-0 font-semibold tabular-nums">{transaction.direction === "DEBIT" ? "−" : "+"}{formatSatang(transaction.amountSatang)}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">No posted wallet transactions yet.</p>}
+  </div>;
+}
+
 export function BorrowerDashboard() {
   const { identity } = useAuth();
   const [data, setData] = useState<BorrowerDashboardData>(createInitialBorrowerDashboardData);
@@ -327,13 +340,14 @@ export function BorrowerDashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <RoleOnboardingTour userId={identity?.id ?? null} role="BORROWER" />
           <Link className={buttonVariants({ variant: "outline", size: "default" })} href="/borrower/wallet">
             Wallet <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
           <Link className={buttonVariants({ variant: "outline", size: "default" })} href="/borrower/repayments">
             Repayment history <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
-          <Link className={buttonVariants({ variant: "outline", size: "default" })} href="/borrower/offers">
+          <Link data-tour-target="borrower-offers" className={buttonVariants({ variant: "outline", size: "default" })} href="/borrower/offers">
             Offers <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
           <Button variant="outline" onClick={refresh} disabled={refreshing}>
@@ -347,10 +361,10 @@ export function BorrowerDashboard() {
       </header>
 
       {refreshing ? <p className="sr-only" role="status" aria-live="polite">Refreshing your dashboard…</p> : null}
-      <SummaryCards resource={data.summary} retry={() => retrySection("summary")} />
+      <div data-tour-target="borrower-summary"><SummaryCards resource={data.summary} retry={() => retrySection("summary")} /></div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <Panel title="Upcoming installments" description="Amounts due from your current repayment schedules" href="/borrower/loans" actionLabel="View loans" icon={CalendarClock}>
+        <Panel title="Upcoming installments" description="Amounts due from your current repayment schedules" href="/borrower/loans" actionLabel="View loans" icon={CalendarClock} tourTarget="borrower-installments">
           {data.summary.status === "loading" ? <SectionLoading label="upcoming installments" /> : null}
           {data.summary.status === "error" ? <SectionError title="Upcoming installments could not be loaded" message={data.summary.message} retry={() => retrySection("summary")} /> : null}
           {summary ? <InstallmentList items={summary.upcomingInstallments} emptyMessage="You have no upcoming unpaid installments." /> : null}
@@ -360,14 +374,17 @@ export function BorrowerDashboard() {
           {data.summary.status === "error" ? <SectionError title="Overdue installments could not be loaded" message={data.summary.message} retry={() => retrySection("summary")} /> : null}
           {summary ? <InstallmentList items={summary.overdueInstallments} emptyMessage="No overdue installments." overdue /> : null}
         </Panel>
-        <Panel title="Recent applications" description="Your latest requests and their current status" href="/borrower/applications" actionLabel="View all" icon={FileText}>
+        <Panel title="Recent applications" description="Your latest requests and their current status" href="/borrower/applications" actionLabel="View all" icon={FileText} tourTarget="borrower-applications">
           <ApplicationSection data={data.applications} retry={() => retrySection("applications")} />
         </Panel>
-        <Panel title="Your loans" description="Principal, current outstanding amount, and next due date" href="/borrower/loans" actionLabel="View loans" icon={Landmark}>
+        <Panel title="Your loans" description="Principal, current outstanding amount, and next due date" href="/borrower/loans" actionLabel="View loans" icon={Landmark} tourTarget="borrower-loans">
           <LoansSection data={data.loans} balances={summary?.activeLoans ?? []} retry={() => retrySection("loans")} />
         </Panel>
-        <Panel title="Recent repayments" description="Posted repayments from your repayment history" href="/borrower/repayments" actionLabel="View history" icon={WalletCards} className="xl:col-span-2">
+        <Panel title="Recent repayments" description="Posted repayments from your repayment history" href="/borrower/repayments" actionLabel="View history" icon={WalletCards} className="xl:col-span-2" tourTarget="borrower-history">
           <RepaymentsSection data={data.repayments} retry={() => retrySection("repayments")} />
+        </Panel>
+        <Panel title="Simulated wallet" description="Persisted wallet balance and recent posted credits/debits" href="/borrower/wallet" actionLabel="View wallet" icon={WalletCards} className="xl:col-span-2">
+          <WalletSection data={data.wallet} retry={() => retrySection("wallet")} />
         </Panel>
       </div>
     </main>

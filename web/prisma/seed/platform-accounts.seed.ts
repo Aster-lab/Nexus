@@ -21,21 +21,21 @@ const PLATFORM_ACCOUNTS = [
         accountName : "Simulated Escrow",
         accountType : "LIABILITY",
         currency : 'THB',
-        status : "INACTIVE",
+        status : "ACTIVE",
     },
     {
         accountCode : "2300",
         accountName : "Repayment Clearing",
         accountType : "LIABILITY",
         currency : "THB",
-        status : "INACTIVE",
+        status : "ACTIVE",
     },
     {
         accountCode : "1300",
         accountName: "Simulated Opening Balance Asset",
         accountType : "ASSET",
         currency : "THB",
-        status: "INACTIVE",
+        status: "ACTIVE",
     }
 ] satisfies Prisma.PlatformAccountCreateManyInput[];
 
@@ -46,6 +46,7 @@ export async function seedPlatformAccounts() {
                 where: {accountCode : account.accountCode}
             });
 
+            let platformAccount = existing;
             if (existing){
                 const matches =
                     existing.accountCode == account.accountCode &&
@@ -62,10 +63,23 @@ export async function seedPlatformAccounts() {
                 console.log(
                     `PlatformAccount ${account.accountCode} already exists; preserving status ${existing.status}.`,
                 );
-                continue;
+            } else {
+                platformAccount = await tx.platformAccount.create({data: account,});
+                console.log(`PlatformAccount ${account.accountCode} created`);
             }
-            await tx.platformAccount.create({data: account,});
-            console.log(`PlatformAccount ${account.accountCode} created`);
+
+            if (platformAccount?.status === "ACTIVE" && (account.accountCode === "2200" || account.accountCode === "2300")) {
+                await tx.wallet.upsert({
+                    where: { ownerPlatformAccountId: platformAccount.id },
+                    create: {
+                        ownerPlatformAccountId: platformAccount.id,
+                        currency: "THB",
+                        balanceSatang: 0n,
+                        status: "ACTIVE",
+                    },
+                    update: {},
+                });
+            }
         }
     });
 }

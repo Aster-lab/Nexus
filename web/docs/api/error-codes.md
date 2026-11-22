@@ -29,7 +29,7 @@ Except for the service-to-service prediction persistence callback documented in 
 | 409 | `IDEMPOTENCY_KEY_CONFLICT` | Key is associated with a different logical financial operation. |
 | 409 | `APPLICATION_NOT_EDITABLE`, `APPLICATION_NOT_REVIEWABLE`, `APPLICATION_NOT_SUBMITTABLE` | Application state does not allow the requested transition. |
 | 409 | `OFFER_NOT_AVAILABLE`, `OFFER_ALREADY_ACCEPTED` | Offer state prevents acceptance. |
-| 409 | `LOAN_NOT_ELIGIBLE`, `ALREADY_DISBURSED`, `REQUEST_ALREADY_APPROVED`, `INVALID_APPROVAL`, `INVALID_REQUEST`, `INVALID_DISBURSEMENT_REQUEST` | Loan/disbursement lifecycle state prevents the operation. |
+| 409 | `LOAN_NOT_ELIGIBLE`, `ALREADY_DISBURSED`, `BORROWER_CONSENT_REQUIRED`, `REQUEST_ALREADY_APPROVED`, `INVALID_APPROVAL`, `INVALID_REQUEST`, `INVALID_DISBURSEMENT_REQUEST` | Loan/disbursement lifecycle state prevents the operation or requires borrower confirmation. |
 | 409 | `INVESTOR_PREFERENCES_REQUIRED`, `INVESTOR_PREFERENCES_INVALID` | Recommendation request cannot use the investor's saved preferences. |
 | 409 | `ALLOCATION_ALREADY_PAID` | Allocation already has a payout. |
 | 422 | `APPLICATION_POLICY_VIOLATION` | Requested amount or term falls outside the active application policy. |

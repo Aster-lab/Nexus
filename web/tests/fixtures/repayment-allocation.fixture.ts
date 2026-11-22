@@ -4,6 +4,7 @@ import { vi } from "vitest";
 import { postInvestorContribution } from "../../src/lib/services/investor-contribution.service";
 import {
   approveLoanDisbursement,
+  recordBorrowerDisbursementConsent,
   requestLoanDisbursement,
 } from "../../src/lib/services/loan-disbursement-approval.service";
 import { postLoanDisbursement } from "../../src/lib/services/loan-disbursement.service";
@@ -117,6 +118,11 @@ export async function createRepaymentAllocationLifecycleContext(
         status: "ACTIVE",
       },
       select: { id: true },
+    });
+
+    await recordBorrowerDisbursementConsent({
+      loanId: fixture.loan.id,
+      borrowerUserId: fixture.borrowerUser.id,
     });
 
     const request = await requestLoanDisbursement({

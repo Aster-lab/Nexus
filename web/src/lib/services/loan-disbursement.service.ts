@@ -104,6 +104,36 @@ async function assertApproval(
   ) {
     fail("Linked request evidence is invalid.", "INVALID_REQUEST");
   }
+
+  const loan = await tx.loan.findUnique({
+    where: { id: loanId },
+    select: {
+      principalSatang: true,
+      borrowerProfile: { select: { userId: true } },
+    },
+  });
+  const borrowerConsent = loan ? await tx.auditLog.findFirst({
+    where: {
+      actorUserId: loan.borrowerProfile.userId,
+      action: "LOAN_DISBURSEMENT_CONSENTED",
+      targetType: TARGET_TYPE,
+      targetId: loanId,
+      outcome: "SUCCESS",
+      newValues: { path: ["schemaVersion"], equals: "loan_disbursement_consent.v1" },
+    },
+    select: { id: true, newValues: true },
+  }) : null;
+  const consentValues = borrowerConsent?.newValues as
+    | { confirmedPrincipalSatang?: unknown; currency?: unknown }
+    | null;
+  if (
+    !borrowerConsent || !consentValues || !loan ||
+    consentValues.confirmedPrincipalSatang !== loan.principalSatang.toString() ||
+    consentValues.currency !== "THB"
+  ) {
+    fail("Borrower confirmation is required before disbursement.", "BORROWER_CONSENT_REQUIRED");
+  }
+
     if (!request.actorUserId) {
     fail(
         "Disbursement request has no requesting administrator.",

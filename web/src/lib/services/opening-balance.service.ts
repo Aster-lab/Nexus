@@ -366,7 +366,7 @@ export async function postOpeningBalance(
 
       /*
        * Lock the source account and validate its configuration.
-       * Account 1300 must be activated separately after workflow verification.
+       * Account 1300 is enabled only by its explicit seed/migration configuration.
        */
       const lockedAccounts = await tx.$queryRaw<Array<{ id: string }>>`
         SELECT id

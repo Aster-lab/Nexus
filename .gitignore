@@ -55,5 +55,6 @@ web/.env
 web/.env.local
 web/.env.*
 !web/.env.demo.example
+!web/.env.staging.example
 !.env.example
 !web/.env.example

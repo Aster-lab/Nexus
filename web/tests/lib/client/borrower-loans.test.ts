@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ApiSuccessEnvelope } from "../../../src/lib/client/api-client";
-import { getBorrowerLoanPath, getBorrowerLoansPath, getBorrowerSchedulePath, hasBorrowerLoans, loadBorrowerLoan, loadBorrowerLoans, loadBorrowerSchedule, type BorrowerLoanFetcher } from "../../../src/lib/client/borrower-loans";
+import { confirmBorrowerDisbursement, getBorrowerLoanPath, getBorrowerLoansPath, getBorrowerSchedulePath, hasBorrowerLoans, loadBorrowerLoan, loadBorrowerLoans, loadBorrowerSchedule, type BorrowerLoanFetcher } from "../../../src/lib/client/borrower-loans";
 
 describe("WP9.4.5 borrower loans client", () => {
   it("distinguishes an empty loan list from paginated loan results", () => {
@@ -27,5 +27,21 @@ describe("WP9.4.5 borrower loans client", () => {
       "/api/borrower/loans/loan%2F1",
       "/api/borrower/loans/loan%2F1/schedule",
     ]);
+  });
+
+  it("posts explicit borrower confirmation to the owned loan consent route", async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({
+      success: true,
+      data: { loanId: "loan-1", confirmedAt: "2026-11-22T00:00:00.000Z", alreadyConfirmed: false },
+      message: "Borrower disbursement confirmation recorded.",
+    }), { status: 201, headers: { "content-type": "application/json" } }));
+
+    const response = await confirmBorrowerDisbursement("loan-1", fetcher);
+
+    expect(response.data.alreadyConfirmed).toBe(false);
+    expect(fetcher).toHaveBeenCalledWith("/api/borrower/loans/loan-1/disbursement-consent", expect.objectContaining({
+      method: "POST",
+      body: JSON.stringify({ confirmDisbursement: true }),
+    }));
   });
 });

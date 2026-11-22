@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { findUniqueMock, createMock, transactionMock } = vi.hoisted(() => ({
+const { findUniqueMock, createMock, walletUpsertMock, transactionMock } = vi.hoisted(() => ({
     findUniqueMock: vi.fn(),
     createMock: vi.fn(),
+    walletUpsertMock: vi.fn(),
     transactionMock: vi.fn(),
 }));
 
@@ -34,21 +35,21 @@ const expectedAccounts = [
         accountName: "Simulated Escrow",
         accountType: "LIABILITY",
         currency: "THB",
-        status: "INACTIVE",
+        status: "ACTIVE",
     },
     {
         accountCode: "2300",
         accountName: "Repayment Clearing",
         accountType: "LIABILITY",
         currency: "THB",
-        status: "INACTIVE",
+        status: "ACTIVE",
     },
     {
         accountCode: "1300",
         accountName: "Simulated Opening Balance Asset",
         accountType: "ASSET",
         currency : "THB",
-        status: "INACTIVE",
+        status: "ACTIVE",
     }
 ];
 
@@ -57,7 +58,8 @@ describe("seedPlatformAccounts", () => {
         vi.clearAllMocks();
 
         findUniqueMock.mockResolvedValue(null);
-        createMock.mockResolvedValue({});
+        createMock.mockImplementation(async ({ data }) => ({ id: `id-${data.accountCode}`, ...data }));
+        walletUpsertMock.mockResolvedValue({});
 
         transactionMock.mockImplementation(async (callback) =>
             callback({
@@ -65,6 +67,7 @@ describe("seedPlatformAccounts", () => {
                     findUnique: findUniqueMock,
                     create: createMock,
                 },
+                wallet: { upsert: walletUpsertMock },
             }),
         );
     });
@@ -93,7 +96,7 @@ describe("seedPlatformAccounts", () => {
         expect(createdAccounts).toEqual(expectedAccounts);
     });
 
-    it("keeps the opening balance asset inactive", async () => {
+    it("activates the approved opening balance asset", async () => {
         await seedPlatformAccounts();
 
         const openingBalanceAccount = createMock.mock.calls
@@ -105,7 +108,23 @@ describe("seedPlatformAccounts", () => {
             accountName: "Simulated Opening Balance Asset",
             accountType: "ASSET",
             currency: "THB",
-            status: "INACTIVE",
+            status: "ACTIVE",
+        });
+    });
+
+    it("provisions zero-balance wallets for the active escrow and clearing accounts", async () => {
+        await seedPlatformAccounts();
+
+        expect(walletUpsertMock).toHaveBeenCalledTimes(2);
+        expect(walletUpsertMock).toHaveBeenCalledWith({
+            where: { ownerPlatformAccountId: "id-2200" },
+            create: { ownerPlatformAccountId: "id-2200", currency: "THB", balanceSatang: 0n, status: "ACTIVE" },
+            update: {},
+        });
+        expect(walletUpsertMock).toHaveBeenCalledWith({
+            where: { ownerPlatformAccountId: "id-2300" },
+            create: { ownerPlatformAccountId: "id-2300", currency: "THB", balanceSatang: 0n, status: "ACTIVE" },
+            update: {},
         });
     });
 

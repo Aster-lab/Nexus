@@ -73,7 +73,10 @@ A create response is `201` and wraps the created application in the shared envel
 | --- | --- |
 | `GET /api/borrower/loans` | Paginated list of the caller's loans; `sortBy=createdAt` is supported. Includes original principal and persisted-schedule outstanding principal/balance when a schedule exists. |
 | `GET /api/borrower/loans/{loanId}` | Owned loan status and persisted terms plus schedule-derived paid/outstanding amounts, installment count, and maturity date when a schedule exists. |
+| `POST /api/borrower/loans/{loanId}/disbursement-consent` | Record the authenticated loan-owning borrower's explicit confirmation before an administrator can release a fully funded loan. Strict body: `{ "confirmDisbursement": true }`. Repeated confirmation reuses the existing audit event. |
 | `GET /api/borrower/loans/{loanId}/schedule` | Current persisted schedule only; returns persisted due dates/statuses and backend-provided total/paid/remaining amounts. This route does not generate or recalculate a schedule. |
+
+Borrower disbursement confirmation is available only while the owned loan is fully funded and not yet disbursed. It authorizes release of the simulated loan amount to the borrower's NEXUS wallet; it does not authorize a real-world deposit or withdrawal. The administrator disbursement service rechecks the persisted borrower confirmation before posting.
 | `GET /api/borrower/loans/{loanId}/payable` | Return the backend-calculated amount currently payable and eligible installments for an owned loan. Early repayments are not included. |
 
 ## Repayments and receipts

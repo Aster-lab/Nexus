@@ -16,6 +16,7 @@ describe("WP9.4.1 borrower dashboard UI", () => {
     expect(markup).toContain("Loading applications");
     expect(markup).toContain("Loading loans");
     expect(markup).toContain("Loading repayment history");
+    expect(markup).toContain("Loading wallet activity");
     expect(markup).toContain('aria-busy="true"');
   });
 });

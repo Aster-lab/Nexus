@@ -1,0 +1,15 @@
+[data-tour-highlighted="true"] {
+  position: relative;
+  z-index: 40;
+  outline: 3px solid var(--accent);
+  outline-offset: 5px;
+  border-radius: 0.9rem;
+  scroll-margin-block: 8rem;
+  box-shadow: 0 0 0 9px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-tour-highlighted="true"] {
+    transition: outline-color 180ms ease, box-shadow 180ms ease;
+  }
+}

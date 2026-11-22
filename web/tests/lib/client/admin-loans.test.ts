@@ -14,10 +14,11 @@ describe("WP9.6.3 administrator loan client", () => {
     expect(getAdminLoanFundingPath("loan/1")).toBe("/api/admin/loans/loan%2F1/funding");
   });
 
-  it("offers the disbursement control only for loans reported FUNDED", () => {
-    expect(canAdminDisburseLoan("FUNDED")).toBe(true);
-    expect(canAdminDisburseLoan("FUNDING")).toBe(false);
-    expect(canAdminDisburseLoan("ACTIVE")).toBe(false);
-    expect(canAdminDisburseLoan("REPAID")).toBe(false);
+  it("allows disbursement only after both funding and borrower confirmation are reported", () => {
+    expect(canAdminDisburseLoan("FUNDED", null)).toBe(false);
+    expect(canAdminDisburseLoan("FUNDED", "2026-11-22T10:00:00.000Z")).toBe(true);
+    expect(canAdminDisburseLoan("FUNDING", "2026-11-22T10:00:00.000Z")).toBe(false);
+    expect(canAdminDisburseLoan("ACTIVE", "2026-11-22T10:00:00.000Z")).toBe(false);
+    expect(canAdminDisburseLoan("REPAID", "2026-11-22T10:00:00.000Z")).toBe(false);
   });
 });

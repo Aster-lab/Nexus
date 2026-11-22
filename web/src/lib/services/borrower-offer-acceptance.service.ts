@@ -1,5 +1,4 @@
 import { Prisma } from "../../generated/prisma/client";
-import { prisma } from "../prisma";
 import { withSerializableTransactionRetry } from "./ledger-posting.service";
 
 type TransactionClient = Prisma.TransactionClient;
@@ -65,6 +64,28 @@ export async function acceptBorrowerLoanOffer(input: {
       fail("OFFER_NOT_AVAILABLE");
     }
 
+    const escrowPlatformAccount = await tx.platformAccount.findUnique({
+      where: { accountCode: "2200" },
+      select: { id: true, accountType: true, currency: true, status: true },
+    });
+    if (
+      !escrowPlatformAccount || escrowPlatformAccount.status !== "ACTIVE" ||
+      escrowPlatformAccount.accountType !== "LIABILITY" || escrowPlatformAccount.currency !== "THB"
+    ) {
+      fail("ESCROW_ACCOUNT_UNAVAILABLE");
+    }
+    const escrowWallet = await tx.wallet.findUnique({
+      where: { ownerPlatformAccountId: escrowPlatformAccount.id },
+      select: { id: true, ownerUserId: true, ownerPlatformAccountId: true, currency: true, status: true },
+    });
+    if (
+      !escrowWallet || escrowWallet.ownerUserId !== null ||
+      escrowWallet.ownerPlatformAccountId !== escrowPlatformAccount.id ||
+      escrowWallet.currency !== "THB" || escrowWallet.status !== "ACTIVE"
+    ) {
+      fail("ESCROW_WALLET_UNAVAILABLE");
+    }
+
     const loan = await tx.loan.create({
       data: {
         borrowerProfileId: input.borrowerProfileId,
@@ -85,6 +106,10 @@ export async function acceptBorrowerLoanOffer(input: {
         termMonths: true,
         fundingDeadline: true,
       },
+    });
+
+    await tx.escrowAccount.create({
+      data: { loanId: loan.id, platformWalletId: escrowWallet.id },
     });
 
     const transitioned = await tx.loanOffer.updateMany({

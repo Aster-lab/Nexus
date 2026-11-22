@@ -27,6 +27,7 @@ import { prisma } from "../../src/lib/prisma";
 import { LoanInterestPolicyValuesSchema, PlatformFeePolicyValuesSchema } from "../../src/lib/contracts/platform-policy";
 import { generateRepaymentSchedule } from "../../src/lib/services/repayment.service";
 import { createRepaymentTestContext, type RepaymentTestContext } from "../fixtures/repayment.fixture";
+import { activateEscrowAccountForTests } from "../fixtures/investor-contribution.fixture";
 import { createAuthenticatedApiRequest, expectApiError, expectApiSuccess } from "../helpers/api";
 
 interface Borrower {
@@ -43,6 +44,7 @@ const createdLoanIds: string[] = [];
 const repaymentContexts: RepaymentTestContext[] = [];
 const repaymentFixtureRolesCreated: string[] = [];
 const repaymentFixtureRolesRevived: Array<{ id: string; revokedAt: Date }> = [];
+const escrowAccountSetups: Array<Awaited<ReturnType<typeof activateEscrowAccountForTests>>> = [];
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -345,6 +347,7 @@ describe("API-03 borrower application APIs", () => {
   let approver: { id: string };
 
   beforeEach(async () => {
+    escrowAccountSetups.push(await activateEscrowAccountForTests());
     borrower = await createBorrower();
     otherBorrower = await createBorrower();
     approver = await prisma.user.create({
@@ -358,6 +361,7 @@ describe("API-03 borrower application APIs", () => {
   afterEach(async () => {
     if (createdLoanIds.length) {
       await prisma.loanStatusHistory.deleteMany({ where: { loanId: { in: createdLoanIds } } });
+      await prisma.escrowAccount.deleteMany({ where: { loanId: { in: createdLoanIds } } });
       await prisma.loan.deleteMany({ where: { id: { in: createdLoanIds } } });
       createdLoanIds.length = 0;
     }
@@ -419,6 +423,7 @@ describe("API-03 borrower application APIs", () => {
       await prisma.userRole.update({ where: { id: assignment.id }, data: { revokedAt: assignment.revokedAt } });
     }
     for (const context of repaymentContexts.splice(0)) await context.cleanup();
+    for (const setup of escrowAccountSetups.splice(0).reverse()) await setup.cleanup();
     if (approver) await prisma.user.deleteMany({ where: { id: approver.id } });
   });
 
@@ -780,6 +785,11 @@ describe("API-03 borrower application APIs", () => {
     const result = await expectApiSuccess<{ loanId: string; status: string }>(response, 201);
     createdLoanIds.push(result.loanId);
     expect(result.status).toBe("FUNDING");
+    await expect(prisma.escrowAccount.findUnique({ where: { loanId: result.loanId } })).resolves.toMatchObject({
+      loanId: result.loanId,
+      heldSatang: 0n,
+      status: "OPEN",
+    });
   });
 
   it("OFF-01/03/04 lists and displays the complete borrower offer terms and expiration", async () => {
