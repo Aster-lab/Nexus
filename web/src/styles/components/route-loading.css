@@ -1,0 +1,27 @@
+.nexus-route-loading {
+  width: min(100% - 2rem, 72rem);
+  min-height: 55vh;
+  margin-inline: auto;
+  padding-block: clamp(2rem, 6vw, 4rem);
+  color: var(--muted);
+}
+
+.nexus-route-loading__heading { display: grid; gap: 0.8rem; margin-bottom: 2rem; }
+.nexus-route-loading__line,
+.nexus-route-loading__card {
+  display: block;
+  background: linear-gradient(100deg, var(--secondary) 25%, color-mix(in srgb, var(--secondary) 55%, var(--background)) 45%, var(--secondary) 65%);
+  background-size: 220% 100%;
+  animation: nexus-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+.nexus-route-loading__line { height: 0.8rem; border-radius: 999px; }
+.nexus-route-loading__line--short { width: min(10rem, 35%); }
+.nexus-route-loading__line--title { width: min(25rem, 75%); height: 2.4rem; }
+.nexus-route-loading__line--wide { width: min(34rem, 90%); }
+.nexus-route-loading__cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.nexus-route-loading__card { min-height: 9rem; border: 1px solid var(--border); border-radius: 1rem; }
+.nexus-route-loading > p { margin-top: 1.2rem; font-size: 0.9rem; }
+
+@keyframes nexus-skeleton-shimmer { to { background-position: -220% 0; } }
+@media (max-width: 42rem) { .nexus-route-loading__cards { grid-template-columns: 1fr; } .nexus-route-loading__card { min-height: 5.5rem; } }
+@media (prefers-reduced-motion: reduce) { .nexus-route-loading__line, .nexus-route-loading__card { animation: none; } }

@@ -74,34 +74,45 @@ export function ApplicationShell({ children, demoMode = false }: { children: Rea
           if (row.closest("table") !== table) continue;
           row.setAttribute("role", "row");
           Array.from(row.cells).forEach((cell, index) => {
-            if (headers[index]) cell.dataset.label = headers[index];
-            cell.setAttribute("role", cell instanceof HTMLTableCellElement && cell.tagName === "TH" ? "rowheader" : "cell");
+            if (headers[index] && cell.dataset.label !== headers[index]) cell.dataset.label = headers[index];
+            const role = cell instanceof HTMLTableCellElement && cell.tagName === "TH" ? "rowheader" : "cell";
+            if (cell.getAttribute("role") !== role) cell.setAttribute("role", role);
           });
         }
       }
     }
 
-    function tablesWithin(node: Node): Set<HTMLTableElement> {
-      const tables = new Set<HTMLTableElement>();
-      if (!(node instanceof Element)) return tables;
-      if (node instanceof HTMLTableElement) tables.add(node);
-      node.querySelectorAll("table").forEach((table) => tables.add(table));
-      const parentTable = node.closest("table");
-      if (parentTable) tables.add(parentTable);
-      return tables;
+    function queueTablesWithin(node: Node, pending: Set<HTMLTableElement>) {
+      if (!(node instanceof Element)) return;
+      if (node instanceof HTMLTableElement) pending.add(node);
+      node.querySelectorAll("table").forEach((table) => pending.add(table));
     }
 
     document.querySelectorAll("table").forEach((table) => addResponsiveLabels(table));
+    const pendingTables = new Set<HTMLTableElement>();
+    let frame = 0;
     const observer = new MutationObserver((records) => {
-      const tables = new Set<HTMLTableElement>();
       for (const record of records) {
-        tablesWithin(record.target).forEach((table) => tables.add(table));
-        record.addedNodes.forEach((node) => tablesWithin(node).forEach((table) => tables.add(table)));
+        if (record.target instanceof Element) {
+          const parentTable = record.target instanceof HTMLTableElement ? record.target : record.target.closest("table");
+          if (parentTable) pendingTables.add(parentTable);
+        }
+        record.addedNodes.forEach((node) => queueTablesWithin(node, pendingTables));
       }
-      tables.forEach(addResponsiveLabels);
+      if (!frame && pendingTables.size) {
+        frame = window.requestAnimationFrame(() => {
+          frame = 0;
+          pendingTables.forEach(addResponsiveLabels);
+          pendingTables.clear();
+        });
+      }
     });
     observer.observe(document.body, { childList: true, subtree: true });
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (frame) window.cancelAnimationFrame(frame);
+      pendingTables.clear();
+    };
   }, []);
   const workspaceRole: NexusRole | null = pathname.startsWith("/admin") && identity?.roles.includes("ADMIN") ? "ADMIN"
     : pathname.startsWith("/borrower") && identity?.roles.includes("BORROWER") ? "BORROWER"

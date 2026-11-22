@@ -12,6 +12,13 @@ export interface InvestorMarketplaceOpportunity {
   termMonths: number;
   fundingDeadline: string;
   createdAt: string;
+  borrowerOverview?: {
+    loanPurpose: string;
+    employmentCategory: string;
+    roleTenureBand: string | null;
+    companyName: string | null;
+    companyType: string | null;
+  } | null;
 }
 
 export interface InvestorMarketplacePage {

@@ -1,6 +1,14 @@
 import { z } from "zod";
 
 export const APPLICATION_SNAPSHOT_SCHEMA_VERSION = "application_snapshot.v1" as const;
+export const BORROWER_COMPANY_TYPES = [
+  "SOLE_PROPRIETORSHIP",
+  "PARTNERSHIP",
+  "PRIVATE_LIMITED_COMPANY",
+  "PUBLIC_LIMITED_COMPANY",
+  "COOPERATIVE",
+  "OTHER",
+] as const;
 
 const nullableText = z.string().trim().nullable();
 const nonEmptyText = z.string().trim().min(1);
@@ -37,6 +45,8 @@ export const ApplicationSnapshotSchema = z
         employer_name: nullableText,
         occupation: nullableText,
         months_in_role: z.number().int().nonnegative().safe().nullable(),
+        company_name: nullableText.optional(),
+        company_type: z.enum(BORROWER_COMPANY_TYPES).nullable().optional(),
       })
       .strict(),
     requested_loan: z
@@ -47,6 +57,16 @@ export const ApplicationSnapshotSchema = z
       })
       .strict(),
   })
-  .strict();
+  .strict()
+  .superRefine((snapshot, context) => {
+    const companyName = snapshot.employment.company_name?.trim() || null;
+    const companyType = snapshot.employment.company_type ?? null;
+    if (companyName && !companyType) {
+      context.addIssue({ code: "custom", path: ["employment", "company_type"], message: "Choose the company type when a company name is provided." });
+    }
+    if (!companyName && companyType) {
+      context.addIssue({ code: "custom", path: ["employment", "company_name"], message: "Enter the company name when choosing a company type." });
+    }
+  });
 
 export type ApplicationSnapshot = z.infer<typeof ApplicationSnapshotSchema>;

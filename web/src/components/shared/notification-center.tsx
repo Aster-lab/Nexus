@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Bell, Check, ExternalLink, RefreshCw } from "lucide-react";
 import { ApiClientError } from "../../lib/client/api-client";
 import { listNotifications, markNotificationRead, type UserNotification } from "../../lib/client/notifications";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 
-type LoadState = { status: "loading" } | { status: "error"; message: string } | { status: "success"; items: UserNotification[]; unreadCount: number };
+type LoadState = { status: "idle" | "loading" } | { status: "error"; message: string } | { status: "success"; items: UserNotification[]; unreadCount: number };
 
 function loadErrorMessage(error: unknown) {
   if (error instanceof ApiClientError && error.status === 401) return "Sign in again to view your notifications.";
@@ -23,10 +24,12 @@ function dateLabel(value: string) {
 export function NotificationCenter({ roles }: { roles: string[] }) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<"ALL" | "UNREAD">("ALL");
-  const [state, setState] = useState<LoadState>({ status: "loading" });
+  const [state, setState] = useState<LoadState>({ status: "idle" });
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const requestSequence = useRef(0);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
 
   const load = useCallback(async (requestId: number) => {
     try {
@@ -39,17 +42,60 @@ export function NotificationCenter({ roles }: { roles: string[] }) {
 
   const refresh = useCallback(() => {
     const requestId = ++requestSequence.current;
-    setState({ status: "loading" });
+    if (state.status !== "success") setState({ status: "loading" });
     void load(requestId);
-  }, [load]);
+  }, [load, state.status]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+
+    const updatePosition = () => {
+      const trigger = triggerRef.current?.querySelector("button");
+      const panel = panelRef.current;
+      if (!trigger || !panel) return;
+
+      const triggerRect = trigger.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      const margin = 12;
+      const left = Math.max(margin, Math.min(
+        triggerRect.right - panelRect.width,
+        window.innerWidth - panelRect.width - margin,
+      ));
+      const below = triggerRect.bottom + 8;
+      const top = below + panelRect.height <= window.innerHeight - margin
+        ? below
+        : Math.max(margin, triggerRect.top - panelRect.height - 8);
+
+      panel.style.top = `${top}px`;
+      panel.style.left = `${left}px`;
+      panel.style.visibility = "visible";
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, state]);
 
   useEffect(() => {
-    const requestId = ++requestSequence.current;
-    void load(requestId);
-    return () => {
-      if (requestSequence.current === requestId) requestSequence.current += 1;
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
     };
-  }, [load]);
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!(event.target instanceof Node)) return;
+      if (!triggerRef.current?.contains(event.target) && !panelRef.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+      document.removeEventListener("mousedown", closeOnOutsideClick);
+    };
+  }, [open]);
 
   const visibleItems = useMemo(() => state.status !== "success" ? [] :
     (filter === "UNREAD" ? state.items.filter((item) => item.status === "UNREAD") : state.items), [filter, state]);
@@ -74,12 +120,22 @@ export function NotificationCenter({ roles }: { roles: string[] }) {
 
   const count = state.status === "success" && state.unreadCount > 0 ? state.unreadCount : null;
 
-  return <div className="nexus-notification-center relative">
-    <Button type="button" variant="ghost" size="icon" className="relative" aria-label={count ? `Notifications, ${count} unread` : "Notifications"} aria-expanded={open} aria-controls="nexus-notification-panel" onClick={() => setOpen((current) => !current)}>
+  function togglePanel() {
+    const shouldOpen = !open;
+    setOpen(shouldOpen);
+    if (shouldOpen && state.status === "idle") {
+      const requestId = ++requestSequence.current;
+      setState({ status: "loading" });
+      void load(requestId);
+    }
+  }
+
+  return <div ref={triggerRef} className="nexus-notification-center relative">
+    <Button type="button" variant="ghost" size="icon" className="relative" aria-label={count ? `Notifications, ${count} unread` : "Notifications"} aria-expanded={open} aria-controls="nexus-notification-panel" onClick={togglePanel}>
       <Bell aria-hidden="true" className="size-5" />
       {count !== null ? <span aria-hidden="true" className="absolute -right-0.5 -top-0.5 grid min-h-5 min-w-5 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">{count > 99 ? "99+" : count}</span> : null}
     </Button>
-    {open ? <section id="nexus-notification-panel" aria-label="Notifications" className="nexus-notification-panel fixed right-3 top-[5.25rem] z-50 w-[min(24rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border bg-card text-card-foreground shadow-xl">
+    {open && typeof document !== "undefined" ? createPortal(<section ref={panelRef} id="nexus-notification-panel" aria-label="Notifications" className="nexus-notification-panel fixed z-[200] w-[min(24rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border bg-card text-card-foreground shadow-xl" style={{ top: 12, left: 12, visibility: "hidden" }}>
       <header className="flex items-start justify-between gap-3 border-b p-4">
         <div><h2 className="font-semibold">Notifications</h2><p className="mt-1 text-xs text-muted-foreground">Account updates and next steps</p></div>
         {count !== null ? <Badge variant="secondary">{count} unread</Badge> : null}
@@ -91,8 +147,9 @@ export function NotificationCenter({ roles }: { roles: string[] }) {
         </div>
         <Button size="sm" variant="ghost" onClick={() => void refresh()} aria-label="Refresh notifications"><RefreshCw className="size-4" /></Button>
       </div>
-      <div className="max-h-[min(65vh,32rem)] overflow-y-auto p-2" aria-live="polite" aria-busy={state.status === "loading"}>
+      <div className="max-h-[min(65dvh,32rem)] overflow-y-auto p-2" aria-live="polite" aria-busy={state.status === "loading"}>
         {actionError ? <p className="m-2 rounded-md bg-destructive/10 p-2 text-sm text-destructive" role="alert">{actionError}</p> : null}
+        {state.status === "idle" ? <p className="p-5 text-center text-sm text-muted-foreground">Open notifications to load account updates.</p> : null}
         {state.status === "loading" ? <p className="p-5 text-center text-sm text-muted-foreground" role="status">Loading notifications…</p> : null}
         {state.status === "error" ? <div className="grid justify-items-start gap-3 p-4" role="alert"><p className="text-sm text-destructive">{state.message}</p><Button size="sm" variant="outline" onClick={() => void refresh()}>Retry</Button></div> : null}
         {state.status === "success" && visibleItems.length === 0 ? <div className="p-6 text-center"><p className="font-medium">{filter === "UNREAD" ? "You’re all caught up" : "No notifications yet"}</p><p className="mt-1 text-sm text-muted-foreground">Updates will appear here when your account has something new.</p></div> : null}
@@ -103,6 +160,6 @@ export function NotificationCenter({ roles }: { roles: string[] }) {
           </li>;
         })}</ul> : null}
       </div>
-    </section> : null}
+    </section>, document.body) : null}
   </div>;
 }

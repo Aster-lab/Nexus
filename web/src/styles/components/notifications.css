@@ -13,11 +13,3 @@
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   border-color: var(--border);
 }
-
-@media (max-width: 34rem) {
-  .nexus-notification-panel {
-    top: 5.25rem;
-    right: max(0.75rem, env(safe-area-inset-right));
-    width: min(24rem, calc(100vw - 1.5rem));
-  }
-}

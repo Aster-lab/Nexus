@@ -33,6 +33,15 @@ export async function GET(request: Request): Promise<Response> {
       investorProfile,
     });
   } catch (error) {
+    if (!(error instanceof ApiError) || error.status >= 500) {
+      const code = typeof error === "object" && error !== null && "code" in error && typeof error.code === "string"
+        ? error.code
+        : undefined;
+      console.error("GET /api/users/me failed", {
+        name: error instanceof Error ? error.name : "UnknownError",
+        ...(code ? { code } : {}),
+      });
+    }
     return apiErrorResponseFrom(error);
   }
 }

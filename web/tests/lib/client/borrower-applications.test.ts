@@ -34,6 +34,8 @@ const validForm: BorrowerApplicationFormValues = {
   employerName: "Example Co",
   occupation: "Analyst",
   monthsInRole: "12",
+  companyName: "",
+  companyType: "",
   amountBaht: "1,000.00",
   termMonths: "12",
   purpose: "education",

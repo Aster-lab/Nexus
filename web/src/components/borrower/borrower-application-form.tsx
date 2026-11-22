@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ChangeEvent, type InputHTMLAttributes, type ReactNode } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, FileCheck2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, FileCheck2, Send } from "lucide-react";
 import { useAuth } from "../auth/auth-provider";
 import { Badge } from "../ui/badge";
 import { Button, buttonVariants } from "../ui/button";
@@ -17,13 +17,16 @@ import {
   loadBorrowerApplicationFormDraft,
   parseBahtAmountToSatang,
   saveBorrowerApplicationFormDraft,
+  submitBorrowerApplicationRequest,
+  updateBorrowerApplication,
   validateBorrowerApplicationForm,
   type BorrowerApplicationFormErrors,
   type BorrowerApplicationFormValues,
 } from "../../lib/client/borrower-applications";
 import { formatDashboardStatus, formatSatang, notifyBorrowerDashboardMutationComplete } from "../../lib/client/borrower-dashboard";
+import { BORROWER_COMPANY_TYPES } from "../../lib/contracts/application";
 
-type FormStep = "edit" | "review" | "success";
+type FormStep = "edit" | "review" | "success" | "submitted";
 type ApplicationDraftResult = { id: string; status: string; borrowerProfileId: string };
 type GeoModule = typeof import("@geothai/core");
 type GeoProvince = ReturnType<GeoModule["provinces"]>[number];
@@ -38,6 +41,15 @@ const PURPOSE_OPTIONS = [
   { value: "home", label: "Home or housing" },
   { value: "other", label: "Other" },
 ] as const;
+
+const COMPANY_TYPE_LABELS: Record<typeof BORROWER_COMPANY_TYPES[number], string> = {
+  SOLE_PROPRIETORSHIP: "Sole proprietorship",
+  PARTNERSHIP: "Partnership",
+  PRIVATE_LIMITED_COMPANY: "Private limited company",
+  PUBLIC_LIMITED_COMPANY: "Public limited company",
+  COOPERATIVE: "Cooperative or community enterprise",
+  OTHER: "Other",
+};
 
 const inputClass = "h-11 w-full min-w-0 rounded-md border border-border bg-background px-3 text-foreground shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring";
 
@@ -125,6 +137,7 @@ export function BorrowerApplicationForm() {
   const [errors, setErrors] = useState<BorrowerApplicationFormErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [draft, setDraft] = useState<ApplicationDraftResult | null>(null);
+  const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [formDraftOwner, setFormDraftOwner] = useState<string | null>(null);
   const [restoredDraft, setRestoredDraft] = useState(false);
   const [geo, setGeo] = useState<GeoModule | null>(null);
@@ -143,6 +156,8 @@ export function BorrowerApplicationForm() {
     employerName: "",
     occupation: "",
     monthsInRole: "",
+    companyName: "",
+    companyType: "",
     amountBaht: "",
     termMonths: "",
     purpose: "",
@@ -208,9 +223,9 @@ export function BorrowerApplicationForm() {
   }, [identity?.borrowerProfile?.legalName, identity?.borrowerProfile?.phone, identity?.id]);
 
   useEffect(() => {
-    if (!identity?.id || formDraftOwner !== identity.id || step === "success") return;
+    if (!identity?.id || formDraftOwner !== identity.id || draft || step === "success" || step === "submitted") return;
     saveBorrowerApplicationFormDraft(identity.id, values);
-  }, [formDraftOwner, identity?.id, step, values]);
+  }, [draft, formDraftOwner, identity?.id, step, values]);
 
   function update<K extends keyof BorrowerApplicationFormValues>(field: K, value: BorrowerApplicationFormValues[K]) {
     setValues((current) => ({ ...current, [field]: value }));
@@ -225,7 +240,7 @@ export function BorrowerApplicationForm() {
     if (Object.keys(nextErrors).length === 0) setStep("review");
   }
 
-  async function createDraft() {
+  async function saveDraft() {
     const nextErrors = validateBorrowerApplicationForm(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
@@ -237,10 +252,17 @@ export function BorrowerApplicationForm() {
       setSubmitting(true);
       setApiError(null);
       try {
-        const response = await createBorrowerApplicationDraft(buildBorrowerApplicationSnapshot(values));
+        const snapshot = buildBorrowerApplicationSnapshot(values);
+        const response = draft
+          ? await updateBorrowerApplication(draft.id, snapshot)
+          : await createBorrowerApplicationDraft(snapshot);
         if (identity?.id) clearBorrowerApplicationFormDraft(identity.id);
-        setRestoredDraft(false);
-        setDraft(response.data);
+        if (!draft) {
+          setRestoredDraft(false);
+          setDraft(response.data);
+        } else {
+          setDraft((current) => current ? { ...current, status: response.data.status } : current);
+        }
         setStep("success");
         notifyBorrowerDashboardMutationComplete();
         return response.data;
@@ -254,6 +276,24 @@ export function BorrowerApplicationForm() {
     if (!outcome.submitted) return;
   }
 
+  async function submitSavedApplication() {
+    if (!draft || submitting) return;
+    setSubmitting(true);
+    setApiError(null);
+    try {
+      const response = await submitBorrowerApplicationRequest(draft.id);
+      setDraft((current) => current ? { ...current, status: response.data.status } : current);
+      setStep("submitted");
+      setConfirmSubmit(false);
+      notifyBorrowerDashboardMutationComplete();
+    } catch (error) {
+      setApiError(getApplicationErrorMessage(error));
+      setConfirmSubmit(false);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   const amountSatang = parseBahtAmountToSatang(values.amountBaht);
 
   return <main className="mx-auto w-full max-w-5xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
@@ -264,34 +304,36 @@ export function BorrowerApplicationForm() {
     <header>
       <p className="text-sm font-semibold uppercase tracking-[0.14em] text-accent">Borrower workspace</p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-        {step === "success" ? "Draft created" : "Create a loan application"}
+        {step === "submitted" ? "Application submitted" : step === "success" ? "Draft saved" : "Create a loan application"}
       </h1>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-        {step === "success"
-          ? "Your draft is saved. You can review and submit it from the application details page."
+        {step === "submitted"
+          ? "Your application was submitted. The review team will update its status when the review is complete."
+          : step === "success"
+            ? "Your draft is saved. Choose whether to submit it now or continue editing."
           : "Add your details and loan request, then review everything before saving your draft."}
       </p>
     </header>
 
-    {step === "success" && draft ? <Card className="border-success/25">
+    {(step === "success" || step === "submitted") && draft ? <Card className="border-success/25">
       <CardContent className="flex flex-col gap-5 p-6 sm:flex-row sm:items-start">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-success/10 text-success"><CheckCircle2 className="size-6" aria-hidden="true" /></span>
         <div className="min-w-0">
-          <Badge variant="success">{formatDashboardStatus(draft.status)}</Badge>
+          <Badge variant={step === "submitted" ? "success" : "secondary"}>{formatDashboardStatus(draft.status)}</Badge>
           <h2 className="mt-3 text-xl font-bold text-foreground">Application {draft.id.slice(0, 8)}</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">The application was saved as a draft. No loan has been approved or funded by creating this draft.</p>
-          <Link className={buttonVariants({ variant: "default", className: "mt-5" })} href="/borrower/applications">Return to applications <ArrowRight className="size-4" aria-hidden="true" /></Link>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">{step === "submitted" ? "Your application is now with the review team. Creating a draft alone does not approve or fund a loan." : "The application is saved as a draft. It will not be reviewed until you submit it."}</p>
+          {step === "submitted" ? <Link className={buttonVariants({ variant: "default", className: "mt-5" })} href={`/borrower/applications/${draft.id}`}>View submitted application <ArrowRight className="size-4" aria-hidden="true" /></Link> : null}
         </div>
       </CardContent>
     </Card> : null}
 
-    {step !== "success" ? <Card>
+    {step !== "success" && step !== "submitted" ? <Card>
       <CardHeader>
         <CardTitle>{step === "edit" ? "Application information" : "Review your application"}</CardTitle>
         <CardDescription>
-          {step === "edit"
-            ? "Unsubmitted details are saved in this browser tab and restored after refresh. They are cleared after the draft is successfully created."
-            : "Check these details before saving your application as a draft."}
+            {step === "edit"
+            ? draft ? "Update the saved draft. You can submit it when the details are ready." : "Unsubmitted details are saved in this browser tab and restored after refresh. They are cleared after the draft is successfully created."
+            : draft ? "Review your changes before updating the saved draft." : "Check these details before saving your application as a draft."}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -387,6 +429,15 @@ export function BorrowerApplicationForm() {
               <FormField id="monthsInRole" label="Months in current role" error={errors.monthsInRole}>
                 <TextInput id="monthsInRole" type="number" min="0" step="1" value={values.monthsInRole} onChange={(event) => update("monthsInRole", event.target.value)} error={errors.monthsInRole} />
               </FormField>
+              <FormField id="companyName" label="Company or business name" error={errors.companyName} hint="Optional. Investors can see this name when it is included in your application.">
+                <TextInput id="companyName" maxLength={160} value={values.companyName} onChange={(event) => update("companyName", event.target.value)} error={errors.companyName} />
+              </FormField>
+              <FormField id="companyType" label="Company or business type" error={errors.companyType}>
+                <SelectInput id="companyType" value={values.companyType} onChange={(event) => update("companyType", event.target.value)} error={errors.companyType}>
+                  <option value="">Choose a type</option>
+                  {BORROWER_COMPANY_TYPES.map((type) => <option key={type} value={type}>{COMPANY_TYPE_LABELS[type]}</option>)}
+                </SelectInput>
+              </FormField>
             </div>
           </section>
 
@@ -430,6 +481,7 @@ export function BorrowerApplicationForm() {
                 <dt className="text-muted-foreground">Employment</dt><dd className="break-words text-foreground">{values.employmentStatus}</dd>
                 <dt className="text-muted-foreground">Employer</dt><dd className="break-words text-foreground">{values.employerName.trim() || "Not provided"}</dd>
                 <dt className="text-muted-foreground">Occupation</dt><dd className="break-words text-foreground">{values.occupation.trim() || "Not provided"}</dd>
+                {values.companyName.trim() ? <><dt className="text-muted-foreground">Company or business</dt><dd className="break-words text-foreground">{values.companyName.trim()} · {COMPANY_TYPE_LABELS[values.companyType as typeof BORROWER_COMPANY_TYPES[number]] ?? "Type not selected"}</dd></> : null}
               </dl>
             </section>
             <section className="rounded-xl border border-border bg-background p-4" aria-labelledby="review-loan-title">
@@ -444,13 +496,25 @@ export function BorrowerApplicationForm() {
           </div>
           <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={() => { setStep("edit"); setApiError(null); }} disabled={submitting}><ArrowLeft className="size-4" aria-hidden="true" /> Edit details</Button>
-            <Button onClick={() => void createDraft()} disabled={submitting}>
-              <FileCheck2 className="size-4" aria-hidden="true" /> {submitting ? "Saving draft…" : "Create draft"}
+            <Button onClick={() => void saveDraft()} disabled={submitting}>
+              <FileCheck2 className="size-4" aria-hidden="true" /> {submitting ? draft ? "Updating draft…" : "Saving draft…" : draft ? "Save draft changes" : "Create draft"}
             </Button>
           </div>
           {submitting ? <p className="text-right text-sm text-muted-foreground" role="status" aria-live="polite">Saving your draft securely…</p> : null}
         </div> : null}
       </CardContent>
     </Card> : null}
+    {step === "success" && draft ? <div className="fixed inset-0 z-[120] grid place-items-center bg-black/55 p-4" role="presentation"><section role="dialog" aria-modal="true" aria-labelledby="draft-next-step-title" aria-describedby="draft-next-step-description" className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-2xl sm:p-7">
+      <Badge variant="success">Draft saved</Badge>
+      <h2 id="draft-next-step-title" className="mt-3 text-xl font-bold">What would you like to do next?</h2>
+      <p id="draft-next-step-description" className="mt-2 text-sm leading-6 text-muted-foreground">Submit when you are ready for the review process, or continue editing your saved draft.</p>
+      {apiError ? <p className="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">{apiError}</p> : null}
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <Button onClick={() => setConfirmSubmit(true)}><Send className="size-4" aria-hidden="true"/>Submit application</Button>
+        <Button variant="outline" onClick={() => { setStep("edit"); setApiError(null); }}>Continue editing</Button>
+      </div>
+      <Link href="/borrower/applications" className="mt-4 inline-flex min-h-10 items-center text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">Go to my applications</Link>
+    </section></div> : null}
+    {confirmSubmit && draft ? <div className="fixed inset-0 z-[130] grid place-items-center bg-black/65 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !submitting) setConfirmSubmit(false); }}><section role="dialog" aria-modal="true" aria-labelledby="submit-saved-application-title" aria-describedby="submit-saved-application-description" className="w-full max-w-md rounded-xl border border-border bg-card p-6 text-card-foreground shadow-2xl"><h2 id="submit-saved-application-title" className="text-lg font-semibold">Submit this application?</h2><p id="submit-saved-application-description" className="mt-2 text-sm leading-6 text-muted-foreground">The review team will receive application {draft.id.slice(0, 8)}. Its status will change only after NEXUS confirms submission.</p>{apiError ? <p className="mt-3 rounded-md bg-destructive/10 p-3 text-sm text-destructive" role="alert">{apiError}</p> : null}<div className="mt-5 flex flex-wrap justify-end gap-2"><Button variant="outline" disabled={submitting} onClick={() => setConfirmSubmit(false)}>Keep as draft</Button><Button disabled={submitting} onClick={() => void submitSavedApplication()}>{submitting ? "Submitting…" : "Confirm submission"}</Button></div></section></div> : null}
   </main>;
 }

@@ -1,5 +1,5 @@
 import { ApiClientError, apiGet, apiPatch, apiPost, type ApiPagination, type ApiPostOptions, type ApiSuccessEnvelope } from "./api-client";
-import type { ApplicationSnapshot } from "../contracts/application";
+import { BORROWER_COMPANY_TYPES, type ApplicationSnapshot } from "../contracts/application";
 
 export const BORROWER_APPLICATION_STATUSES = [
   "DRAFT",
@@ -31,6 +31,8 @@ export interface BorrowerApplicationFormValues {
   employerName: string;
   occupation: string;
   monthsInRole: string;
+  companyName: string;
+  companyType: string;
   amountBaht: string;
   termMonths: string;
   purpose: string;
@@ -38,7 +40,7 @@ export interface BorrowerApplicationFormValues {
 
 const APPLICATION_FORM_FIELDS = [
   "legalName", "phone", "addressLine1", "addressLine2", "subdistrict", "district", "province", "postalCode",
-  "countryCode", "employmentStatus", "employerName", "occupation", "monthsInRole", "amountBaht", "termMonths", "purpose",
+  "countryCode", "employmentStatus", "employerName", "occupation", "monthsInRole", "companyName", "companyType", "amountBaht", "termMonths", "purpose",
 ] as const satisfies readonly (keyof BorrowerApplicationFormValues)[];
 const APPLICATION_FORM_STORAGE_VERSION = 1;
 
@@ -76,11 +78,16 @@ export function loadBorrowerApplicationFormDraft(
       return null;
     }
     const values = record.values as Record<string, unknown>;
-    if (!APPLICATION_FORM_FIELDS.every((field) => typeof values[field] === "string")) {
+    const requiredFields = APPLICATION_FORM_FIELDS.filter((field) => field !== "companyName" && field !== "companyType");
+    if (!requiredFields.every((field) => typeof values[field] === "string") ||
+      (values.companyName !== undefined && typeof values.companyName !== "string") ||
+      (values.companyType !== undefined && typeof values.companyType !== "string")) {
       storage.removeItem(key);
       return null;
     }
-    return Object.fromEntries(APPLICATION_FORM_FIELDS.map((field) => [field, values[field]])) as unknown as BorrowerApplicationFormValues;
+    return Object.fromEntries(APPLICATION_FORM_FIELDS.map((field) => [field,
+      field === "companyName" || field === "companyType" ? values[field] ?? "" : values[field],
+    ])) as unknown as BorrowerApplicationFormValues;
   } catch {
     return null;
   }
@@ -187,6 +194,11 @@ export function validateBorrowerApplicationForm(values: BorrowerApplicationFormV
   if (!values.legalName.trim()) errors.legalName = "Enter the borrower name required for the application.";
   if (!values.addressLine1.trim()) errors.addressLine1 = "Enter the primary address line.";
   if (!values.employmentStatus.trim()) errors.employmentStatus = "Enter the employment status required by the application.";
+  if (values.companyName.trim() && !BORROWER_COMPANY_TYPES.some((type) => type === values.companyType)) {
+    errors.companyType = "Choose the company type, or clear the company name if you do not have one.";
+  } else if (!values.companyName.trim() && values.companyType) {
+    errors.companyName = "Enter a company name or clear the company type.";
+  }
 
   const amountSatang = parseBahtAmountToSatang(values.amountBaht);
   if (amountSatang === null) {
@@ -241,6 +253,10 @@ export function buildBorrowerApplicationSnapshot(values: BorrowerApplicationForm
       employer_name: nullableText(values.employerName),
       occupation: nullableText(values.occupation),
       months_in_role: values.monthsInRole.trim() ? Number(values.monthsInRole) : null,
+      ...(values.companyName.trim() ? {
+        company_name: nullableText(values.companyName),
+        company_type: values.companyType as NonNullable<ApplicationSnapshot["employment"]["company_type"]>,
+      } : {}),
     },
     requested_loan: {
       purpose: values.purpose,

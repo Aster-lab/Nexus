@@ -41,6 +41,9 @@ function borrowerFields(profile: ProfileData["borrowerProfile"]): BorrowerFields
 }
 
 function errorMessage(error: unknown) {
+  if (error instanceof ApiClientError && error.code === "INVALID_API_RESPONSE") {
+    return `The profile service returned an unexpected response (HTTP ${error.status}). Refresh once; if it continues, check Vercel function logs for GET /api/users/me.`;
+  }
   return error instanceof ApiClientError ? error.message : "We could not save your profile. Please try again.";
 }
 
