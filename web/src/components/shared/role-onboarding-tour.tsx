@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import { ArrowRight, BookOpen, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button, buttonVariants } from "../ui/button";
@@ -14,7 +15,7 @@ const TOUR_STEPS: Record<TourRole, TourStep[]> = {
     {
       title: "Your dashboard",
       description: "This is your overview for applications, offers, active loans, and repayments.",
-      detail: "Figures and statuses come from NEXUS records. A section can load independently, so use its retry action if it is temporarily unavailable.",
+      detail: "Your figures and statuses come from your account. Each section loads separately, so you can retry just the part that needs attention.",
       target: "borrower-summary",
     },
     {
@@ -35,8 +36,8 @@ const TOUR_STEPS: Record<TourRole, TourStep[]> = {
     },
     {
       title: "Loans and repayments",
-      description: "Accepted offers can proceed to funding and disbursement. Your loan page shows the backend schedule and amounts already paid.",
-      detail: "Partial repayment is supported when payable. NEXUS checks the current payable amount and applies repayments to the oldest outstanding installment, interest first. Review the confirmation before submitting.",
+      description: "After you accept an offer, the loan can move into funding and disbursement. Your loan page shows the repayment schedule and amounts paid so far.",
+      detail: "You can make a partial repayment when an installment is due. NEXUS applies it to the oldest unpaid installment, interest first. Review the amount before you submit.",
       target: "borrower-loans",
       href: "/borrower/loans",
       linkLabel: "View loans",
@@ -44,7 +45,7 @@ const TOUR_STEPS: Record<TourRole, TourStep[]> = {
     {
       title: "History and receipts",
       description: "Use repayment history to review confirmed repayments and open available receipts.",
-      detail: "A repayment is successful only after NEXUS confirms the posted transaction. Wallet balances are simulated THB records, not bank deposits.",
+      detail: "A repayment is complete only after NEXUS confirms it. Wallet balances are simulated THB funds, not bank deposits.",
       target: "borrower-history",
       href: "/borrower/repayments",
       linkLabel: "Open repayment history",
@@ -53,16 +54,16 @@ const TOUR_STEPS: Record<TourRole, TourStep[]> = {
   INVESTOR: [
     {
       title: "Your simulated wallet",
-      description: "Your wallet displays the THB balance recorded for your investor account.",
-      detail: "New accounts start at zero. An administrator assigns simulated initial funds through a ledger posting; NEXUS does not connect to a bank account.",
+      description: "Your wallet shows the simulated THB balance available to invest.",
+      detail: "New wallets start at zero. An administrator can add simulated funds to your balance. NEXUS does not connect to a bank account.",
       target: "investor-wallet-summary",
       href: "/investor/wallet",
       linkLabel: "Open wallet",
     },
     {
       title: "Marketplace",
-      description: "Review loans that are currently open for funding and have remaining capacity.",
-      detail: "An approved borrower application is not listed yet. An administrator issues an offer, then the borrower accepts it; the resulting funding loan can appear here before its funding deadline.",
+      description: "Browse loans that are open for funding and still have room for investment.",
+      detail: "An approved application won't appear here right away. An administrator must issue an offer and the borrower must accept it first. The loan can then open for funding until its deadline.",
       target: "investor-marketplace",
       href: "/investor/marketplace",
       linkLabel: "Browse marketplace",
@@ -70,7 +71,7 @@ const TOUR_STEPS: Record<TourRole, TourStep[]> = {
     {
       title: "Review before investing",
       description: "Open an opportunity to review the terms and remaining capacity before deciding whether to invest.",
-      detail: "The backend rechecks eligibility and available funds when you submit. Returns are not guaranteed. The tour will take you to the read-only marketplace; it will not submit an investment.",
+      detail: "NEXUS checks eligibility and your available balance when you submit. Returns are not guaranteed. This link opens the marketplace without making an investment.",
       target: "investor-marketplace",
       href: "/investor/marketplace",
       linkLabel: "Review opportunities",
@@ -78,7 +79,7 @@ const TOUR_STEPS: Record<TourRole, TourStep[]> = {
     {
       title: "Portfolio and allocations",
       description: "Your portfolio shows investments and repayment allocations associated with them.",
-      detail: "An allocation is not yet a wallet credit. The payout process must complete before the investor wallet receives the credit.",
+      detail: "Repayment allocations are tracked separately from your wallet. They become wallet credits only after the payout is complete.",
       target: "investor-portfolio",
       href: "/investor/portfolio",
       linkLabel: "View portfolio",
@@ -86,15 +87,15 @@ const TOUR_STEPS: Record<TourRole, TourStep[]> = {
     {
       title: "Payout history",
       description: "Payout history shows processing status and completed credits.",
-      detail: "Use persisted transaction and payout details to understand what has completed. All balances and transactions in this MVP are simulated.",
+      detail: "Check each payout's status and transaction details to see what has completed. All balances and transactions in NEXUS are simulated.",
       target: "investor-payouts",
       href: "/investor/payouts",
       linkLabel: "View payout history",
     },
     {
       title: "Wallet activity",
-      description: "Wallet activity lists posted credits and debits for your simulated THB balance.",
-      detail: "Only a completed payout becomes a wallet credit. Allocations and estimated returns are not available balance.",
+      description: "See the confirmed credits and debits that changed your simulated THB balance.",
+      detail: "A payout adds funds to your wallet only when it is complete. Allocations and estimated returns are not spendable balance.",
       target: "investor-wallet-activity",
       href: "/investor/wallet",
       linkLabel: "Open wallet activity",
@@ -104,13 +105,13 @@ const TOUR_STEPS: Record<TourRole, TourStep[]> = {
     {
       title: "Operations overview",
       description: "Use this dashboard to monitor users, applications, loans, payouts, repayments, and recent administrative activity.",
-      detail: "Each section loads from an authorized backend API. A dashboard count is an operational summary, not a replacement for reviewing the underlying records.",
+      detail: "Use these summaries to spot items that need attention, then open the underlying records before taking action.",
       target: "admin-summary",
     },
     {
       title: "Platform policies",
       description: "Review proposed platform rules, approve them, then activate the approved versions when ready.",
-      detail: "Approval alone does not make a policy effective. Activations are audited. Keep the loan interest and repayment rates consistent; the current repayment policy uses 12%.",
+      detail: "A policy takes effect only after it has been approved and activated. Each change is recorded. Keep loan interest and repayment rates consistent; the current repayment policy uses 12%.",
       target: "admin-nav-policies",
       href: "/admin/policies",
       linkLabel: "Review policies",
@@ -126,23 +127,23 @@ const TOUR_STEPS: Record<TourRole, TourStep[]> = {
     {
       title: "Loans and disbursement",
       description: "Monitor funding progress and inspect loan details and repayment schedules.",
-      detail: "Disburse only after funding and borrower consent requirements are met. Disbursement is a confirmed financial action and is recorded through the ledger workflow.",
+      detail: "Disburse only after the loan is fully funded and the borrower has given consent. Each disbursement is recorded in the financial ledger.",
       target: "admin-loans",
       href: "/admin/loans",
       linkLabel: "Open loans",
     },
     {
       title: "Repayment monitoring",
-      description: "Review persisted repayment records and their installment breakdowns.",
-      detail: "The backend determines posted repayment amounts and allocations. Use the records and receipt details to confirm outcomes.",
+      description: "Review repayments, their installment breakdowns, and receipt details.",
+      detail: "NEXUS confirms the posted amount and installment allocation. Use the repayment record and receipt to verify the result.",
       target: "admin-repayments",
       href: "/admin/repayments",
       linkLabel: "Review repayments",
     },
     {
       title: "Investor payouts",
-      description: "Review eligible allocations and process payouts when their backend status and clearing balance permit it.",
-      detail: "A completed payout credits an investor wallet only after its ledger posting succeeds. Review the confirmation and resulting status; do not treat a pending allocation as a completed credit.",
+      description: "Review eligible allocations and process payouts when funds and account status allow.",
+      detail: "An investor receives a wallet credit only after the payout and its ledger posting are complete. A pending allocation is not yet a payment.",
       target: "admin-payouts",
       href: "/admin/payouts",
       linkLabel: "Review payouts",
@@ -150,7 +151,7 @@ const TOUR_STEPS: Record<TourRole, TourStep[]> = {
     {
       title: "Financial reconciliation",
       description: "Run read-only checks across ledger entries, wallets, repayments, installments, and payouts.",
-      detail: "The reconciliation report identifies discrepancies; it never repairs financial records. Investigate and resolve issues through supported workflows.",
+      detail: "This report flags discrepancies but never changes financial records. Investigate each issue and resolve it through the appropriate administrative process.",
       target: "admin-nav-financial",
       href: "/admin/financial",
       linkLabel: "Open reconciliation",
@@ -158,7 +159,7 @@ const TOUR_STEPS: Record<TourRole, TourStep[]> = {
     {
       title: "Users and audit history",
       description: "Review account status and inspect the audit trail for important administrative and financial actions.",
-      detail: "Audit history is append-only. Use it to verify who performed an action and what resource changed. NEXUS balances and transactions are simulated platform records.",
+      detail: "Use the audit history to see who took an action, what changed, and when. NEXUS balances and transactions are simulated platform records.",
       target: "admin-audit-logs",
       href: "/admin/audit-logs",
       linkLabel: "Open audit logs",
@@ -261,10 +262,10 @@ export function RoleOnboardingTour({ userId, role }: { userId: string | null; ro
     {userId ? <Button type="button" variant="outline" size="sm" onClick={startTour}>
       <BookOpen className="size-4" aria-hidden="true" /> {completed || stepIndex === 0 ? "Take the tour" : "Resume tour"}
     </Button> : null}
-    {ready && open && userId ? <aside
+    {ready && open && userId ? createPortal(<aside
       aria-label={`${role === "BORROWER" ? "Borrower" : role === "INVESTOR" ? "Investor" : "Administrator"} interactive tour`}
       aria-live="polite"
-      className="fixed inset-x-3 bottom-3 z-50 mx-auto max-h-[48vh] max-w-xl overflow-y-auto rounded-2xl border border-border bg-card text-card-foreground shadow-2xl sm:inset-x-auto sm:bottom-6 sm:right-6 sm:max-h-[min(75vh,38rem)] sm:w-[min(36rem,calc(100vw-3rem))]"
+      className="fixed left-1/2 top-1/2 z-[100] max-h-[min(86dvh,48rem)] w-[min(36rem,calc(100vw-1.5rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-border bg-card text-card-foreground shadow-2xl"
     >
       <section className="grid gap-4 p-4 sm:gap-5 sm:p-6">
         <header className="flex items-start justify-between gap-4">
@@ -299,6 +300,6 @@ export function RoleOnboardingTour({ userId, role }: { userId: string | null; ro
           </div>
         </footer>
       </section>
-    </aside> : null}
+    </aside>, document.body) : null}
   </>;
 }

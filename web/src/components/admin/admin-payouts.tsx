@@ -127,7 +127,7 @@ export function AdminPayoutsPage() {
 
   async function handleProcess(allocation: AdminPendingPayoutAllocation) {
     if (!canAdminProcessPayout(allocation.eligibility) || processingId) return;
-    const prompt = `Pay ${formatSatang(allocation.amountSatang)} to ${allocation.investor.displayName} for allocation ${allocation.id}? The backend will recheck balances and posting state.`;
+    const prompt = `Pay ${formatSatang(allocation.amountSatang)} to ${allocation.investor.displayName} for this allocation? NEXUS will verify the available clearing balance before posting.`;
     if (!window.confirm(prompt)) return;
     setProcessingId(allocation.id);
     setActionError("");
@@ -147,13 +147,13 @@ export function AdminPayoutsPage() {
   return (
     <section className="admin-page">
       <header className="admin-page__header">
-        <div><p className="admin-eyebrow">Financial operations</p><h1>Investor payout operations</h1><p className="admin-muted">Process backend-confirmed eligible allocations and review persisted payout records.</p></div>
+        <div><p className="admin-eyebrow">Financial operations</p><h1>Investor payouts</h1><p className="admin-muted">Review eligible allocations, process payouts, and check their status.</p></div>
       </header>
       {notice ? <p role="status" className="admin-success-note">{notice}</p> : null}
       {actionError ? <p role="alert" className="admin-danger-note">{actionError}</p> : null}
 
       <Card>
-        <CardHeader><CardTitle>Pending allocations</CardTitle><CardDescription>Eligibility is advisory; the WP7 payout service makes the final transactional check.</CardDescription></CardHeader>
+        <CardHeader><CardTitle>Pending allocations</CardTitle><CardDescription>NEXUS checks each allocation and the available clearing balance again before processing a payout.</CardDescription></CardHeader>
         <CardContent>
           {allocationState === "loading" ? <LoadingState label="Loading unpaid allocations" /> : null}
           {allocationState === "error" ? <ErrorState title="Pending allocations unavailable" message={allocationError} /> : null}

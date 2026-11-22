@@ -268,8 +268,8 @@ export function BorrowerApplicationForm() {
       </h1>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
         {step === "success"
-          ? "Your draft is saved. You can review it and submit it in the application details step."
-          : "Enter the information required by the application contract. Review your summary before saving a draft."}
+          ? "Your draft is saved. You can review and submit it from the application details page."
+          : "Add your details and loan request, then review everything before saving your draft."}
       </p>
     </header>
 
@@ -295,7 +295,7 @@ export function BorrowerApplicationForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {restoredDraft && step === "edit" ? <p className="mb-5 rounded-md border border-primary/20 bg-primary/5 p-3 text-sm text-primary" role="status">Your unfinished application was restored in this tab.</p> : null}
+        {restoredDraft && step === "edit" ? <p className="mb-5 rounded-md border border-primary/20 bg-primary/5 p-3 text-sm text-primary" role="status">We restored your unfinished application so you can pick up where you left off.</p> : null}
         {apiError ? <div className="mb-5 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">{apiError}</div> : null}
 
         {step === "edit" ? <form className="space-y-8" onSubmit={(event) => event.preventDefault()} noValidate>

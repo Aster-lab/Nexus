@@ -138,19 +138,19 @@ export function AdminDashboardPage() {
   const displayName = identity?.email ?? "Administrator";
   return <section className="admin-page">
     <header className="admin-page__header">
-      <div><p className="admin-eyebrow">NEXUS operations</p><h1>Welcome back, {displayName}</h1><p className="admin-muted">Administrator dashboard · A live operational snapshot from the authorized administrative APIs.</p></div>
+      <div><p className="admin-eyebrow">NEXUS operations</p><h1>Welcome back, {displayName}</h1><p className="admin-muted">Your live overview of platform activity and items that may need attention.</p></div>
       <div className="flex flex-wrap gap-2"><RoleOnboardingTour userId={identity?.id ?? null} role="ADMIN"/><Link data-tour-target="admin-nav-policies" className={buttonVariants({ variant: "outline" })} href="/admin/policies"><ShieldCheck size={16} />Policies</Link><Link data-tour-target="admin-nav-financial" className={buttonVariants({ variant: "outline" })} href="/admin/financial"><ClipboardCheck size={16} />Reconciliation</Link></div>
     </header>
 
     <div className="admin-metric-grid" data-tour-target="admin-summary">
       <MetricCard title="Users" icon={Users} load={usersLoader} value={(summary) => String(summary.total)} description={(summary) => `${summary.borrowers} borrowers · ${summary.investors} investors`} href="/admin/users" tourTarget="admin-summary" />
       <MetricCard title="Pending applications" icon={FileText} load={applicationsLoader} value={(summary) => String(summary.total)} description={() => "Submitted, under review, or awaiting information"} href="/admin/applications" tourTarget="admin-applications" />
-      <MetricCard title="Active loans" icon={Landmark} load={loansLoader} value={(summary) => String(summary.active)} description={() => "Current ACTIVE loan records"} href="/admin/loans" tourTarget="admin-loans" />
-      <MetricCard title="Pending investor payouts" icon={Wallet} load={payoutsLoader} value={(summary) => String(summary.pending)} description={() => "Unpaid allocations requiring administrator review"} href="/admin/payouts" tourTarget="admin-payouts" />
+      <MetricCard title="Active loans" icon={Landmark} load={loansLoader} value={(summary) => String(summary.active)} description={() => "Loans currently in progress"} href="/admin/loans" tourTarget="admin-loans" />
+      <MetricCard title="Pending investor payouts" icon={Wallet} load={payoutsLoader} value={(summary) => String(summary.pending)} description={() => "Allocations awaiting payout review"} href="/admin/payouts" tourTarget="admin-payouts" />
     </div>
 
     <div className="admin-activity-grid">
-      <ActivityList title="Recent repayments" description="Latest repayment records and posting states." load={repaymentsLoader} rows={(data) => <RepaymentActivity data={data} />} emptyTitle="No repayment activity" tourTarget="admin-repayments" />
+      <ActivityList title="Recent repayments" description="Latest repayments and their posting status." load={repaymentsLoader} rows={(data) => <RepaymentActivity data={data} />} emptyTitle="No repayment activity" tourTarget="admin-repayments" />
       <ActivityList title="Recent administrative activity" description="Recent immutable audit events." load={auditLoader} rows={(data) => <AuditActivity data={data} />} emptyTitle="No recent administrative activity" tourTarget="admin-audit-logs" />
     </div>
   </section>;

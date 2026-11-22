@@ -138,7 +138,7 @@ export function AdminApplicationDetailPage({ applicationId }: { applicationId: s
 
   async function recordDecision() {
     if (!application || !isAdminApplicationReviewable(application.status) || !reason.trim() || saving) return;
-    if (!window.confirm(`Record ${decision.toLowerCase()} for this application? This decision is persisted and audited.`)) return;
+    if (!window.confirm(`Record a ${decision.toLowerCase()} decision for this application? This action will be added to the audit log.`)) return;
     setSaving(true);
     setError("");
     setNotice("");
@@ -239,7 +239,7 @@ export function AdminApplicationDetailPage({ applicationId }: { applicationId: s
               </select>
             </label>
           </div>
-          <p id="offer-policy-note" className="text-sm text-muted-foreground">The active platform offer and interest policies determine eligibility, annual interest, and expiry. The backend validates these terms when you issue the offer.</p>
+          <p id="offer-policy-note" className="text-sm text-muted-foreground">The active platform policies set the offer requirements, interest rate, and expiry. NEXUS checks these terms when you issue the offer.</p>
           <label className="admin-form-label" htmlFor="offer-reason">Issuance reason
             <textarea id="offer-reason" className="admin-form-control" maxLength={1000} rows={3} required value={offerReason} onChange={(event) => setOfferReason(event.target.value)} />
           </label>

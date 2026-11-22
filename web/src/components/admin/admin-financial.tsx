@@ -35,7 +35,7 @@ export function AdminFinancialPage() {
     <header className="admin-page__header"><div><p className="admin-eyebrow">Financial</p><h1>Financial overview &amp; reconciliation</h1><p className="admin-muted">Platform financial checks and reported discrepancies.</p></div></header>
     <AdminEscrowStatus />
     <AdminRepaymentClearingStatus onActivated={() => setRefreshSequence((current) => current + 1)} />
-    <Card><CardHeader><CardTitle>Read-only reconciliation</CardTitle><CardDescription>This report inspects persisted ledger, wallet, repayment, installment, payout, and allocation records. It does not change financial data.</CardDescription></CardHeader><CardContent>
+    <Card><CardHeader><CardTitle>Read-only reconciliation</CardTitle><CardDescription>This report compares ledger entries, wallet balances, repayments, installments, payouts, and allocations. It never changes financial records.</CardDescription></CardHeader><CardContent>
       {state === "loading" ? <LoadingState label="Loading financial reconciliation" /> : null}
       {state === "error" ? <ErrorState title="Reconciliation unavailable" message={error} /> : null}
       {state === "success" && report ? <div className="admin-financial-report">
