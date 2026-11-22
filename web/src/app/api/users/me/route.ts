@@ -26,6 +26,7 @@ export async function GET(request: Request): Promise<Response> {
     ]);
     return apiSuccessResponse({
       id: identity.userId,
+      userId: identity.userId,
       email: identity.email,
       roles: identity.roles,
       borrowerProfile,

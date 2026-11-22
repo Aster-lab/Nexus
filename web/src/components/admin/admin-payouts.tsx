@@ -147,7 +147,7 @@ export function AdminPayoutsPage() {
   return (
     <section className="admin-page">
       <header className="admin-page__header">
-        <div><p className="admin-eyebrow">Financial operations</p><h1>Investor payouts</h1><p className="admin-muted">Review eligible allocations, process payouts, and check their status.</p></div>
+        <div><p className="admin-eyebrow">Financial operations</p><h1>Investor payout operations</h1><p className="admin-muted">Review eligible allocations, process payouts, and check their status.</p></div>
       </header>
       {notice ? <p role="status" className="admin-success-note">{notice}</p> : null}
       {actionError ? <p role="alert" className="admin-danger-note">{actionError}</p> : null}

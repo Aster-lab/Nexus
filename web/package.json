@@ -26,6 +26,7 @@
     "db:seed:staging": "dotenv run -f .env.staging.runtime -- tsx prisma/seed/index.ts",
     "admin:bootstrap": "dotenv run -f .env -- tsx scripts/bootstrap-admin.ts",
     "admin:bootstrap:staging": "dotenv run -f .env.staging.runtime -- tsx scripts/bootstrap-admin.ts --confirm-staging",
+    "admin:bootstrap:production": "dotenv run -f .env.production -- tsx scripts/bootstrap-admin.ts --confirm-production",
     "demo:setup": "dotenv run -f .env.demo -- tsx scripts/setup-demo.ts",
     "demo:activate-policies": "dotenv run -f .env.demo -- tsx scripts/activate-demo-policies.ts",
     "predemo:migrate": "dotenv run -f .env.demo -- tsx scripts/assert-demo-environment.ts",

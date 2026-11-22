@@ -138,7 +138,7 @@ export function AdminDashboardPage() {
   const displayName = identity?.email ?? "Administrator";
   return <section className="admin-page">
     <header className="admin-page__header">
-      <div><p className="admin-eyebrow">NEXUS operations</p><h1>Welcome back, {displayName}</h1><p className="admin-muted">Your live overview of platform activity and items that may need attention.</p></div>
+      <div><p className="admin-eyebrow">NEXUS operations</p><h1>Administrator dashboard</h1><p className="admin-muted">Welcome back, {displayName}. Here’s your overview of platform activity and items that may need attention.</p></div>
       <div className="flex flex-wrap gap-2"><RoleOnboardingTour userId={identity?.id ?? null} role="ADMIN"/><Link data-tour-target="admin-nav-policies" className={buttonVariants({ variant: "outline" })} href="/admin/policies"><ShieldCheck size={16} />Policies</Link><Link data-tour-target="admin-nav-financial" className={buttonVariants({ variant: "outline" })} href="/admin/financial"><ClipboardCheck size={16} />Reconciliation</Link></div>
     </header>
 

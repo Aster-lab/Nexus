@@ -19,6 +19,7 @@ const ROLE_NAVIGATION: Record<NexusRole, RoleNavigationItem[]> = {
     { label: "Loans", href: "/borrower/loans" },
     { label: "Repayment history", href: "/borrower/repayments" },
     { label: "Wallet", href: "/borrower/wallet" },
+    { label: "User guide", href: "/borrower/guide" },
   ],
   INVESTOR: [
     { label: "Overview", href: "/investor" },
@@ -28,6 +29,7 @@ const ROLE_NAVIGATION: Record<NexusRole, RoleNavigationItem[]> = {
     { label: "Payout history", href: "/investor/payouts" },
     { label: "Wallet", href: "/investor/wallet" },
     { label: "Recommendations", href: "/investor/recommendations" },
+    { label: "User guide", href: "/investor/guide" },
   ],
   ADMIN: [
     { label: "Dashboard", href: "/admin" },
@@ -39,6 +41,7 @@ const ROLE_NAVIGATION: Record<NexusRole, RoleNavigationItem[]> = {
     { label: "Policies", href: "/admin/policies" },
     { label: "Users", href: "/admin/users" },
     { label: "Audit logs", href: "/admin/audit-logs" },
+    { label: "User guide", href: "/admin/guide" },
   ],
 };
 

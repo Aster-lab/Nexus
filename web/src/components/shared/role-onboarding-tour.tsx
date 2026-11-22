@@ -265,7 +265,7 @@ export function RoleOnboardingTour({ userId, role }: { userId: string | null; ro
     {ready && open && userId ? createPortal(<aside
       aria-label={`${role === "BORROWER" ? "Borrower" : role === "INVESTOR" ? "Investor" : "Administrator"} interactive tour`}
       aria-live="polite"
-      className="fixed left-1/2 top-1/2 z-[100] max-h-[min(86dvh,48rem)] w-[min(36rem,calc(100vw-1.5rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-border bg-card text-card-foreground shadow-2xl"
+      className="fixed bottom-4 right-4 z-[100] max-h-[min(70dvh,42rem)] w-[min(36rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-border bg-card text-card-foreground shadow-2xl sm:bottom-6 sm:right-6"
     >
       <section className="grid gap-4 p-4 sm:gap-5 sm:p-6">
         <header className="flex items-start justify-between gap-4">
