@@ -53,9 +53,12 @@ export async function generateRepaymentReceipt(
       postedAt: true,
       entries: {
         select: {
+          walletId: true,
+          platformAccountId: true,
           entryType: true,
           amountSatang: true,
           currency: true,
+          platformAccount: { select: { accountCode: true } },
         },
       },
       repayments: {
@@ -132,12 +135,14 @@ export async function generateRepaymentReceipt(
   );
   const principalSatang = repayments.reduce((total, repayment) => total + repayment.principalSatang, 0n);
   const interestSatang = repayments.reduce((total, repayment) => total + repayment.interestSatang, 0n);
-  const debitEntries = transaction.entries.filter(
-    (entry) => entry.entryType === "DEBIT",
-  );
-  const creditEntries = transaction.entries.filter(
-    (entry) => entry.entryType === "CREDIT",
-  );
+  const debitEntries = transaction.entries.filter((entry) => entry.entryType === "DEBIT");
+  const creditEntries = transaction.entries.filter((entry) => entry.entryType === "CREDIT");
+  const walletDebits = debitEntries.filter((entry) => entry.walletId !== null);
+  const walletCredits = creditEntries.filter((entry) => entry.walletId !== null);
+  const principalDebits = debitEntries.filter((entry) => entry.walletId === null);
+  const principalCredits = creditEntries.filter((entry) => entry.walletId === null);
+  const walletDebitTotal = walletDebits.reduce((total, entry) => total + entry.amountSatang, 0n);
+  const walletCreditTotal = walletCredits.reduce((total, entry) => total + entry.amountSatang, 0n);
   const debitTotal = debitEntries.reduce(
     (total, entry) => total + entry.amountSatang,
     0n,
@@ -148,12 +153,20 @@ export async function generateRepaymentReceipt(
   );
 
   if (
-    transaction.entries.length !== 2 ||
-    debitEntries.length !== 1 ||
-    creditEntries.length !== 1 ||
+    walletDebits.length !== 1 ||
+    walletCredits.length !== 1 ||
+    (principalSatang > 0n
+      ? principalDebits.length !== 1 || principalCredits.length !== 1 ||
+        principalDebits[0].platformAccount?.accountCode !== "1300" ||
+        principalCredits[0].platformAccount?.accountCode !== "1200" ||
+        principalDebits[0].amountSatang !== principalSatang ||
+        principalCredits[0].amountSatang !== principalSatang
+      : principalDebits.length !== 0 || principalCredits.length !== 0) ||
+    transaction.entries.length !== (principalSatang > 0n ? 4 : 2) ||
     transaction.entries.some((entry) => entry.currency !== CURRENCY) ||
-    debitTotal !== totalReceivedSatang ||
-    creditTotal !== totalReceivedSatang
+    walletDebitTotal !== totalReceivedSatang ||
+    walletCreditTotal !== totalReceivedSatang ||
+    debitTotal !== creditTotal
   ) {
     throw new Error("Repayment receipt does not reconcile to its posted ledger entries.");
   }

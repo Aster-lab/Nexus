@@ -9,7 +9,7 @@
 1. Open the NEXUS site and choose **Create an account** or **Sign in**.
 2. Borrower and investor roles are available for self-registration. One account may have both roles. Administrators cannot self-register.
 3. After sign-in, NEXUS opens a role workspace. If your account has both borrower and investor roles, use the role navigation to open each workspace.
-4. Borrower and investor dashboards show an interactive first-visit tour. It highlights dashboard sections, offers links to relevant pages, saves progress in the current browser, and can be paused or resumed with **Take the tour** / **Resume tour**.
+4. Borrower, investor, and administrator dashboards show an interactive first-visit tour. It highlights dashboard sections, offers links to relevant pages, saves progress in the current browser, and can be paused or resumed with **Take the tour** / **Resume tour**.
 
 Financial amounts, eligibility, repayment schedules, and posting outcomes shown by NEXUS come from backend records. The UI does not replace the backend's decision or validation.
 
@@ -28,6 +28,8 @@ Open **Borrower → Overview** (`/borrower`). Review pending applications, activ
 5. Open the draft, edit it if permitted, and submit it when ready.
 6. Follow status and review information on the application detail page.
 
+Borrowers may maintain and submit multiple applications at the same time. Each application is reviewed independently.
+
 An application marked **Approved** is not yet a loan and does not automatically appear in the investor marketplace.
 
 ### Review and accept an offer
@@ -42,13 +44,14 @@ After acceptance, NEXUS creates the loan in `FUNDING` status. It can then appear
 
 - Open **Loans and repayments** (`/borrower/loans`) to inspect the loan and the backend-generated installment schedule.
 - Use a loan's **Repay** action when an installment is payable. Enter an amount within the current payable amount and review the confirmation. The backend decides the final allocation and posts the transaction.
+- You can also choose **Make a repayment** from the borrower dashboard or repayment history (`/borrower/repayments/make`) to see all active loans and their current backend-provided payable amounts without first opening the loan list.
 - NEXUS applies repayments to the oldest outstanding installment, interest first. Partial repayment is supported when permitted; early repayment and overpayment are rejected by backend rules.
 - Open **Repayment history** (`/borrower/repayments`) to review persisted repayments. Use the receipt link for a confirmed repayment when available.
 - A request that times out may have an uncertain result. Check repayment history before retrying; do not assume it succeeded just because it was submitted.
 
 ### Borrower wallet
 
-Open **Wallet** (`/borrower/wallet`) to view the simulated THB balance and posted wallet activity. Registration creates an empty wallet. If an initial balance is appropriate for the scenario, an administrator must post it. A loan disbursement credits the borrower wallet after the required approval and borrower consent steps.
+Open **Wallet** (`/borrower/wallet`) to view the simulated THB balance and posted wallet activity. Registration creates an empty wallet. Borrowers can add simulated funds with **Add simulated funds**: enter a THB amount up to ฿50,000 per top-up, review and confirm it, then wait for the posted ledger result. This does not collect real money. Later top-ups are allowed. A loan disbursement also credits the borrower wallet after the required approval and borrower consent steps.
 
 ## Investor guide
 
@@ -56,7 +59,7 @@ Open **Wallet** (`/borrower/wallet`) to view the simulated THB balance and poste
 
 - Open **Investor → Overview** (`/investor`) for wallet balance, portfolio totals, recent investments, payouts, and wallet activity.
 - Open **Wallet** (`/investor/wallet`) for the persisted simulated THB balance and posted ledger activity.
-- Newly registered investor wallets start at zero. An administrator assigns simulated opening funds through the financial workflow. NEXUS does not link to a bank account.
+- Newly registered investor wallets start at zero. Investors can add simulated funds from **Wallet** (`/investor/wallet`) with **Add simulated funds**: enter up to ฿50,000 per top-up, review and confirm, then wait for the posted ledger result. Later top-ups are allowed. This does not collect real money. Administrators can also assign initial simulated funds, and completed repayment payouts credit the wallet. NEXUS does not link to a bank account.
 
 ### Marketplace and investment
 
@@ -89,6 +92,8 @@ The tool prompts for an email and a password without echoing the password, verif
 
 ### Application review and offer issuance
 
+Before accepting applications, open **Policies** (`/admin/policies`). For each proposal, inspect **Review values**, choose **Approve**, then **Activate** and confirm. Approval alone does not make a policy effective. Activate **Loan offer policy** before application creation, and activate matching **Loan interest policy** and **Repayment policy** versions before issuing offers or generating schedules. The MVP repayment policy is fixed at 12%, so the interest policy must also be 12%. Each change is written to the audit log.
+
 1. Open **Applications** (`/admin/applications`) and filter for submitted or under-review requests.
 2. Choose **Review** to open an application.
 3. Inspect the borrower and requested-loan details and review history.
@@ -107,6 +112,10 @@ If **Issue loan offer** is unavailable, verify that the application is approved 
 4. Enter the simulated THB amount and a reason, review the confirmation, then confirm the posting.
 
 This operation creates a ledger-backed, immutable opening-balance posting. It is not a bank deposit. The platform opening-balance source must be configured and active.
+
+### Loan funding escrow setup
+
+On **Financial overview** (`/admin/financial`), use the **Loan funding escrow** card to check platform account 2200 and its shared THB wallet. If the card reports that funding needs attention, an administrator can enter a reason, review the impact, and confirm activation. The action is audited and changes account/wallet status only; it does not change the wallet balance. If account 2200 is missing, confirming activation provisions the approved THB liability account and a zero-balance wallet. A closed escrow wallet cannot be reopened through this control.
 
 ### Loans and disbursement
 

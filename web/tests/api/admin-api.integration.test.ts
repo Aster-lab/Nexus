@@ -15,6 +15,7 @@ import { POST as processPayout } from "../../src/app/api/admin/payouts/route";
 import { GET as listPendingPayoutAllocations } from "../../src/app/api/admin/payout-allocations/route";
 import { GET as getReconciliation } from "../../src/app/api/admin/reconciliation/route";
 import { GET as listAdminWallets } from "../../src/app/api/admin/wallets/route";
+import { GET as getEscrowReadiness, POST as activateEscrow } from "../../src/app/api/admin/escrow/route";
 import { POST as postAdminOpeningBalance } from "../../src/app/api/admin/opening-balances/route";
 import { GET as listAdminLedgerTransactions } from "../../src/app/api/admin/ledger-transactions/route";
 import { GET as listAuditLogs } from "../../src/app/api/admin/audit-logs/route";
@@ -216,6 +217,33 @@ describe("API-05 administrator APIs", () => {
     await expectApiError(await postAdminOpeningBalance(apiRequest(borrower, "http://localhost/api/admin/opening-balances", {
       method: "POST", headers: { "content-type": "application/json", "idempotency-key": `opening-denied-${randomUUID()}` },
       body: JSON.stringify({ walletId: randomUUID(), amountSatang: "10000", reason: "Must be denied" }),
+    })), { status: 403, code: "FORBIDDEN" });
+  });
+
+  it("API-05-26 activates the seeded escrow account and wallet without changing the balance, and audits the actor", async () => {
+    const admin = await createIdentity("ADMIN");
+    const account = await prisma.platformAccount.findUniqueOrThrow({ where: { accountCode: "2200" }, select: { id: true, status: true } });
+    const wallet = await prisma.wallet.findUniqueOrThrow({ where: { ownerPlatformAccountId: account.id }, select: { id: true, status: true, balanceSatang: true } });
+    sharedStates.push({ accountId: account.id, accountStatus: account.status, walletId: wallet.id, walletStatus: wallet.status });
+    await prisma.platformAccount.update({ where: { id: account.id }, data: { status: "INACTIVE" } });
+    await prisma.wallet.update({ where: { id: wallet.id }, data: { status: "RESTRICTED" } });
+    const beforeLedgerEntries = await prisma.ledgerEntry.count({ where: { walletId: wallet.id } });
+
+    const result = await expectApiSuccess<{ accountCode: string; accountStatus: string; walletStatus: string; balanceSatang: string; ready: boolean }>(await activateEscrow(apiRequest(admin, "http://localhost/api/admin/escrow", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reason: "Restore demo loan funding configuration" }),
+    })));
+
+    expect(result).toMatchObject({ accountCode: "2200", accountStatus: "ACTIVE", walletStatus: "ACTIVE", balanceSatang: wallet.balanceSatang.toString(), ready: true });
+    await expect(prisma.ledgerEntry.count({ where: { walletId: wallet.id } })).resolves.toBe(beforeLedgerEntries);
+    await expect(prisma.auditLog.findFirst({ where: { actorUserId: admin.userId, targetId: account.id, action: "ESCROW_INFRASTRUCTURE_ACTIVATED", outcome: "SUCCESS" } })).resolves.toMatchObject({ reason: "Restore demo loan funding configuration" });
+    const readiness = await expectApiSuccess<{ ready: boolean }>(await getEscrowReadiness(apiRequest(admin, "http://localhost/api/admin/escrow")));
+    expect(readiness.ready).toBe(true);
+  });
+
+  it("API-05-27 denies borrowers access to escrow administration", async () => {
+    const borrower = await createIdentity("BORROWER");
+    await expectApiError(await activateEscrow(apiRequest(borrower, "http://localhost/api/admin/escrow", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reason: "Unauthorized status change" }),
     })), { status: 403, code: "FORBIDDEN" });
   });
 

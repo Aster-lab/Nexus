@@ -26,6 +26,7 @@ import { GET as getReceipt } from "../../src/app/api/borrower/repayments/[repaym
 import { prisma } from "../../src/lib/prisma";
 import { LoanInterestPolicyValuesSchema, PlatformFeePolicyValuesSchema } from "../../src/lib/contracts/platform-policy";
 import { generateRepaymentSchedule } from "../../src/lib/services/repayment.service";
+import { getRepaymentPayableThroughDate } from "../../src/lib/services/repayment/repayment-due-window";
 import { createRepaymentTestContext, type RepaymentTestContext } from "../fixtures/repayment.fixture";
 import { activateEscrowAccountForTests } from "../fixtures/investor-contribution.fixture";
 import { createAuthenticatedApiRequest, expectApiError, expectApiSuccess } from "../helpers/api";
@@ -437,6 +438,43 @@ describe("API-03 borrower application APIs", () => {
     createdApplicationIds.push(result.id);
     expect(result.status).toBe("DRAFT");
     expect(result.borrowerProfileId).toBe(borrower.profileId);
+  });
+
+  it("allows a borrower to submit another application while a previous application is active", async () => {
+    const createDraft = async (name: string) => {
+      const response = await createApplication(borrowerRequest(borrower, "http://localhost/api/borrower/applications", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(validApplication(name)),
+      }));
+      const draft = await expectApiSuccess<{ id: string; status: string }>(response, 201);
+      createdApplicationIds.push(draft.id);
+      return draft;
+    };
+    const first = await createDraft("First active application");
+    const second = await createDraft("Second active application");
+
+    const firstSubmission = await submitApplication(borrowerRequest(
+      borrower,
+      `http://localhost/api/borrower/applications/${first.id}/submit`,
+      { method: "POST" },
+    ), { params: Promise.resolve({ applicationId: first.id }) });
+    await expectApiSuccess<{ status: string }>(firstSubmission);
+    await prisma.loanApplication.update({ where: { id: first.id }, data: { status: "APPROVED" } });
+
+    const secondSubmission = await submitApplication(borrowerRequest(
+      borrower,
+      `http://localhost/api/borrower/applications/${second.id}/submit`,
+      { method: "POST" },
+    ), { params: Promise.resolve({ applicationId: second.id }) });
+    const submittedSecond = await expectApiSuccess<{ status: string }>(secondSubmission);
+
+    expect(submittedSecond.status).toBe("SUBMITTED");
+    const applications = await prisma.loanApplication.findMany({
+      where: { id: { in: [first.id, second.id] }, borrowerProfileId: borrower.profileId },
+      select: { status: true },
+    });
+    expect(applications).toEqual(expect.arrayContaining([{ status: "APPROVED" }, { status: "SUBMITTED" }]));
   });
 
   it("APP-01/03 filters own applications by status and preserves supported created-date sorting", async () => {
@@ -1028,7 +1066,7 @@ describe("API-03 borrower application APIs", () => {
     const persistedPayable = await prisma.installment.findMany({
       where: {
         scheduleVersionId: schedule.currentVersionId!,
-        dueDate: { lte: new Date() },
+        dueDate: { lte: getRepaymentPayableThroughDate() },
         status: { in: ["PENDING", "PARTIALLY_PAID", "OVERDUE"] },
       },
       select: {

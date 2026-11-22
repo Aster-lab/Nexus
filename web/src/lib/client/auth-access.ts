@@ -36,6 +36,7 @@ const ROLE_NAVIGATION: Record<NexusRole, RoleNavigationItem[]> = {
     { label: "Repayments", href: "/admin/repayments" },
     { label: "Investor payouts", href: "/admin/payouts" },
     { label: "Financial overview", href: "/admin/financial" },
+    { label: "Policies", href: "/admin/policies" },
     { label: "Users", href: "/admin/users" },
     { label: "Audit logs", href: "/admin/audit-logs" },
   ],

@@ -29,14 +29,14 @@ const INITIAL_QUERY: AdminLoansQuery = { page: 1, limit: PAGE_SIZE, status: "ALL
 
 function LoanRow({ loan }: { loan: AdminLoanListItem }) {
   return <tr>
-    <td><Link className="admin-text-link admin-table__primary-link" href={`/admin/loans/${encodeURIComponent(loan.id)}`}>{loan.id.slice(0, 8)}</Link></td>
-    <td>{loan.borrowerProfile.legalName}</td>
-    <td>{formatSatang(loan.principalSatang)}</td>
-    <td>{formatSatang(loan.fundedSatang)}</td>
-    <td>{loan.termMonths} months</td>
-    <td><Badge variant={loan.status === "ACTIVE" ? "success" : loan.status === "FUNDING" ? "warning" : "outline"}>{loan.status}</Badge></td>
-    <td>{loan.fundingDeadline ? new Date(loan.fundingDeadline).toLocaleDateString() : "—"}</td>
-    <td><Link href={`/admin/loans/${encodeURIComponent(loan.id)}`}>View</Link></td>
+    <td data-label="Loan"><Link className="admin-text-link admin-table__primary-link" href={`/admin/loans/${encodeURIComponent(loan.id)}`}>{loan.id.slice(0, 8)}</Link></td>
+    <td data-label="Borrower">{loan.borrowerProfile.legalName}</td>
+    <td data-label="Principal">{formatSatang(loan.principalSatang)}</td>
+    <td data-label="Funded">{formatSatang(loan.fundedSatang)}</td>
+    <td data-label="Term">{loan.termMonths} months</td>
+    <td data-label="Status"><Badge variant={loan.status === "ACTIVE" ? "success" : loan.status === "FUNDING" ? "warning" : "outline"}>{loan.status}</Badge></td>
+    <td data-label="Funding deadline">{loan.fundingDeadline ? new Date(loan.fundingDeadline).toLocaleDateString() : "—"}</td>
+    <td data-label="Action"><Link href={`/admin/loans/${encodeURIComponent(loan.id)}`}>View</Link></td>
   </tr>;
 }
 

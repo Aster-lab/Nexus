@@ -100,8 +100,20 @@ export async function reconcileInvestorPayouts(
       }),
       tx.platformAccount.findUnique({
         where: { accountCode: CLEARING_ACCOUNT_CODE },
-        include: {
-          wallets: { select: { id: true, balanceSatang: true, currency: true } },
+        select: {
+          id: true,
+          accountName: true,
+          accountType: true,
+          currency: true,
+          status: true,
+          wallets: { select: {
+            id: true,
+            balanceSatang: true,
+            currency: true,
+            status: true,
+            ownerUserId: true,
+            ownerPlatformAccountId: true,
+          } },
         },
       }),
     ]);
@@ -211,11 +223,24 @@ export async function reconcileInvestorPayouts(
     }
 
     let clearing: InvestorPayoutReconciliationReport["clearing"] = null;
-    if (!clearingAccount || clearingAccount.wallets.length !== 1) {
+    const clearingWallet = clearingAccount?.wallets[0] ?? null;
+    const clearingConfigured = Boolean(
+      clearingAccount &&
+      clearingAccount.accountName === "Repayment Clearing" &&
+      clearingAccount.status === "ACTIVE" &&
+      clearingAccount.accountType === "LIABILITY" &&
+      clearingAccount.currency === CURRENCY &&
+      clearingAccount.wallets.length === 1 &&
+      clearingWallet &&
+      clearingWallet.ownerUserId === null &&
+      clearingWallet.ownerPlatformAccountId === clearingAccount.id &&
+      clearingWallet.status === "ACTIVE" &&
+      clearingWallet.currency === CURRENCY,
+    );
+    if (!clearingConfigured || !clearingAccount || !clearingWallet) {
       addIssue(issues, "CLEARING_WALLET_CONFIGURATION", CLEARING_ACCOUNT_CODE,
-        "Repayment Clearing must have exactly one configured wallet.");
+        "Account 2300 must be an active THB liability with exactly one active, platform-owned THB wallet.");
     } else {
-      const clearingWallet = clearingAccount.wallets[0];
       const collections = transactions
         .filter((transaction) => transaction.transactionType === "BORROWER_REPAYMENT")
         .flatMap((transaction) => transaction.entries)

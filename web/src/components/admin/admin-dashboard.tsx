@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
-import { ArrowRight, ClipboardCheck, FileText, Landmark, Users, Wallet, type LucideIcon } from "lucide-react";
+import { ArrowRight, ClipboardCheck, FileText, Landmark, Users, Wallet, ShieldCheck, type LucideIcon } from "lucide-react";
 import { ApiClientError } from "../../lib/client/api-client";
 import { formatSatang } from "../../lib/client/financial-format";
 import {
@@ -21,6 +21,7 @@ import { buttonVariants } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { EmptyState, ErrorState, LoadingState } from "../ui/request-state";
 import { useAuth } from "../auth/auth-provider";
+import { RoleOnboardingTour } from "../shared/role-onboarding-tour";
 
 type LoadState<T> = { status: "loading" } | { status: "error"; message: string } | { status: "success"; data: T };
 
@@ -56,6 +57,7 @@ function MetricCard({
   value,
   href,
   description,
+  tourTarget,
 }: {
   title: string;
   icon: LucideIcon;
@@ -63,9 +65,10 @@ function MetricCard({
   value: (summary: Record<string, number>) => string;
   href: string;
   description: (summary: Record<string, number>) => string;
+  tourTarget: string;
 }) {
   const state = useDashboardSection(load);
-  return <Card className="admin-metric-card">
+  return <Card className="admin-metric-card" data-tour-target={tourTarget}>
     <CardHeader className="admin-metric-card__header">
       <div className="admin-metric-card__icon" aria-hidden="true"><Icon size={19} /></div>
       <CardTitle>{title}</CardTitle>
@@ -88,15 +91,17 @@ function ActivityList<T extends { id: string }>({
   load,
   rows,
   emptyTitle,
+  tourTarget,
 }: {
   title: string;
   description: string;
   load: () => Promise<T[]>;
   rows: (data: T[]) => ReactNode;
   emptyTitle: string;
+  tourTarget: string;
 }) {
   const state = useDashboardSection(load);
-  return <Card className="admin-activity-card">
+  return <Card className="admin-activity-card" data-tour-target={tourTarget}>
     <CardHeader>
       <CardTitle>{title}</CardTitle>
       <CardDescription>{description}</CardDescription>
@@ -134,19 +139,19 @@ export function AdminDashboardPage() {
   return <section className="admin-page">
     <header className="admin-page__header">
       <div><p className="admin-eyebrow">NEXUS operations</p><h1>Welcome back, {displayName}</h1><p className="admin-muted">Administrator dashboard · A live operational snapshot from the authorized administrative APIs.</p></div>
-      <Link className={buttonVariants({ variant: "outline" })} href="/admin/financial"><ClipboardCheck size={16} />Reconciliation</Link>
+      <div className="flex flex-wrap gap-2"><RoleOnboardingTour userId={identity?.id ?? null} role="ADMIN"/><Link data-tour-target="admin-nav-policies" className={buttonVariants({ variant: "outline" })} href="/admin/policies"><ShieldCheck size={16} />Policies</Link><Link data-tour-target="admin-nav-financial" className={buttonVariants({ variant: "outline" })} href="/admin/financial"><ClipboardCheck size={16} />Reconciliation</Link></div>
     </header>
 
-    <div className="admin-metric-grid">
-      <MetricCard title="Users" icon={Users} load={usersLoader} value={(summary) => String(summary.total)} description={(summary) => `${summary.borrowers} borrowers · ${summary.investors} investors`} href="/admin/users" />
-      <MetricCard title="Pending applications" icon={FileText} load={applicationsLoader} value={(summary) => String(summary.total)} description={() => "Submitted, under review, or awaiting information"} href="/admin/applications" />
-      <MetricCard title="Active loans" icon={Landmark} load={loansLoader} value={(summary) => String(summary.active)} description={() => "Current ACTIVE loan records"} href="/admin/loans" />
-      <MetricCard title="Pending investor payouts" icon={Wallet} load={payoutsLoader} value={(summary) => String(summary.pending)} description={() => "Unpaid allocations requiring administrator review"} href="/admin/payouts" />
+    <div className="admin-metric-grid" data-tour-target="admin-summary">
+      <MetricCard title="Users" icon={Users} load={usersLoader} value={(summary) => String(summary.total)} description={(summary) => `${summary.borrowers} borrowers · ${summary.investors} investors`} href="/admin/users" tourTarget="admin-summary" />
+      <MetricCard title="Pending applications" icon={FileText} load={applicationsLoader} value={(summary) => String(summary.total)} description={() => "Submitted, under review, or awaiting information"} href="/admin/applications" tourTarget="admin-applications" />
+      <MetricCard title="Active loans" icon={Landmark} load={loansLoader} value={(summary) => String(summary.active)} description={() => "Current ACTIVE loan records"} href="/admin/loans" tourTarget="admin-loans" />
+      <MetricCard title="Pending investor payouts" icon={Wallet} load={payoutsLoader} value={(summary) => String(summary.pending)} description={() => "Unpaid allocations requiring administrator review"} href="/admin/payouts" tourTarget="admin-payouts" />
     </div>
 
     <div className="admin-activity-grid">
-      <ActivityList title="Recent repayments" description="Latest repayment records and posting states." load={repaymentsLoader} rows={(data) => <RepaymentActivity data={data} />} emptyTitle="No repayment activity" />
-      <ActivityList title="Recent administrative activity" description="Recent immutable audit events." load={auditLoader} rows={(data) => <AuditActivity data={data} />} emptyTitle="No recent administrative activity" />
+      <ActivityList title="Recent repayments" description="Latest repayment records and posting states." load={repaymentsLoader} rows={(data) => <RepaymentActivity data={data} />} emptyTitle="No repayment activity" tourTarget="admin-repayments" />
+      <ActivityList title="Recent administrative activity" description="Recent immutable audit events." load={auditLoader} rows={(data) => <AuditActivity data={data} />} emptyTitle="No recent administrative activity" tourTarget="admin-audit-logs" />
     </div>
   </section>;
 }

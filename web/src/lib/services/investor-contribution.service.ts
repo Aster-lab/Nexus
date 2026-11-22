@@ -1,6 +1,7 @@
 import {Prisma} from "../../generated/prisma/client";
 import {prisma} from "../prisma";
 import { createInAppNotification } from "./notification.service";
+import { requireUserWalletControlAccount } from "./ledger-control-accounts.service";
 
 const ESCROW_ACCOUNT_CODE = "2200";
 const CURRENCY = "THB";
@@ -220,12 +221,16 @@ async function postWithinTransaction(
         },
     });
 
+    // Reflect user-owned wallet activity in the shared 2100 control account.
+    const walletControlAccount = await requireUserWalletControlAccount(tx);
+
     // Balanced ledger entries
     await tx.ledgerEntry.createMany({
         data: [
         {
             ledgerTransactionId: ledger.id,
             walletId: investorWallet.id,
+            platformAccountId: walletControlAccount.id,
             entryType: "DEBIT",
             amountSatang: input.amountSatang,
             currency: CURRENCY,

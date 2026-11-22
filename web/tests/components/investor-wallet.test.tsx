@@ -10,9 +10,9 @@ describe("WP9.7 investor wallet activity", () => {
     expect(loading).toContain("Simulated wallet");
   });
 
-  it("does not expose direct balance adjustment actions", () => {
+  it("does not expose a top-up form before wallet ownership is loaded", () => {
     const html = renderToStaticMarkup(createElement(InvestorWalletPage, {}));
-    expect(html).not.toContain("Add funds");
+    expect(html).not.toContain("Add simulated funds");
     expect(html).not.toContain("Withdraw");
   });
 });

@@ -1,12 +1,27 @@
 import { apiGet, apiPost, apiRequest } from "./api-client";
 
 export interface InvestorPreferences {
-  schema_version: "nexus_investor_preference.v1";
-  risk_tier: Array<"TIER_A" | "TIER_B" | "TIER_C" | "TIER_D">;
+  schema_version: "nexus_investor_preference.v2";
   interest_rate: { min: number; max: number };
   loan_duration: { min: number; max: number };
   investment_amount: { min: number; max: number };
   loan_purpose: Array<"business" | "education" | "medical" | "personal" | "home" | "other">;
+}
+export type InvestorPreferencesDraft = Omit<InvestorPreferences, "schema_version" | "interest_rate" | "loan_duration" | "investment_amount"> & {
+  interest_rate: { min: string; max: string };
+  loan_duration: { min: string; max: string };
+  investment_amount: { min: string; max: string };
+};
+
+/** Converts form strings to the strict API contract, excluding UI-only state. */
+export function buildInvestorPreferencesPayload(draft: InvestorPreferencesDraft): InvestorPreferences {
+  return {
+    schema_version: "nexus_investor_preference.v2",
+    loan_purpose: [...draft.loan_purpose],
+    interest_rate: { min: Number(draft.interest_rate.min), max: Number(draft.interest_rate.max) },
+    loan_duration: { min: Number(draft.loan_duration.min), max: Number(draft.loan_duration.max) },
+    investment_amount: { min: Number(draft.investment_amount.min), max: Number(draft.investment_amount.max) },
+  };
 }
 export interface BorrowerEvaluation {
   predictionRecordId: string;
@@ -23,7 +38,7 @@ export interface BorrowerEvaluation {
 }
 export interface RecommendationRun {
   recommendationRunId: string;
-  modelVersionId: string;
+  modelVersionId: string | null;
   inputVersion: string;
   createdAt: string;
   latencyMs: number;
@@ -33,8 +48,8 @@ export interface RecommendationRun {
     loanId: string;
     score: string;
     rankingPosition: number;
-    explanation: { schema_version: string; algorithm: string; feature_scores: { risk_tier: number; interest_rate: number; loan_duration: number; loan_amount: number; loan_purpose: number } };
-    loan: { id: string; status: string; principalSatang: string; fundedSatang: string; remainingFundingSatang: string; annualInterestRate: string; termMonths: number; loanPurpose?: string; riskTier?: string; fundingDeadline?: string };
+    explanation: { schema_version: string; algorithm: string; feature_scores: { interest_rate: number; loan_duration: number; investment_amount: number; loan_purpose: number } };
+    loan: { id: string; status: string; principalSatang: string; fundedSatang: string; remainingFundingSatang: string; annualInterestRate: string; termMonths: number; loanPurpose?: string; fundingDeadline?: string };
   }>;
 }
 

@@ -91,7 +91,7 @@ describe("API-04 investor APIs", () => {
     const investor = await createInvestor();
     const initial = await expectApiSuccess<{ preferences: unknown | null }>(await getPreferences(request(investor, "http://localhost/api/investor/preferences")));
     expect(initial.preferences).toBeNull();
-    const preferences = { schema_version: "nexus_investor_preference.v1", risk_tier: ["TIER_A", "TIER_B"], interest_rate: { min: 0, max: 18 }, loan_duration: { min: 3, max: 24 }, investment_amount: { min: 1000, max: 50000 }, loan_purpose: ["education", "business"] };
+    const preferences = { schema_version: "nexus_investor_preference.v2", interest_rate: { min: 0, max: 18 }, loan_duration: { min: 3, max: 24 }, investment_amount: { min: 1000, max: 50000 }, loan_purpose: ["education", "business"] };
     const saved = await expectApiSuccess<{ preferences: typeof preferences }>(await savePreferences(request(investor, "http://localhost/api/investor/preferences", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(preferences) })));
     expect(saved.preferences).toEqual(preferences);
     const loaded = await expectApiSuccess<{ preferences: typeof preferences }>(await getPreferences(request(investor, "http://localhost/api/investor/preferences")));
@@ -101,6 +101,17 @@ describe("API-04 investor APIs", () => {
   it("API-04-23 rejects invalid recommendation preferences", async () => {
     const investor = await createInvestor();
     await expectApiError(await savePreferences(request(investor, "http://localhost/api/investor/preferences", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ schema_version: "wrong", risk_tier: [] }) })), { status: 400, code: "VALIDATION_ERROR" });
+  });
+
+  it("normalizes previously saved model-dependent preferences for preference matching", async () => {
+    const investor = await createInvestor();
+    await prisma.investorPreference.create({ data: { investorProfileId: investor.profileId, preferenceData: { schema_version: "nexus_investor_preference.v1", risk_tier: ["TIER_A"], interest_rate: { min: 5, max: 12 }, loan_duration: { min: 3, max: 24 }, investment_amount: { min: 1000, max: 50000 }, loan_purpose: ["education"] } } });
+
+    const loaded = await expectApiSuccess<{ preferences: { schema_version: string; interest_rate: { min: number; max: number }; loan_purpose: string[] } }>(await getPreferences(request(investor, "http://localhost/api/investor/preferences")));
+    expect(loaded.preferences.schema_version).toBe("nexus_investor_preference.v2");
+    expect(loaded.preferences.interest_rate).toEqual({ min: 5, max: 12 });
+    expect(loaded.preferences.loan_purpose).toEqual(["education"]);
+    expect(loaded.preferences).not.toHaveProperty("risk_tier");
   });
 
   it("API-04-24 does not allow a borrower to read or save investor preferences", async () => {

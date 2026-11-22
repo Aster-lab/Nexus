@@ -341,6 +341,9 @@ export function BorrowerDashboard() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <RoleOnboardingTour userId={identity?.id ?? null} role="BORROWER" />
+          <Link className={buttonVariants({ variant: "default", size: "default" })} href="/borrower/repayments/make">
+            Make a repayment <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
           <Link className={buttonVariants({ variant: "outline", size: "default" })} href="/borrower/wallet">
             Wallet <ArrowRight className="size-4" aria-hidden="true" />
           </Link>

@@ -1,5 +1,6 @@
 import { Prisma } from "../../generated/prisma/client";
 import { prisma } from "../prisma";
+import { requireUserWalletControlAccount } from "./ledger-control-accounts.service";
 
 const CURRENCY = "THB";
 const ESCROW_ACCOUNT_CODE = "2200";
@@ -303,7 +304,9 @@ async function postWithinTransaction(
     },
   });
 
-  // 2. Balanced ledger: escrow debit, investor credit.
+  // 2. Balanced ledger: escrow debit, investor credit. The investor-wallet
+  // line also updates account 2100's user-wallet control subledger.
+  const walletControlAccount = await requireUserWalletControlAccount(tx);
   await tx.ledgerEntry.createMany({
     data: [
       {
@@ -316,6 +319,7 @@ async function postWithinTransaction(
       {
         ledgerTransactionId: ledger.id,
         walletId: investorWallet.id,
+        platformAccountId: walletControlAccount.id,
         entryType: "CREDIT",
         amountSatang: refundableSatang,
         currency: CURRENCY,

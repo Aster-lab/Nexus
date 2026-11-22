@@ -345,7 +345,10 @@ describe("TXN — transaction atomicity and reconciliation", () => {
       .reduce((sum, entry) => sum + entry.amountSatang, 0n);
     expect(transaction.status).toBe("POSTED");
     expect(debitTotal).toBe(creditTotal);
-    expect(debitTotal).toBe(amountSatang);
+    const walletDebitTotal = transaction.entries
+      .filter((entry) => entry.entryType === "DEBIT" && entry.walletId !== null)
+      .reduce((sum, entry) => sum + entry.amountSatang, 0n);
+    expect(walletDebitTotal).toBe(amountSatang);
     expect(repayments.reduce((sum, row) => sum + row.totalSatang, 0n)).toBe(amountSatang);
     expect(
       repayments.reduce(

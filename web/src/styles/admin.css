@@ -4,7 +4,7 @@
   }
 
   .admin-navigation {
-    @apply flex shrink-0 gap-1 overflow-x-auto rounded-xl border border-border bg-card p-2 lg:sticky lg:top-6 lg:h-fit lg:w-60 lg:flex-col;
+    @apply flex w-full shrink-0 flex-col gap-1 rounded-xl border border-border bg-card p-2 lg:sticky lg:top-6 lg:h-fit lg:w-60;
   }
 
   .admin-navigation__label {
@@ -12,7 +12,7 @@
   }
 
   .admin-navigation__link {
-    @apply inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-foreground no-underline transition-colors hover:bg-secondary lg:w-full;
+    @apply inline-flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground no-underline transition-colors hover:bg-secondary;
   }
 
   .admin-navigation__link--active {
@@ -275,6 +275,74 @@
     @apply my-3 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm text-foreground;
   }
 
+  .admin-policy-list {
+    @apply grid gap-5;
+  }
+
+  .admin-policy-card {
+    @apply grid min-w-0 gap-4 rounded-xl border border-border bg-background p-4 sm:p-5;
+  }
+
+  .admin-policy-card__heading {
+    @apply flex flex-col justify-between gap-3 sm:flex-row sm:items-start;
+  }
+
+  .admin-policy-card__heading h2 {
+    @apply text-lg font-semibold text-foreground;
+  }
+
+  .admin-policy-card__heading code {
+    @apply mt-1 inline-block break-all text-xs text-muted-foreground;
+  }
+
+  .admin-policy-card__heading p {
+    @apply mt-2 text-sm leading-6 text-muted-foreground;
+  }
+
+  .admin-policy-versions {
+    @apply grid min-w-0 gap-3;
+  }
+
+  .admin-policy-version {
+    @apply grid min-w-0 gap-4 rounded-lg border border-border bg-card p-4;
+  }
+
+  .admin-policy-version__heading {
+    @apply flex flex-wrap items-center justify-between gap-3;
+  }
+
+  .admin-policy-version__heading h3 {
+    @apply font-semibold text-foreground;
+  }
+
+  .admin-policy-version__meta {
+    @apply grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2;
+  }
+
+  .admin-policy-version__meta div {
+    @apply min-w-0 rounded-md bg-secondary/40 p-3;
+  }
+
+  .admin-policy-version__meta dt {
+    @apply text-xs font-medium text-muted-foreground;
+  }
+
+  .admin-policy-version__meta dd {
+    @apply mt-1 break-words text-sm text-foreground;
+  }
+
+  .admin-policy-version__values summary {
+    @apply cursor-pointer font-medium text-primary;
+  }
+
+  .admin-policy-version__values pre {
+    @apply mt-2 max-w-full whitespace-pre-wrap break-all rounded-md bg-secondary/60 p-3 text-xs text-foreground;
+  }
+
+  .admin-policy-version__action {
+    @apply flex justify-end border-t border-border pt-3;
+  }
+
   .admin-confirm-backdrop {
     @apply fixed inset-0 z-40 grid place-items-center bg-black/50 p-4;
   }
@@ -296,7 +364,17 @@
   }
 
   .admin-audit-filters {
-    @apply mb-5 grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6;
+    @apply mb-5 grid min-w-0 items-end gap-3;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  }
+
+  .admin-audit-filters > * {
+    @apply w-full min-w-0;
+  }
+
+  .admin-audit-filters .admin-form-control {
+    @apply w-full min-w-0;
+    box-sizing: border-box;
   }
 
   .admin-audit-record {

@@ -114,7 +114,11 @@ describe("Repayment fixture context integration", () => {
         where: { id: context.borrowerWalletId },
       });
 
-      expect(wallet.balanceSatang).toBe(context.openingBalanceSatang);
+      // The genuine disbursement in this fixture also credits the borrower's
+      // wallet with the loan principal before the opening balance is posted.
+      expect(wallet.balanceSatang).toBe(
+        context.openingBalanceSatang + context.loan.principalSatang,
+      );
     } finally {
       await context.cleanup();
     }
@@ -238,7 +242,7 @@ describe("Repayment fixture context integration", () => {
         where: { id: context.borrowerWalletId },
       });
 
-      expect(wallet.balanceSatang).toBe(customAmount);
+      expect(wallet.balanceSatang).toBe(customAmount + context.loan.principalSatang);
     } finally {
       await context.cleanup();
     }

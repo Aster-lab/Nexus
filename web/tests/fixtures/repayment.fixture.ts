@@ -1,5 +1,6 @@
 
 import { randomUUID } from "node:crypto";
+import { vi } from "vitest";
 
 import { prisma } from "../../src/lib/prisma";
 import {
@@ -10,6 +11,12 @@ import {
 import { postInvestorContribution } from "../../src/lib/services/investor-contribution.service";
 import { createOpeningBalance } from "../../src/lib/services/opening-balance.service";
 import { generateRepaymentSchedule } from "../../src/lib/services/repayment.service";
+import {
+  approveLoanDisbursement,
+  recordBorrowerDisbursementConsent,
+  requestLoanDisbursement,
+} from "../../src/lib/services/loan-disbursement-approval.service";
+import { postLoanDisbursement } from "../../src/lib/services/loan-disbursement.service";
 const DEFAULT_BORROWER_OPENING_BALANCE_SATANG = 100_000_000n;
 type PlatformAccountStatusValue =
   Awaited<
@@ -201,6 +208,10 @@ export async function createRepaymentTestContext(
   const openingBalanceIdempotencyKey =
     `repayment-test-opening-${randomUUID()}`;
 
+  const wallClockNow = Date.now();
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-01-15T00:00:00.000Z"));
+
   try {
     // Ensure the configured opening-balance source is enabled for this
     // fixture, then restore its prior state during context cleanup.
@@ -230,16 +241,29 @@ export async function createRepaymentTestContext(
       },
     });
 
-    const disbursedAt = new Date("2026-01-15T00:00:00.000Z");
-
-    const loan = await prisma.loan.update({
-      where: { id: fixture.loan.id },
-      data: {
-        status: "ACTIVE",
-        fundedSatang: fixture.loan.principalSatang,
-        disbursedAt,
-      },
+    await recordBorrowerDisbursementConsent({
+      loanId: fixture.loan.id,
+      borrowerUserId: fixture.borrowerUser.id,
     });
+    const request = await requestLoanDisbursement({
+      loanId: fixture.loan.id,
+      requesterUserId: administratorUserId,
+      reason: "Repayment integration test disbursement",
+    });
+    const approval = await approveLoanDisbursement({
+      requestAuditLogId: request.id,
+      approverUserId: administratorUserId,
+      reason: "Approve repayment integration test disbursement",
+    });
+    const disbursement = await postLoanDisbursement({
+      loanId: fixture.loan.id,
+      approvalAuditLogId: approval.id,
+      idempotencyKey: `repayment-test-disbursement-${randomUUID()}`,
+    });
+    if (disbursement.status !== "POSTED") {
+      throw new Error("Repayment integration fixture disbursement did not post.");
+    }
+    const loan = await prisma.loan.findUniqueOrThrow({ where: { id: fixture.loan.id } });
     await operations.postOpeningBalance({
       administratorUserId,
       walletId: borrowerWallet.id,
@@ -278,6 +302,9 @@ export async function createRepaymentTestContext(
     }
 
     throw error;
+  } finally {
+    vi.setSystemTime(new Date(wallClockNow));
+    vi.useRealTimers();
   }
 }
 

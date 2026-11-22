@@ -72,6 +72,7 @@ export const ModelName = {
   PlatformAccount: 'PlatformAccount',
   LedgerTransaction: 'LedgerTransaction',
   LedgerEntry: 'LedgerEntry',
+  LedgerEntryAccountMapping: 'LedgerEntryAccountMapping',
   OpeningBalance: 'OpeningBalance',
   Investment: 'Investment',
   InvestmentContribution: 'InvestmentContribution',
@@ -433,6 +434,19 @@ export const LedgerEntryScalarFieldEnum = {
 } as const
 
 export type LedgerEntryScalarFieldEnum = (typeof LedgerEntryScalarFieldEnum)[keyof typeof LedgerEntryScalarFieldEnum]
+
+
+export const LedgerEntryAccountMappingScalarFieldEnum = {
+  id: 'id',
+  ledgerEntryId: 'ledgerEntryId',
+  platformAccountId: 'platformAccountId',
+  entryType: 'entryType',
+  amountSatang: 'amountSatang',
+  currency: 'currency',
+  createdAt: 'createdAt'
+} as const
+
+export type LedgerEntryAccountMappingScalarFieldEnum = (typeof LedgerEntryAccountMappingScalarFieldEnum)[keyof typeof LedgerEntryAccountMappingScalarFieldEnum]
 
 
 export const OpeningBalanceScalarFieldEnum = {

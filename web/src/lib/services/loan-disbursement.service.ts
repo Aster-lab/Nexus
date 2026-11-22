@@ -12,6 +12,11 @@ import {
   reject,
   validateIdempotencyKey,
 } from "./financial-service.utils";
+import {
+  getAssetAccountBalance,
+  requireLoanPrincipalAccounts,
+  requireUserWalletControlAccount,
+} from "./ledger-control-accounts.service";
 
 const APPROVAL_ACTION = "LOAN_DISBURSEMENT_APPROVED";
 const REQUEST_ACTION = "LOAN_DISBURSEMENT_REQUESTED";
@@ -160,6 +165,9 @@ async function findExistingDisbursement(
     escrowWalletId: string;
     borrowerWalletId: string;
     escrowAccountId: string;
+    userWalletControlAccountId: string;
+    loanReceivableAccountId: string;
+    fundingAssetAccountId: string;
   },
 ) {
   const existing = await tx.ledgerTransaction.findUnique({
@@ -186,6 +194,7 @@ async function findExistingDisbursement(
       where: { ledgerTransactionId: existing.id },
       select: {
         walletId: true,
+        platformAccountId: true,
         entryType: true,
         amountSatang: true,
         currency: true,
@@ -212,13 +221,22 @@ async function findExistingDisbursement(
   const hasCredit = entries.some(
     (entry) =>
       entry.walletId === input.borrowerWalletId &&
+      (entry.platformAccountId === input.userWalletControlAccountId || entry.platformAccountId === null) &&
       entry.entryType === "CREDIT" &&
       entry.amountSatang === input.amountSatang &&
       entry.currency === CURRENCY,
   );
 
+  const hasReceivableDebit = entries.some((entry) =>
+    entry.walletId === null && entry.platformAccountId === input.loanReceivableAccountId &&
+    entry.entryType === "DEBIT" && entry.amountSatang === input.amountSatang && entry.currency === CURRENCY,
+  );
+  const hasFundingCredit = entries.some((entry) =>
+    entry.walletId === null && entry.platformAccountId === input.fundingAssetAccountId &&
+    entry.entryType === "CREDIT" && entry.amountSatang === input.amountSatang && entry.currency === CURRENCY,
+  );
   const validMovement =
-    entries.length === 2 &&
+    (entries.length === 2 || (entries.length === 4 && hasReceivableDebit && hasFundingCredit)) &&
     hasDebit &&
     hasCredit &&
     escrowMovements.length === 1 &&
@@ -298,6 +316,17 @@ async function postDisbursement(
     fail("Active THB borrower wallet was not found.", "BORROWER_WALLET_NOT_FOUND");
   }
 
+  let walletControlAccount: { id: string };
+  let principalAccounts: Awaited<ReturnType<typeof requireLoanPrincipalAccounts>>;
+  try {
+    [walletControlAccount, principalAccounts] = await Promise.all([
+      requireUserWalletControlAccount(tx),
+      requireLoanPrincipalAccounts(tx),
+    ]);
+  } catch (error) {
+    fail(error instanceof Error ? error.message : "Loan accounting accounts are unavailable.", "ACCOUNTING_CONFIGURATION_INVALID");
+  }
+
 
   if (
     escrowAccount.status !== "FULLY_FUNDED" ||
@@ -325,6 +354,9 @@ async function postDisbursement(
       escrowWalletId: escrowWallet.id,
       borrowerWalletId: borrowerWallet.id,
       escrowAccountId: escrowAccount.id,
+      userWalletControlAccountId: walletControlAccount.id,
+      loanReceivableAccountId: principalAccounts.loanReceivable.id,
+      fundingAssetAccountId: principalAccounts.fundingAsset.id,
     });
 
     if (existing) return existing;
@@ -437,9 +469,16 @@ async function postDisbursement(
     escrowWalletId: escrowWallet.id,
     borrowerWalletId: borrowerWallet.id,
     escrowAccountId: escrowAccount.id,
+    userWalletControlAccountId: walletControlAccount.id,
+    loanReceivableAccountId: principalAccounts.loanReceivable.id,
+    fundingAssetAccountId: principalAccounts.fundingAsset.id,
   });
 
   if (existing) return existing;
+
+  if (await getAssetAccountBalance(tx, principalAccounts.fundingAsset.id) < amountSatang) {
+    fail("Simulated funding asset account 1300 has insufficient balance for this loan disbursement.", "SIMULATED_FUNDING_ASSET_INSUFFICIENT");
+  }
 
   const ledger = await tx.ledgerTransaction.create({
     data: {
@@ -464,6 +503,21 @@ async function postDisbursement(
       {
         ledgerTransactionId: ledger.id,
         walletId: borrowerWallet.id,
+        platformAccountId: walletControlAccount.id,
+        entryType: "CREDIT",
+        amountSatang,
+        currency: CURRENCY,
+      },
+      {
+        ledgerTransactionId: ledger.id,
+        platformAccountId: principalAccounts.loanReceivable.id,
+        entryType: "DEBIT",
+        amountSatang,
+        currency: CURRENCY,
+      },
+      {
+        ledgerTransactionId: ledger.id,
+        platformAccountId: principalAccounts.fundingAsset.id,
         entryType: "CREDIT",
         amountSatang,
         currency: CURRENCY,

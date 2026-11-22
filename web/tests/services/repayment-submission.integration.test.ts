@@ -226,7 +226,13 @@ async function expectPostedLedgerTransaction(
   expect(transaction.postedAt).toBeInstanceOf(Date);
   expect(transaction.idempotencyKey).toBe(idempotencyKey);
 
-  expect(transaction.entries).toHaveLength(2);
+  // Repayments that include principal also post the 1300/1200 receivable
+  // movement alongside the borrower-to-clearing wallet transfer.
+  const principalSatang = transaction.repayments.reduce(
+    (total, repayment) => total + repayment.principalSatang,
+    0n,
+  );
+  expect(transaction.entries).toHaveLength(principalSatang > 0n ? 4 : 2);
 
   const debit = transaction.entries.find(
     (entry) => entry.entryType === "DEBIT",
@@ -241,7 +247,7 @@ async function expectPostedLedgerTransaction(
   expect(debit!.walletId).toBe(context.borrowerWalletId);
   expect(credit!.walletId).toBe(context.clearingWalletId);
 
-  expect(debit!.platformAccountId).toBeNull();
+  expect(debit!.platformAccountId).not.toBeNull();
   expect(credit!.platformAccountId).toBeNull();
 
   expect(debit!.currency).toBe("THB");

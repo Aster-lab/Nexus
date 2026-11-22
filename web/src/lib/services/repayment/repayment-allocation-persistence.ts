@@ -38,20 +38,6 @@ export async function persistRepaymentAllocations(
     orderBy: { id: "asc" },
   });
 
-  console.dir(
-  {
-    loanId: input.loanId,
-    investments: investments.map((investment) => ({
-      id: investment.id,
-      contributions: investment.contributions.map((contribution) => ({
-        amountSatang: contribution.amountSatang.toString(),
-      
-      })),
-    })),
-  },
-  { depth: null },
-);
-
   const weightedInvestments = investments.map((investment) => ({
     investmentId: investment.id,
     contributionSatang: investment.contributions.reduce(

@@ -24,9 +24,9 @@ export async function GET(request: Request): Promise<Response> {
     };
     const orderBy = pagination.sortBy === "postedAt" ? { postedAt: pagination.sortOrder } : { createdAt: pagination.sortOrder };
     const [rows, total] = await Promise.all([
-      prisma.ledgerTransaction.findMany({ where, orderBy, skip: pagination.offset, take: pagination.limit, select: { id: true, transactionType: true, status: true, referenceType: true, referenceId: true, description: true, createdAt: true, postedAt: true, reversedTransactionId: true, entries: { orderBy: { createdAt: "asc" }, select: { id: true, walletId: true, platformAccountId: true, entryType: true, amountSatang: true, currency: true, wallet: { select: { ownerUser: { select: { id: true, email: true } }, ownerPlatformAccount: { select: { accountCode: true, accountName: true } } } }, platformAccount: { select: { accountCode: true, accountName: true } } } } } }),
+      prisma.ledgerTransaction.findMany({ where, orderBy, skip: pagination.offset, take: pagination.limit, select: { id: true, transactionType: true, status: true, referenceType: true, referenceId: true, description: true, createdAt: true, postedAt: true, reversedTransactionId: true, entries: { orderBy: { createdAt: "asc" }, select: { id: true, walletId: true, platformAccountId: true, entryType: true, amountSatang: true, currency: true, wallet: { select: { ownerUser: { select: { id: true, email: true } }, ownerPlatformAccount: { select: { accountCode: true, accountName: true } } } }, platformAccount: { select: { accountCode: true, accountName: true } }, accountMappings: { select: { entryType: true, amountSatang: true, platformAccount: { select: { accountCode: true, accountName: true } } } } } } } }),
       prisma.ledgerTransaction.count({ where }),
     ]);
-    return apiPaginatedResponse(rows.map((row) => ({ ...row, entries: row.entries.map((entry) => ({ ...entry, amountSatang: entry.amountSatang.toString() })) })), pagination, total);
+    return apiPaginatedResponse(rows.map((row) => ({ ...row, entries: row.entries.map((entry) => ({ ...entry, amountSatang: entry.amountSatang.toString(), accountMappings: entry.accountMappings.map((mapping) => ({ ...mapping, amountSatang: mapping.amountSatang.toString() })) })) })), pagination, total);
   } catch (error) { return apiErrorResponseFrom(error); }
 }

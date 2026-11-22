@@ -3,6 +3,7 @@ import { Prisma } from "../../generated/prisma/client";
 import { prisma } from "../prisma";
 import { requireFinancialAdministrator } from "./financial-authorization.service";
 import { withSerializableTransactionRetry } from "./ledger-posting.service";
+import { requireUserWalletControlAccount } from "./ledger-control-accounts.service";
 
 const CURRENCY = "THB";
 const TRANSACTION_TYPE = "COMPENSATING_TRANSACTION";
@@ -174,6 +175,10 @@ async function compensateInTransaction(
     throw new Error("A wallet referenced by the original transaction no longer exists.");
   }
   const walletById = new Map(wallets.map((wallet) => [wallet.id, wallet]));
+  const hasUserWallet = wallets.some((wallet) => wallet.ownerUserId !== null);
+  const walletControlAccount = hasUserWallet
+    ? await requireUserWalletControlAccount(tx)
+    : null;
 
   const reversal = await tx.ledgerTransaction.create({
     data: {
@@ -188,14 +193,21 @@ async function compensateInTransaction(
     select: { id: true },
   });
 
-  const reversalEntries = original.entries.map((entry) => ({
-    ledgerTransactionId: reversal.id,
-    walletId: entry.walletId,
-    platformAccountId: entry.platformAccountId,
-    entryType: entry.entryType === "DEBIT" ? "CREDIT" as const : "DEBIT" as const,
-    amountSatang: entry.amountSatang,
-    currency: entry.currency,
-  }));
+  const reversalEntries = original.entries.map((entry) => {
+    const wallet = entry.walletId ? walletById.get(entry.walletId) : null;
+    return {
+      ledgerTransactionId: reversal.id,
+      walletId: entry.walletId,
+      // Historical user-wallet entries predate account 2100. Tag their
+      // compensation so the post-migration control ledger follows the wallet.
+      platformAccountId:
+        entry.platformAccountId ??
+        (wallet?.ownerUserId ? walletControlAccount?.id ?? null : null),
+      entryType: entry.entryType === "DEBIT" ? "CREDIT" as const : "DEBIT" as const,
+      amountSatang: entry.amountSatang,
+      currency: entry.currency,
+    };
+  });
   await tx.ledgerEntry.createMany({ data: reversalEntries });
 
   const walletDeltas = new Map<string, bigint>();

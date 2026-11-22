@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, BookOpen, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button, buttonVariants } from "../ui/button";
 
-type TourRole = "BORROWER" | "INVESTOR";
+type TourRole = "BORROWER" | "INVESTOR" | "ADMIN";
 type TourStep = { title: string; description: string; detail: string; target: string; href?: string; linkLabel?: string };
 type TourProgress = { complete: boolean; stepIndex: number };
 
@@ -98,6 +98,70 @@ const TOUR_STEPS: Record<TourRole, TourStep[]> = {
       target: "investor-wallet-activity",
       href: "/investor/wallet",
       linkLabel: "Open wallet activity",
+    },
+  ],
+  ADMIN: [
+    {
+      title: "Operations overview",
+      description: "Use this dashboard to monitor users, applications, loans, payouts, repayments, and recent administrative activity.",
+      detail: "Each section loads from an authorized backend API. A dashboard count is an operational summary, not a replacement for reviewing the underlying records.",
+      target: "admin-summary",
+    },
+    {
+      title: "Platform policies",
+      description: "Review proposed platform rules, approve them, then activate the approved versions when ready.",
+      detail: "Approval alone does not make a policy effective. Activations are audited. Keep the loan interest and repayment rates consistent; the current repayment policy uses 12%.",
+      target: "admin-nav-policies",
+      href: "/admin/policies",
+      linkLabel: "Review policies",
+    },
+    {
+      title: "Application review",
+      description: "Inspect submitted borrower applications and record an approved or rejected decision with a reason.",
+      detail: "An approval is not a loan offer. After approval, issue an offer from the application details page; the borrower must accept it before a funding loan is created.",
+      target: "admin-applications",
+      href: "/admin/applications",
+      linkLabel: "Open applications",
+    },
+    {
+      title: "Loans and disbursement",
+      description: "Monitor funding progress and inspect loan details and repayment schedules.",
+      detail: "Disburse only after funding and borrower consent requirements are met. Disbursement is a confirmed financial action and is recorded through the ledger workflow.",
+      target: "admin-loans",
+      href: "/admin/loans",
+      linkLabel: "Open loans",
+    },
+    {
+      title: "Repayment monitoring",
+      description: "Review persisted repayment records and their installment breakdowns.",
+      detail: "The backend determines posted repayment amounts and allocations. Use the records and receipt details to confirm outcomes.",
+      target: "admin-repayments",
+      href: "/admin/repayments",
+      linkLabel: "Review repayments",
+    },
+    {
+      title: "Investor payouts",
+      description: "Review eligible allocations and process payouts when their backend status and clearing balance permit it.",
+      detail: "A completed payout credits an investor wallet only after its ledger posting succeeds. Review the confirmation and resulting status; do not treat a pending allocation as a completed credit.",
+      target: "admin-payouts",
+      href: "/admin/payouts",
+      linkLabel: "Review payouts",
+    },
+    {
+      title: "Financial reconciliation",
+      description: "Run read-only checks across ledger entries, wallets, repayments, installments, and payouts.",
+      detail: "The reconciliation report identifies discrepancies; it never repairs financial records. Investigate and resolve issues through supported workflows.",
+      target: "admin-nav-financial",
+      href: "/admin/financial",
+      linkLabel: "Open reconciliation",
+    },
+    {
+      title: "Users and audit history",
+      description: "Review account status and inspect the audit trail for important administrative and financial actions.",
+      detail: "Audit history is append-only. Use it to verify who performed an action and what resource changed. NEXUS balances and transactions are simulated platform records.",
+      target: "admin-audit-logs",
+      href: "/admin/audit-logs",
+      linkLabel: "Open audit logs",
     },
   ],
 };
@@ -198,14 +262,14 @@ export function RoleOnboardingTour({ userId, role }: { userId: string | null; ro
       <BookOpen className="size-4" aria-hidden="true" /> {completed || stepIndex === 0 ? "Take the tour" : "Resume tour"}
     </Button> : null}
     {ready && open && userId ? <aside
-      aria-label={`${role === "BORROWER" ? "Borrower" : "Investor"} interactive tour`}
+      aria-label={`${role === "BORROWER" ? "Borrower" : role === "INVESTOR" ? "Investor" : "Administrator"} interactive tour`}
       aria-live="polite"
       className="fixed inset-x-3 bottom-3 z-50 mx-auto max-h-[48vh] max-w-xl overflow-y-auto rounded-2xl border border-border bg-card text-card-foreground shadow-2xl sm:inset-x-auto sm:bottom-6 sm:right-6 sm:max-h-[min(75vh,38rem)] sm:w-[min(36rem,calc(100vw-3rem))]"
     >
       <section className="grid gap-4 p-4 sm:gap-5 sm:p-6">
         <header className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">{role === "BORROWER" ? "Borrower guide" : "Investor guide"}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">{role === "BORROWER" ? "Borrower guide" : role === "INVESTOR" ? "Investor guide" : "Administrator guide"}</p>
             <p className="mt-1 text-sm text-muted-foreground">Step {stepIndex + 1} of {steps.length} · Highlighted section on your dashboard</p>
           </div>
           <Button type="button" variant="ghost" size="sm" onClick={pauseTour}>Pause tour</Button>

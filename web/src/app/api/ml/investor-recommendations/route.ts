@@ -3,20 +3,15 @@ import { ApiError, apiErrorResponseFrom } from "../../../../lib/api/errors";
 import { requireInvestor } from "../../../../lib/api/investor";
 import { apiSuccessResponse } from "../../../../lib/api/responses";
 import { prisma } from "../../../../lib/prisma";
-import { mlServiceEndpoint } from "../../../../lib/services/ml-service-url";
-import {
-  DynamicRecommendationRequestSchema,
-  DynamicRecommendationResponseSchema,
-  InvestorPreferenceContractSchema,
-  PersistedPredictionOutputSchema,
-} from "../../../../lib/contracts/risk";
+import { normalizeInvestorPreference } from "../../../../lib/contracts/risk";
+import { PREFERENCE_MATCH_ALGORITHM, PREFERENCE_MATCH_WEIGHTS, rankLoansByPreference, type PreferenceMatchCandidate } from "../../../../lib/services/investor-recommendation.service";
 import { z } from "zod";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const SERVICE_TIMEOUT_MS = 10_000;
-type LoanPurpose = z.infer<typeof DynamicRecommendationRequestSchema>["candidates"][number]["loan_purpose"];
-const purposeCodes: readonly LoanPurpose[] = ["business", "education", "medical", "personal", "home", "other"];
+const LOAN_PURPOSES = ["business", "education", "medical", "personal", "home", "other"] as const;
+type LoanPurpose = typeof LOAN_PURPOSES[number];
+type StoredPreference = NonNullable<ReturnType<typeof normalizeInvestorPreference>>;
 
 function loanPurpose(snapshot: unknown): LoanPurpose | null {
   if (typeof snapshot !== "object" || snapshot === null) return null;
@@ -25,8 +20,8 @@ function loanPurpose(snapshot: unknown): LoanPurpose | null {
   const purpose = (requested as { purpose?: unknown }).purpose;
   if (typeof purpose !== "string") return null;
   const normalized = purpose.trim().toLowerCase();
-  const exactPurpose = purposeCodes.find((code) => code === normalized);
-  if (exactPurpose) return exactPurpose;
+  const matched = LOAN_PURPOSES.find((code) => code === normalized);
+  if (matched) return matched;
   if (normalized.includes("business")) return "business";
   if (normalized.includes("education")) return "education";
   if (normalized.includes("medical")) return "medical";
@@ -36,17 +31,82 @@ function loanPurpose(snapshot: unknown): LoanPurpose | null {
 }
 
 function safeEligibleLoan(loan: {
-  id: string;
   status: string;
+  principalSatang: bigint;
+  fundedSatang: bigint;
+  fundingDeadline: Date;
+  escrowAccount: { status: string } | null;
+}, now: Date): boolean {
+  return loan.status === "FUNDING" && loan.fundingDeadline > now &&
+    loan.fundedSatang < loan.principalSatang && loan.escrowAccount?.status === "OPEN" &&
+    Number.isSafeInteger(Number(loan.principalSatang)) && Number.isSafeInteger(Number(loan.fundedSatang));
+}
+
+function publicCandidate(loan: {
+  id: string;
   principalSatang: bigint;
   fundedSatang: bigint;
   annualInterestRate: { toString(): string };
   termMonths: number;
   fundingDeadline: Date;
-  escrowAccount: { status: string } | null;
-}, now: Date): boolean {
-  return loan.status === "FUNDING" && loan.fundingDeadline > now &&
-    loan.fundedSatang < loan.principalSatang && loan.escrowAccount?.status === "OPEN";
+  purpose: LoanPurpose;
+}): PreferenceMatchCandidate {
+  return {
+    loanId: loan.id,
+    annualInterestRate: Number(loan.annualInterestRate.toString()),
+    termMonths: loan.termMonths,
+    remainingFundingSatang: Number(loan.principalSatang - loan.fundedSatang),
+    loanPurpose: loan.purpose,
+    fundingDeadline: loan.fundingDeadline,
+  };
+}
+
+function preferenceSnapshot(preferences: StoredPreference, capturedAt: string) {
+  return { schema_version: "nexus_recommendation_preferences_snapshot.v2", captured_at: capturedAt, preferences };
+}
+
+function candidateSnapshot(candidates: Array<PreferenceMatchCandidate & { principalSatang: string; fundedSatang: string }>, capturedAt: string) {
+  return {
+    schema_version: "nexus_recommendation_candidates_snapshot.v3",
+    captured_at: capturedAt,
+    candidates: candidates.map((candidate) => ({
+      loan_id: candidate.loanId,
+      principal_satang: candidate.principalSatang,
+      funded_satang: candidate.fundedSatang,
+      annual_interest_rate: candidate.annualInterestRate,
+      term_months: candidate.termMonths,
+      remaining_funding_satang: candidate.remainingFundingSatang,
+      loan_purpose: candidate.loanPurpose,
+      funding_deadline: candidate.fundingDeadline.toISOString(),
+    })),
+  };
+}
+
+function persistedExplanation(featureScores: Record<string, number>) {
+  return {
+    schema_version: "nexus_recommendation_explanation.v2",
+    algorithm: PREFERENCE_MATCH_ALGORITHM,
+    weights: PREFERENCE_MATCH_WEIGHTS,
+    feature_scores: featureScores,
+  };
+}
+
+function normalizeStoredExplanation(explanation: Prisma.JsonValue | null) {
+  if (typeof explanation !== "object" || explanation === null || Array.isArray(explanation)) return explanation;
+  const value = explanation as Record<string, Prisma.JsonValue>;
+  const scores = typeof value.feature_scores === "object" && value.feature_scores !== null && !Array.isArray(value.feature_scores)
+    ? value.feature_scores as Record<string, Prisma.JsonValue>
+    : {};
+  const score = (key: string, fallback?: string) => {
+    const raw = scores[key] ?? (fallback ? scores[fallback] : undefined);
+    return typeof raw === "number" ? raw : 0;
+  };
+  return persistedExplanation({
+    interest_rate: score("interest_rate"),
+    loan_duration: score("loan_duration"),
+    investment_amount: score("investment_amount", "loan_amount"),
+    loan_purpose: score("loan_purpose"),
+  });
 }
 
 export async function GET(request: Request): Promise<Response> {
@@ -77,7 +137,7 @@ export async function GET(request: Request): Promise<Response> {
         loanId: item.loanId,
         score: item.matchScore.toString(),
         rankingPosition: item.rankingPosition,
-        explanation: item.explanation,
+        explanation: normalizeStoredExplanation(item.explanation),
         loan: { id: item.loan.id, status: item.loan.status, principalSatang: item.loan.principalSatang.toString(), fundedSatang: item.loan.fundedSatang.toString(), remainingFundingSatang: (item.loan.principalSatang - item.loan.fundedSatang).toString(), annualInterestRate: item.loan.annualInterestRate.toString(), termMonths: item.loan.termMonths, fundingDeadline: item.loan.fundingDeadline },
       })),
     });
@@ -87,102 +147,103 @@ export async function GET(request: Request): Promise<Response> {
 export async function POST(request: Request): Promise<Response> {
   try {
     const identity = await requireInvestor(request);
-    const preferenceRow = await prisma.investorPreference.findUnique({ where: { investorProfileId: identity.investorProfile.id }, select: { preferenceData: true, updatedAt: true } });
+    const preferenceRow = await prisma.investorPreference.findUnique({ where: { investorProfileId: identity.investorProfile.id }, select: { preferenceData: true } });
     if (!preferenceRow) throw new ApiError("INVESTOR_PREFERENCES_REQUIRED", "Set investor preferences before requesting recommendations.", 409);
-    const preference = InvestorPreferenceContractSchema.safeParse(preferenceRow.preferenceData);
-    if (!preference.success) throw new ApiError("INVESTOR_PREFERENCES_INVALID", "Stored investor preferences are invalid.", 409);
-    const model = await prisma.modelVersion.findFirst({ where: { status: "APPROVED", isActive: true, featureSchemaVersion: "nexus_risk_features.v1" }, orderBy: { registeredAt: "desc" }, select: { id: true } });
-    if (!model) throw new ApiError("ML_MODEL_UNAVAILABLE", "No approved compatible risk model is active.", 503);
+    const preferences = normalizeInvestorPreference(preferenceRow.preferenceData);
+    if (!preferences) throw new ApiError("INVESTOR_PREFERENCES_INVALID", "Stored investor preferences are invalid.", 409);
+
+    const startedAt = Date.now();
     const now = new Date();
-    const riskRows = await prisma.loan.findMany({
-      where: {
-        status: "FUNDING",
-        fundingDeadline: { gt: now },
-        escrowAccount: { is: { status: "OPEN" } },
-        application: { riskAssessments: { some: { assessmentStatus: "CURRENT", predictionRecord: { modelVersionId: model.id } } } },
-      },
-      orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+    const loans = await prisma.loan.findMany({
+      where: { status: "FUNDING", fundingDeadline: { gt: now }, escrowAccount: { is: { status: "OPEN" } } },
+      orderBy: [{ fundingDeadline: "asc" }, { id: "asc" }],
       take: 200,
       select: {
         id: true, principalSatang: true, fundedSatang: true, annualInterestRate: true, termMonths: true, status: true, fundingDeadline: true,
         escrowAccount: { select: { status: true } },
-        application: { select: { borrowerProfileId: true, currentVersionId: true, currentVersion: { select: { submittedData: true } }, riskAssessments: { where: { assessmentStatus: "CURRENT", predictionRecord: { modelVersionId: model.id } }, select: { applicationVersionId: true, predictionRecord: { select: { predictionOutput: true } } } } } },
+        acceptedOffer: { select: { applicationVersion: { select: { submittedData: true } } } },
       },
     });
-    const candidates: z.infer<typeof DynamicRecommendationRequestSchema>["candidates"] = [];
-    for (const loan of riskRows) {
-      if (!safeEligibleLoan(loan, now) || !loan.application.currentVersionId) continue;
-      const assessment = loan.application.riskAssessments.find((row) => row.applicationVersionId === loan.application.currentVersionId);
-      if (!assessment || !loan.application.currentVersion) continue;
-      const prediction = PersistedPredictionOutputSchema.safeParse(assessment.predictionRecord.predictionOutput);
-      const purpose = loanPurpose(loan.application.currentVersion.submittedData);
-      const principal = Number(loan.principalSatang);
-      const funded = Number(loan.fundedSatang);
-      if (!prediction.success || !purpose || !Number.isSafeInteger(principal) || !Number.isSafeInteger(funded)) continue;
-      candidates.push({
-        loan_id: loan.id,
-        principal_satang: principal,
-        funded_satang: funded,
-        annual_interest_rate: Number(loan.annualInterestRate.toString()),
-        term_months: loan.termMonths,
-        loan_purpose: purpose,
-        risk_tier: prediction.data.tier.tier_code as "TIER_A" | "TIER_B" | "TIER_C" | "TIER_D",
-      });
-    }
-    const input = DynamicRecommendationRequestSchema.parse({ schema_version: "nexus_investor_recommendation_request.v1", preferences: preference.data, candidates });
-    const serviceUrl = process.env.ML_SERVICE_URL;
-    const serviceToken = process.env.ML_SERVICE_TOKEN;
-    if (!serviceUrl || !serviceToken || serviceToken.length < 32) throw new ApiError("ML_SERVICE_UNAVAILABLE", "The recommendation service is not configured.", 503);
-    const startedAt = Date.now();
-    let response: Response;
-    try {
-      response = await fetch(mlServiceEndpoint("recommendations", serviceUrl), { method: "POST", headers: { "content-type": "application/json", "X-ML-Service-Token": serviceToken }, body: JSON.stringify(input), redirect: "error", cache: "no-store", signal: AbortSignal.timeout(SERVICE_TIMEOUT_MS) });
-    } catch (error) {
-      if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) throw new ApiError("ML_SERVICE_TIMEOUT", "The recommendation service timed out.", 504);
-      throw new ApiError("ML_SERVICE_UNAVAILABLE", "The recommendation service is unavailable.", 503);
-    }
-    if (!response.ok) throw new ApiError("ML_SERVICE_UNAVAILABLE", "The recommendation service could not complete the request.", 503);
-    const result = DynamicRecommendationResponseSchema.safeParse(await response.json().catch(() => null));
-    if (!result.success) throw new ApiError("INVALID_ML_RESPONSE", "The recommendation service returned an invalid response.", 502);
-    const candidateById = new Map(candidates.map((candidate) => [candidate.loan_id, candidate]));
-    const filtered = result.data.recommendations.filter((item) => candidateById.has(item.loan_id));
+    const candidates = loans.flatMap((loan) => {
+      if (!safeEligibleLoan(loan, now)) return [];
+      const purpose = loanPurpose(loan.acceptedOffer.applicationVersion.submittedData);
+      if (!purpose) return [];
+      return [{
+        ...publicCandidate({ ...loan, purpose }),
+        principalSatang: loan.principalSatang.toString(),
+        fundedSatang: loan.fundedSatang.toString(),
+      }];
+    });
+    const ranked = rankLoansByPreference(preferences, candidates);
     const latencyMs = Math.max(0, Date.now() - startedAt);
+
     const persisted = await prisma.$transaction(async (tx) => {
-      const stillEligible = await tx.loan.findMany({ where: { id: { in: filtered.map((item) => item.loan_id) }, status: "FUNDING", fundingDeadline: { gt: new Date() }, escrowAccount: { is: { status: "OPEN" } } }, select: { id: true, principalSatang: true, fundedSatang: true } });
-      const liveIds = new Set(stillEligible.filter((loan) => loan.fundedSatang < loan.principalSatang).map((loan) => loan.id));
-      const liveRecommendations = filtered.filter((item) => liveIds.has(item.loan_id));
+      const currentRows = ranked.length ? await tx.loan.findMany({
+        where: { id: { in: ranked.map(({ loanId }) => loanId) }, status: "FUNDING", fundingDeadline: { gt: new Date() }, escrowAccount: { is: { status: "OPEN" } } },
+        select: {
+          id: true, principalSatang: true, fundedSatang: true, annualInterestRate: true, termMonths: true, status: true, fundingDeadline: true,
+          escrowAccount: { select: { status: true } },
+          acceptedOffer: { select: { applicationVersion: { select: { submittedData: true } } } },
+        },
+      }) : [];
+      const currentCandidates = currentRows.flatMap((loan) => {
+        if (!safeEligibleLoan(loan, new Date())) return [];
+        const purpose = loanPurpose(loan.acceptedOffer.applicationVersion.submittedData);
+        if (!purpose) return [];
+        return [{ ...publicCandidate({ ...loan, purpose }), principalSatang: loan.principalSatang.toString(), fundedSatang: loan.fundedSatang.toString() }];
+      });
+      const currentRanked = rankLoansByPreference(preferences, currentCandidates);
+      const candidateById = new Map(currentCandidates.map((candidate) => [candidate.loanId, candidate]));
       const capturedAt = new Date().toISOString();
       const run = await tx.recommendationRun.create({
         data: {
           investorProfileId: identity.investorProfile.id,
-          modelVersionId: model.id,
-          inputVersion: input.schema_version,
+          modelVersionId: null,
+          inputVersion: "nexus_investor_preference_match.v1",
           latencyMs,
-          preferenceSnapshot: { schema_version: "nexus_recommendation_preferences_snapshot.v1", captured_at: capturedAt, preferences: preference.data } as unknown as Prisma.InputJsonValue,
-          candidateSetSnapshot: { schema_version: "nexus_recommendation_candidates_snapshot.v2", captured_at: capturedAt, candidates: input.candidates } as unknown as Prisma.InputJsonValue,
+          preferenceSnapshot: preferenceSnapshot(preferences, capturedAt) as unknown as Prisma.InputJsonValue,
+          candidateSetSnapshot: candidateSnapshot(currentCandidates, capturedAt) as unknown as Prisma.InputJsonValue,
         },
         select: { id: true, createdAt: true, modelVersionId: true },
       });
-      if (liveRecommendations.length) {
-        await tx.recommendationResult.createMany({ data: liveRecommendations.map((item, index) => ({
+      if (currentRanked.length) {
+        await tx.recommendationResult.createMany({ data: currentRanked.map((item, index) => ({
           recommendationRunId: run.id,
-          loanId: item.loan_id,
+          loanId: item.loanId,
           matchScore: new Prisma.Decimal(item.score.toString()),
           rankingPosition: index + 1,
-          explanation: { schema_version: "nexus_recommendation_explanation.v1", algorithm: "content_based_cosine_similarity", feature_scores: item.feature_scores } as unknown as Prisma.InputJsonValue,
+          explanation: persistedExplanation(item.featureScores) as unknown as Prisma.InputJsonValue,
         })) });
       }
-      return { run, recommendations: liveRecommendations };
+      return { run, ranked: currentRanked, candidateById };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, maxWait: 10_000, timeout: 30_000 });
+
     return apiSuccessResponse({
       recommendationRunId: persisted.run.id,
       modelVersionId: persisted.run.modelVersionId,
-      inputVersion: input.schema_version,
+      inputVersion: "nexus_investor_preference_match.v1",
       createdAt: persisted.run.createdAt,
       latencyMs,
-      recommendations: persisted.recommendations.map((item, index) => {
-        const loan = candidates.find((candidate) => candidate.loan_id === item.loan_id)!;
-        return { loanId: item.loan_id, score: item.score.toString(), rankingPosition: index + 1, explanation: { schema_version: "nexus_recommendation_explanation.v1", algorithm: "content_based_cosine_similarity", feature_scores: item.feature_scores }, loan: { id: loan.loan_id, principalSatang: String(loan.principal_satang), fundedSatang: String(loan.funded_satang), remainingFundingSatang: String(loan.principal_satang - loan.funded_satang), annualInterestRate: String(loan.annual_interest_rate), termMonths: loan.term_months, loanPurpose: loan.loan_purpose, riskTier: loan.risk_tier } };
+      isStale: false,
+      recommendations: persisted.ranked.map((item, index) => {
+        const candidate = persisted.candidateById.get(item.loanId)!;
+        return {
+          loanId: item.loanId,
+          score: item.score.toString(),
+          rankingPosition: index + 1,
+          explanation: persistedExplanation(item.featureScores),
+          loan: {
+            id: candidate.loanId,
+            status: "FUNDING",
+            principalSatang: candidate.principalSatang,
+            fundedSatang: candidate.fundedSatang,
+            remainingFundingSatang: String(candidate.remainingFundingSatang),
+            annualInterestRate: String(candidate.annualInterestRate),
+            termMonths: candidate.termMonths,
+            loanPurpose: candidate.loanPurpose,
+            fundingDeadline: candidate.fundingDeadline,
+          },
+        };
       }),
     }, { status: 201, message: "Investor recommendations refreshed." });
   } catch (error) { return apiErrorResponseFrom(error); }

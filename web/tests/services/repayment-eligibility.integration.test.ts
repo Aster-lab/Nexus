@@ -6,6 +6,7 @@ import {
   validateRepaymentEligibility,
   generateRepaymentSchedule
 } from "../../src/lib/services/repayment.service";
+import { getRepaymentPayableThroughDate } from "../../src/lib/services/repayment/repayment-due-window";
 import {
   createRepaymentTestContext,
   type RepaymentTestContext,
@@ -205,7 +206,46 @@ describe("Borrower repayment eligibility integration", () => {
     }
   });
 
-  it("ELG-05 rejects repayment eligibility before the first installment due date", async () => {
+  it("ELG-05 allows repayment of an installment due within the next month", async () => {
+    const context = await createRepaymentTestContext();
+
+    try {
+      const now = new Date();
+      const disbursedAt = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() - 7,
+      ));
+
+      await prisma.loan.update({
+        where: { id: context.loan.id },
+        data: { disbursedAt },
+      });
+      await generateRepaymentSchedule({
+        loanId: context.loan.id,
+        actorUserId: context.administratorUserId,
+      });
+
+      const versionId = await getCurrentScheduleVersionId(context.loan.id);
+      const firstInstallment = await prisma.installment.findFirst({
+        where: { scheduleVersionId: versionId },
+        orderBy: { installmentNumber: "asc" },
+      });
+      expect(firstInstallment).not.toBeNull();
+      expect(firstInstallment!.dueDate.getTime()).toBeGreaterThan(Date.now());
+      expect(firstInstallment!.dueDate.getTime()).toBeLessThanOrEqual(
+        getRepaymentPayableThroughDate(now).getTime(),
+      );
+
+      const result = await validate(context, PARTIAL_PAYMENT_SATANG);
+      expect(result.payableInstallmentCount).toBe(1);
+      expect(result.payableOutstandingSatang).toBeGreaterThan(PARTIAL_PAYMENT_SATANG);
+    } finally {
+      await context.cleanup();
+    }
+  });
+
+  it("ELG-06 rejects installments that fall beyond the one-month advance window", async () => {
     const context = await createRepaymentTestContext();
 
     try {
@@ -259,7 +299,7 @@ describe("Borrower repayment eligibility integration", () => {
     }
   });
 
-  it("ELG-06 rejects an amount exceeding the currently payable outstanding obligation", async () => {
+  it("ELG-07 rejects an amount exceeding the currently payable outstanding obligation", async () => {
     const context = await createScheduledRepaymentContext();
 
     try {

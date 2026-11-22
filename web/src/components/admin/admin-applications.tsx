@@ -215,7 +215,7 @@ export function AdminApplicationDetailPage({ applicationId }: { applicationId: s
       <CardContent className="grid gap-4">
         {application.loanOffers.length ? <div className="grid gap-3">
           <h2 className="text-sm font-semibold">Offer history</h2>
-          {application.loanOffers.map((offer) => <div key={offer.id} className="grid gap-1 rounded-lg border border-border p-3 text-sm sm:grid-cols-2">
+          {application.loanOffers.map((offer, index) => <div key={offer.id || `${application.id}-offer-${index}`} className="grid min-w-0 gap-1 rounded-lg border border-border p-3 text-sm sm:grid-cols-2">
             <p><span className="text-muted-foreground">Status:</span> {statusLabel(offer.status)}</p>
             <p><span className="text-muted-foreground">Principal:</span> {formatSatang(offer.principalSatang)}</p>
             <p><span className="text-muted-foreground">Rate:</span> {(Number(offer.annualInterestRate) * 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}% p.a.</p>

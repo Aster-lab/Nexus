@@ -20,7 +20,7 @@ No application code, tests, lint, build, or browser session was run during this 
 | API integration | Same-origin API client, typed role clients, API envelope/error parsing, auth session provider | API errors are parsed centrally, but page-level messages and retry behavior remain component-specific. |
 | Role navigation | Shared application shell, role-aware navigation and guards | Responsive CSS exists for tablet/mobile. Browser viewport rendering was not available to this review. |
 | Theme | Light/dark semantic variables, system preference, persisted selection | Both themes are supported in tokens. Some legacy auth styles retain literal palette values instead of semantic tokens. |
-| Financial display | Shared satang/THB formatting, statuses, transaction table | Financial values are backend sourced; tables use local horizontal scrolling when they exceed phone width. |
+| Financial display | Shared satang/THB formatting, statuses, transaction table | Financial values are backend sourced; dense tables now reflow into labeled record cards at laptop/tablet/mobile widths. |
 
 ## Findings by work area
 
@@ -50,7 +50,7 @@ No application code, tests, lint, build, or browser session was run during this 
 ### 4. Responsive presentation
 
 - Tailwind breakpoints and media queries exist across shared, auth, admin, borrower, investor, and recommendation screens.
-- Tables with many columns use an `overflow-x-auto` wrapper and a deliberate minimum table width. This avoids squeezing financial columns but requires horizontal scrolling on phones. The UX acceptance tests should state whether scrollable tables are acceptable for each view or whether selected fields should become stacked cards.
+- Dense tables reflow into labeled, stacked records below the desktop breakpoint instead of requiring horizontal scrolling. Verify the card layout on borrower, investor, and administrator pages at the configured staging viewport widths.
 - The app shell switches navigation layout at tablet/mobile breakpoints, and admin navigation changes from a horizontal scroller to a desktop sidebar.
 - No desktop/tablet/mobile viewport screenshots or browser measurements were available. The responsive audit is source-level only; clipped content, tap target behavior, and actual horizontal overflow are not confirmed.
 

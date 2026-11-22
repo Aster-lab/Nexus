@@ -298,7 +298,7 @@ describe("AUTH/AUD — repayment authorization and financial audit", () => {
       actorUserId: context.administratorUserId,
     });
 
-    expect(report.valid).toBe(true);
+    expect(report.valid, JSON.stringify(report.issues)).toBe(true);
     expect(await platformFinancialSnapshot()).toEqual(before);
   });
 

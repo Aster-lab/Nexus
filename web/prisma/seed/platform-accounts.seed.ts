@@ -7,14 +7,14 @@ const PLATFORM_ACCOUNTS = [
         accountName : "Simulated Loan Principal Receivable",
         accountType : "ASSET",
         currency : "THB",
-        status : "INACTIVE",
+        status : "ACTIVE",
     },
     {
         accountCode : "2100",
         accountName : "Shared User-Wallet Control",
         accountType : "LIABILITY",
         currency : "THB",
-        status : "INACTIVE",
+        status : "ACTIVE",
     },
     {
         accountCode : "2200",
@@ -39,6 +39,15 @@ const PLATFORM_ACCOUNTS = [
     }
 ] satisfies Prisma.PlatformAccountCreateManyInput[];
 
+// These accounts hold simulated transfers in shared platform-owned wallets.
+// Account 1300 is a ledger funding source and is posted to by platformAccountId,
+// so it intentionally has no wallet. Account 1200 tracks the principal asset;
+// account 2100 controls user-owned wallet liabilities without owning a wallet.
+const PLATFORM_WALLET_ACCOUNT_CODES = new Set(["2200", "2300"]);
+// These chart accounts are required by every financial write path. A stale
+// inactive status must not leave a freshly migrated environment unusable.
+const REQUIRED_ACTIVE_ACCOUNT_CODES = new Set(["1200", "2100", "1300"]);
+
 export async function seedPlatformAccounts() {
     await prisma.$transaction(async (tx)=>{
         for (const account of PLATFORM_ACCOUNTS) {
@@ -60,15 +69,23 @@ export async function seedPlatformAccounts() {
                         "Existing record does not match the approved seed definition"
                     )
                 }
-                console.log(
-                    `PlatformAccount ${account.accountCode} already exists; preserving status ${existing.status}.`,
-                );
+                if (REQUIRED_ACTIVE_ACCOUNT_CODES.has(account.accountCode) && existing.status !== "ACTIVE") {
+                    platformAccount = await tx.platformAccount.update({
+                        where: { id: existing.id },
+                        data: { status: "ACTIVE" },
+                    });
+                    console.log(`PlatformAccount ${account.accountCode} activated for required financial operations.`);
+                } else {
+                    console.log(
+                        `PlatformAccount ${account.accountCode} already exists; preserving status ${existing.status}.`,
+                    );
+                }
             } else {
                 platformAccount = await tx.platformAccount.create({data: account,});
                 console.log(`PlatformAccount ${account.accountCode} created`);
             }
 
-            if (platformAccount?.status === "ACTIVE" && (account.accountCode === "2200" || account.accountCode === "2300")) {
+            if (platformAccount?.status === "ACTIVE" && PLATFORM_WALLET_ACCOUNT_CODES.has(account.accountCode)) {
                 await tx.wallet.upsert({
                     where: { ownerPlatformAccountId: platformAccount.id },
                     create: {

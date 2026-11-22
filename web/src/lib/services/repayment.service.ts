@@ -1,5 +1,6 @@
 
 import { prisma } from "../prisma";
+import { getRepaymentPayableThroughDate } from "./repayment/repayment-due-window";
 import {
   generateRepaymentSchedule as calculateSchedule,
 } from "./repayment/repayment-calculation";
@@ -506,13 +507,11 @@ export async function validateRepaymentEligibility({
     throw new Error("Loan has no active repayment schedule.");
   }
 
-  const now = new Date();
-
   const installments = await prisma.installment.findMany({
     where: {
       scheduleVersionId: currentVersionId,
       dueDate: {
-        lte: now,
+        lte: getRepaymentPayableThroughDate(),
       },
       status: {
         in: ["PENDING", "PARTIALLY_PAID", "OVERDUE"],
