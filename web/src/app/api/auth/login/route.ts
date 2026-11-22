@@ -43,13 +43,10 @@ export async function POST(request: Request): Promise<Response> {
     const rawToken = randomBytes(32).toString("base64url");
     const expiresAt = new Date(Date.now() + SESSION_LIFETIME_SECONDS * 1000);
     const session = await prisma.$transaction(async (tx) => {
-      await tx.$queryRaw<Array<{ id: string }>>`
+      const users = await tx.$queryRaw<Array<{ id: string }>>`
         SELECT id FROM users WHERE id = ${identity.id}::uuid AND account_status = 'ACTIVE' FOR UPDATE
       `;
-      const user = await tx.user.findFirst({
-        where: { id: identity.id, accountStatus: "ACTIVE" },
-        select: { id: true },
-      });
+      const user = users[0];
       if (!user) return null;
       return tx.session.create({
         data: {

@@ -11,6 +11,12 @@ export const INVESTOR_DASHBOARD_PATHS = {
 } as const;
 
 export const INVESTOR_DASHBOARD_REFRESH_EVENT = "nexus:investor-dashboard-refresh";
+const DASHBOARD_CACHE_TTL_MS = 10_000;
+
+const investorDashboardCache = new Map<string, {
+  expiresAt: number;
+  data: InvestorDashboardData;
+}>();
 
 export type InvestorDashboardValue<T> =
   | { status: "loading" }
@@ -107,19 +113,37 @@ export async function loadInvestorDashboard(
   fetcher: InvestorDashboardFetcher = apiGet,
   signal?: AbortSignal,
   onResource?: <K extends InvestorDashboardKey>(key: K, resource: InvestorDashboardData[K]) => void,
+  cacheKey?: string,
 ): Promise<InvestorDashboardData> {
   const keys: InvestorDashboardKey[] = ["portfolio", "investments", "payouts", "wallet"];
+  const cached = cacheKey ? investorDashboardCache.get(cacheKey) : undefined;
+  if (cached && cached.expiresAt > Date.now()) {
+    for (const key of keys) onResource?.(key, cached.data[key]);
+    return cached.data;
+  }
+  if (cached && cacheKey) investorDashboardCache.delete(cacheKey);
+
   const entries = await Promise.all(keys.map(async (key) => {
     const resource = await loadInvestorDashboardResource(key, fetcher, signal);
     onResource?.(key, resource);
     return [key, resource] as const;
   }));
-  return Object.assign(createInitialInvestorDashboardData(), Object.fromEntries(entries));
+  const data = Object.assign(createInitialInvestorDashboardData(), Object.fromEntries(entries));
+  if (cacheKey && !signal?.aborted && keys.every((key) => data[key].status === "success")) {
+    investorDashboardCache.set(cacheKey, { expiresAt: Date.now() + DASHBOARD_CACHE_TTL_MS, data });
+  }
+  return data;
+}
+
+export function invalidateInvestorDashboardCache(cacheKey?: string): void {
+  if (cacheKey) investorDashboardCache.delete(cacheKey);
+  else investorDashboardCache.clear();
 }
 
 export function notifyInvestorDashboardMutationComplete(
   target: EventTarget | null = typeof window === "undefined" ? null : window,
 ): void {
+  invalidateInvestorDashboardCache();
   target?.dispatchEvent(new Event(INVESTOR_DASHBOARD_REFRESH_EVENT));
 }
 

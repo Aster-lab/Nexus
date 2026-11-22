@@ -4,12 +4,33 @@ import {
   BORROWER_DASHBOARD_PATHS,
   createInitialBorrowerDashboardData,
   formatSatang,
+  invalidateBorrowerDashboardCache,
   loadBorrowerDashboard,
   notifyBorrowerDashboardMutationComplete,
   subscribeBorrowerDashboardRefresh,
+  type DashboardFetcher,
 } from "../../../src/lib/client/borrower-dashboard";
 
 describe("WP9.4.1 borrower dashboard data", () => {
+  it("reuses a fresh user-scoped dashboard and invalidates it after refresh", async () => {
+    const fetcherMock = vi.fn(async <T>(path: string): Promise<ApiSuccessEnvelope<T>> => {
+      const data = path === BORROWER_DASHBOARD_PATHS.summary
+        ? { activeLoanCount: 0, totalOutstandingBalanceSatang: "0", pendingApplicationCount: 0, availableOfferCount: 0, nextInstallment: null, upcomingInstallments: [], overdueInstallments: [], activeLoans: [] }
+        : path === BORROWER_DASHBOARD_PATHS.wallet ? { wallet: null, transactions: [] } : [];
+      return { success: true, data: data as T, message: "Loaded" };
+    });
+    const fetcher = fetcherMock as unknown as DashboardFetcher;
+    const cacheKey = "borrower-dashboard-cache-test";
+
+    await loadBorrowerDashboard(fetcher, undefined, undefined, cacheKey);
+    await loadBorrowerDashboard(fetcher, undefined, undefined, cacheKey);
+    expect(fetcherMock).toHaveBeenCalledTimes(Object.keys(BORROWER_DASHBOARD_PATHS).length);
+
+    invalidateBorrowerDashboardCache(cacheKey);
+    await loadBorrowerDashboard(fetcher, undefined, undefined, cacheKey);
+    expect(fetcherMock).toHaveBeenCalledTimes(Object.keys(BORROWER_DASHBOARD_PATHS).length * 2);
+  });
+
   it("loads recent applications, loans, and repayments from their read APIs", async () => {
     const calls: string[] = [];
     const fetcher = async <T>(path: string): Promise<ApiSuccessEnvelope<T>> => {

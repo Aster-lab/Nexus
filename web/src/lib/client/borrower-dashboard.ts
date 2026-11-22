@@ -11,6 +11,12 @@ export const BORROWER_DASHBOARD_PATHS = {
 } as const;
 
 export const BORROWER_DASHBOARD_REFRESH_EVENT = "nexus:borrower-dashboard-refresh";
+const DASHBOARD_CACHE_TTL_MS = 10_000;
+
+const borrowerDashboardCache = new Map<string, {
+  expiresAt: number;
+  data: BorrowerDashboardData;
+}>();
 
 export type DashboardResource<T> =
   | { status: "loading" }
@@ -169,19 +175,37 @@ export async function loadBorrowerDashboard(
   fetcher: DashboardFetcher = apiGet,
   signal?: AbortSignal,
   onResource?: DashboardResourceUpdate,
+  cacheKey?: string,
 ): Promise<BorrowerDashboardData> {
   const keys: DashboardResourceKey[] = ["summary", "applications", "loans", "repayments", "wallet"];
+  const cached = cacheKey ? borrowerDashboardCache.get(cacheKey) : undefined;
+  if (cached && cached.expiresAt > Date.now()) {
+    for (const key of keys) onResource?.(key, cached.data[key]);
+    return cached.data;
+  }
+  if (cached && cacheKey) borrowerDashboardCache.delete(cacheKey);
+
   const entries = await Promise.all(keys.map(async (key) => {
     const resource = await loadBorrowerDashboardResource(key, fetcher, signal);
     onResource?.(key, resource);
     return [key, resource] as const;
   }));
-  return Object.assign(createInitialBorrowerDashboardData(), Object.fromEntries(entries));
+  const data = Object.assign(createInitialBorrowerDashboardData(), Object.fromEntries(entries));
+  if (cacheKey && !signal?.aborted && keys.every((key) => data[key].status === "success")) {
+    borrowerDashboardCache.set(cacheKey, { expiresAt: Date.now() + DASHBOARD_CACHE_TTL_MS, data });
+  }
+  return data;
+}
+
+export function invalidateBorrowerDashboardCache(cacheKey?: string): void {
+  if (cacheKey) borrowerDashboardCache.delete(cacheKey);
+  else borrowerDashboardCache.clear();
 }
 
 export function notifyBorrowerDashboardMutationComplete(
   target: EventTarget | null = typeof window === "undefined" ? null : window,
 ): void {
+  invalidateBorrowerDashboardCache();
   target?.dispatchEvent(new Event(BORROWER_DASHBOARD_REFRESH_EVENT));
 }
 

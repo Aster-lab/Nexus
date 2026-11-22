@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ApiSuccessEnvelope } from "../../../src/lib/client/api-client";
 import {
   INVESTOR_DASHBOARD_PATHS,
+  invalidateInvestorDashboardCache,
   loadInvestorDashboard,
   notifyInvestorDashboardMutationComplete,
   subscribeInvestorDashboardRefresh,
@@ -10,6 +11,25 @@ import {
 } from "../../../src/lib/client/investor-dashboard";
 
 describe("WP9.5 investor dashboard client", () => {
+  it("reuses fresh user-scoped dashboard data and supports explicit invalidation", async () => {
+    const fetcherMock = vi.fn<InvestorDashboardFetcher>(async <T>(path: string): Promise<ApiSuccessEnvelope<T>> => {
+      const data = path === INVESTOR_DASHBOARD_PATHS.portfolio
+        ? { investorProfileId: "profile-cache", investmentCounts: { active: 0, completed: 0 }, totalInvestedPrincipalSatang: "0", principalReceivedSatang: "0", interestReceivedSatang: "0", outstandingPrincipalSatang: "0", wallet: null }
+        : path === INVESTOR_DASHBOARD_PATHS.wallet ? { wallet: null, transactions: [] } : [];
+      return { success: true, data: data as T, message: "Loaded" };
+    });
+    const fetcher = fetcherMock as unknown as InvestorDashboardFetcher;
+    const cacheKey = "investor-dashboard-cache-test";
+
+    await loadInvestorDashboard(fetcher, undefined, undefined, cacheKey);
+    await loadInvestorDashboard(fetcher, undefined, undefined, cacheKey);
+    expect(fetcherMock).toHaveBeenCalledTimes(4);
+
+    invalidateInvestorDashboardCache(cacheKey);
+    await loadInvestorDashboard(fetcher, undefined, undefined, cacheKey);
+    expect(fetcherMock).toHaveBeenCalledTimes(8);
+  });
+
   it("loads portfolio, investment, payout, and wallet APIs scoped to the investor", async () => {
     const paths: string[] = [];
     const fetcher = vi.fn<InvestorDashboardFetcher>(async <T>(path: string): Promise<ApiSuccessEnvelope<T>> => {

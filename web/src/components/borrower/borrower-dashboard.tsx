@@ -26,6 +26,7 @@ import {
   formatDashboardDate,
   formatDashboardStatus,
   formatSatang,
+  invalidateBorrowerDashboardCache,
   loadBorrowerDashboard,
   loadBorrowerDashboardResource,
   subscribeBorrowerDashboardRefresh,
@@ -293,9 +294,10 @@ export function BorrowerDashboard() {
   const [requestVersion, setRequestVersion] = useState(0);
 
   const refresh = useCallback(() => {
+    invalidateBorrowerDashboardCache(identity?.id);
     setRefreshing(true);
     setRequestVersion((version) => version + 1);
-  }, []);
+  }, [identity?.id]);
 
   const retrySection = useCallback((key: DashboardResourceKey) => {
     setData((current) => ({ ...current, [key]: { status: "loading" } }) as BorrowerDashboardData);
@@ -316,7 +318,7 @@ export function BorrowerDashboard() {
       setData(createInitialBorrowerDashboardData());
       void loadBorrowerDashboard(undefined, controller.signal, (key, resource) => {
         if (active) setData((current) => ({ ...current, [key]: resource }) as BorrowerDashboardData);
-      }).finally(() => {
+      }, identity?.id).finally(() => {
         if (active) setRefreshing(false);
       });
     });
@@ -324,7 +326,7 @@ export function BorrowerDashboard() {
       active = false;
       controller.abort();
     };
-  }, [requestVersion]);
+  }, [identity?.id, requestVersion]);
 
   const name = identity?.borrowerProfile?.legalName ?? identity?.email ?? "Borrower";
   const summary = data.summary.status === "success" ? data.summary.data : null;

@@ -12,6 +12,7 @@ import { useAuth } from "../auth/auth-provider";
 import { RoleOnboardingTour } from "../shared/role-onboarding-tour";
 import {
   createInitialInvestorDashboardData,
+  invalidateInvestorDashboardCache,
   loadInvestorDashboard,
   loadInvestorDashboardResource,
   subscribeInvestorDashboardRefresh,
@@ -38,12 +39,13 @@ export function InvestorDashboardPage({ initialData }: { initialData?: InvestorD
   const [data, setData] = useState<InvestorDashboardData>(initialData);
 
   const refresh = useCallback(() => {
+    invalidateInvestorDashboardCache(identity?.id);
     const controller = new AbortController();
     void loadInvestorDashboard(undefined, controller.signal, (key, resource) => {
       setData((current) => ({ ...current, [key]: resource }) as InvestorDashboardData);
-    });
+    }, identity?.id);
     return () => controller.abort();
-  }, []);
+  }, [identity?.id]);
 
   useEffect(() => {
     let active = true;
