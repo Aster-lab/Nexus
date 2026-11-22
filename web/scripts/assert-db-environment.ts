@@ -1,16 +1,20 @@
-import {createHash} from "node:crypto";
-import { DatabaseEnvironment } from "@/types/database-environment";
+import { createHash } from "node:crypto";
+import type { DatabaseEnvironment } from "@/types/database-environment";
+
+const ALLOWED_ENVIRONMENTS = ["development", "test", "staging"] as const;
+
+function isLoopbackHost(hostname: string): boolean {
+    const host = hostname.toLowerCase().replace(/^\[|\]$/g, "");
+    return host === "localhost" || host === "::1" || host.startsWith("127.");
+}
 
 export function assertDbEnvironment(
     expectedEnvironment: string | undefined,
     environment: DatabaseEnvironment = process.env,
 ): void {
-    if (
-        expectedEnvironment !== "development" &&
-        expectedEnvironment !== "test"
-    ) {
+    if (!ALLOWED_ENVIRONMENTS.includes(expectedEnvironment as typeof ALLOWED_ENVIRONMENTS[number])) {
         throw new Error(
-            "Specify the expected environment: development or test.",
+            "Specify the expected environment: development, test, or staging.",
         );
     }
 
@@ -37,6 +41,25 @@ export function assertDbEnvironment(
             `Database URL fingerprint mismatch for ${expectedEnvironment}.`,
         );
     }
+
+    if (expectedEnvironment === "staging") {
+        let databaseUrlObject: URL;
+        try {
+            databaseUrlObject = new URL(databaseUrl);
+        } catch {
+            throw new Error("Staging DATABASE_URL must be a valid PostgreSQL URL.");
+        }
+        if (!(["postgres:", "postgresql:"].includes(databaseUrlObject.protocol))) {
+            throw new Error("Staging DATABASE_URL must use PostgreSQL.");
+        }
+        if (isLoopbackHost(databaseUrlObject.hostname)) {
+            throw new Error("Staging database must use a hosted non-loopback PostgreSQL URL.");
+        }
+        const databaseName = decodeURIComponent(databaseUrlObject.pathname.replace(/^\//, "")).toLowerCase();
+        if (["nexus_dev", "nexus_test", "nexus_demo"].includes(databaseName)) {
+            throw new Error("Staging cannot target the local development, test, or demo database.");
+        }
+    }
 }
 
 async function main() {
@@ -46,7 +69,7 @@ async function main() {
 
         console.log(`Database environment verified: ${expectedEnvironment}`);
     } catch (error) {
-        console.error("Databse environment verification failed: ",error);
+        console.error("Database environment verification failed:", error);
         process.exitCode = 1;
     }
 }

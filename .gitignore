@@ -17,6 +17,7 @@ ML/venv/
 ML/.venv/
 ML/.env
 ML/.env.example
+ML/.env.staging
 ML/env/
 ML/data/
 *.csv
