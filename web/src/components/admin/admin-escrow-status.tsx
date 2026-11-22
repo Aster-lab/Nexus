@@ -28,7 +28,7 @@ export function AdminEscrowStatus() {
     }
   }, []);
 
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => { queueMicrotask(() => { void refresh(); }); }, [refresh]);
 
   async function confirmActivation() {
     if (busy || !reason.trim()) return;

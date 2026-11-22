@@ -29,7 +29,7 @@ export function AdminFinancialPage() {
     }
   }, []);
 
-  useEffect(() => { void refresh(); }, [refresh, refreshSequence]);
+  useEffect(() => { queueMicrotask(() => { void refresh(); }); }, [refresh, refreshSequence]);
 
   return <section className="admin-page">
     <header className="admin-page__header"><div><p className="admin-eyebrow">Financial</p><h1>Financial overview &amp; reconciliation</h1><p className="admin-muted">Platform financial checks and reported discrepancies.</p></div></header>

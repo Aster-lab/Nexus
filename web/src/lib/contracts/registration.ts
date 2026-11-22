@@ -1,13 +1,13 @@
 import { z } from "zod";
 import { BorrowerProfileAddressSchema } from "./application";
 
-const borrowerRegistrationProfileSchema = z.object({
+export const BorrowerRegistrationProfileSchema = z.object({
   legalName: z.string().trim().min(2).max(150),
   phone: z.string().trim().max(30).transform((phone) => phone || null).nullable(),
   address: BorrowerProfileAddressSchema,
 }).strict();
 
-const investorRegistrationProfileSchema = z.object({
+export const InvestorRegistrationProfileSchema = z.object({
   displayName: z.string().trim().min(2).max(60),
 }).strict();
 
@@ -15,8 +15,8 @@ export const RegistrationRequestSchema = z.object({
   email: z.string().trim().pipe(z.email().max(254)).transform((email) => email.toLowerCase()),
   password: z.string().min(12).max(128),
   roles: z.array(z.enum(["BORROWER", "INVESTOR"])).min(1).max(2),
-  borrowerProfile: borrowerRegistrationProfileSchema.optional(),
-  investorProfile: investorRegistrationProfileSchema.optional(),
+  borrowerProfile: BorrowerRegistrationProfileSchema.optional(),
+  investorProfile: InvestorRegistrationProfileSchema.optional(),
 }).strict().superRefine((registration, context) => {
   if (new Set(registration.roles).size !== registration.roles.length) {
     context.addIssue({ code: "custom", path: ["roles"], message: "Each role may be selected once." });

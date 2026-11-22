@@ -34,7 +34,7 @@ export function AdminPoliciesPage() {
     }
   }, []);
 
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => { queueMicrotask(() => { void refresh(); }); }, [refresh]);
 
   async function confirmAction() {
     if (!pending) return;

@@ -16,8 +16,8 @@
 
 @media (max-width: 34rem) {
   .nexus-notification-panel {
-    position: fixed;
-    top: 4.25rem;
-    right: 0.75rem;
+    top: 5.25rem;
+    right: max(0.75rem, env(safe-area-inset-right));
+    width: min(24rem, calc(100vw - 1.5rem));
   }
 }

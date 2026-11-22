@@ -1,6 +1,10 @@
 .nexus-shell-body { display: flex; flex: 1; min-height: 0; }
 .nexus-main { min-width: 0; flex: 1; padding: 0 1.25rem 1.5rem; }
 .nexus-main .overflow-x-auto, .nexus-main .admin-table-wrap { max-width: 100%; overflow-x: auto; }
+.nexus-navigation-progress { position: fixed; z-index: 100; top: 0; left: 0; width: 32%; height: 3px; transform-origin: left center; background: var(--primary); box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 55%, transparent); animation: nexus-navigation-progress 850ms ease-in-out infinite alternate; }
+.nexus-main > main, .nexus-main > section { animation: nexus-page-enter 150ms ease-out both; }
+@keyframes nexus-navigation-progress { from { transform: scaleX(0.25); opacity: 0.75; } to { transform: scaleX(1); opacity: 1; } }
+@keyframes nexus-page-enter { from { opacity: 0.78; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
 .workspace-sidebar {
   position: sticky; top: 0; display: flex; width: 18rem; min-width: 18rem; height: calc(100dvh - 4.75rem);
   flex-direction: column; gap: 1.2rem; padding: 1.35rem 0.9rem; overflow: auto;
@@ -115,3 +119,4 @@
 }
 
 @media (prefers-reduced-motion: reduce) { .workspace-sidebar, .workspace-sidebar__link { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .nexus-navigation-progress { animation: none; } .nexus-main > main, .nexus-main > section { animation: none; } }

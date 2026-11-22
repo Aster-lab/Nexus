@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ApiClientError, apiRequest } from "../../lib/client/api-client";
 import { useAuth } from "./auth-provider";
 import { NotificationCenter } from "../shared/notification-center";
 import { DemoEnvironmentBanner } from "../shared/demo-environment-banner";
 import { WorkspaceSidebar } from "./workspace-sidebar";
+import { WorkspaceSwitcher } from "./workspace-switcher";
+import { NexusMark } from "../shared/nexus-mark";
 import type { NexusRole } from "../../lib/client/auth-access";
 
 export function ApplicationShell({ children, demoMode = false }: { children: React.ReactNode; demoMode?: boolean }) {
@@ -15,6 +17,44 @@ export function ApplicationShell({ children, demoMode = false }: { children: Rea
   const pathname = usePathname();
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
+  const [navigationPending, setNavigationPending] = useState(false);
+  const navigationTimeout = useRef<number | null>(null);
+
+  useEffect(() => {
+    function startNavigation() {
+      setNavigationPending(true);
+      if (navigationTimeout.current !== null) window.clearTimeout(navigationTimeout.current);
+      navigationTimeout.current = window.setTimeout(() => setNavigationPending(false), 5_000);
+    }
+
+    function handleInternalLink(event: MouseEvent) {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (!(event.target instanceof Element)) return;
+      const link = event.target.closest<HTMLAnchorElement>("a[href]");
+      if (!link || link.target && link.target !== "_self" || link.hasAttribute("download")) return;
+      const destination = new URL(link.href, window.location.href);
+      if (destination.origin !== window.location.origin) return;
+      const current = `${window.location.pathname}${window.location.search}`;
+      const next = `${destination.pathname}${destination.search}`;
+      if (next !== current) startNavigation();
+    }
+
+    document.addEventListener("click", handleInternalLink, true);
+    window.addEventListener("popstate", startNavigation);
+    return () => {
+      document.removeEventListener("click", handleInternalLink, true);
+      window.removeEventListener("popstate", startNavigation);
+      if (navigationTimeout.current !== null) window.clearTimeout(navigationTimeout.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      if (navigationTimeout.current !== null) window.clearTimeout(navigationTimeout.current);
+      navigationTimeout.current = null;
+      setNavigationPending(false);
+    });
+  }, [pathname]);
 
   useEffect(() => {
     function addResponsiveLabels(table: HTMLTableElement) {
@@ -82,14 +122,17 @@ export function ApplicationShell({ children, demoMode = false }: { children: Rea
 
   return (
     <>
+      {navigationPending ? <div className="nexus-navigation-progress" role="progressbar" aria-label="Loading page" /> : null}
       <header className="nexus-shell-header">
-        <Link className="nexus-brand" href={identity ? "/dashboard" : "/"} aria-label="NEXUS home">NEXUS</Link>
+        <Link className="nexus-brand" href={identity ? "/dashboard" : "/"} aria-label="NEXUS home"><NexusMark size={25} /><span>NEXUS</span></Link>
         {!identity && <nav className="nexus-shell-nav" aria-label="Main navigation">
           {status === "unauthenticated" && <Link href="/login">Sign in</Link>}
           {status === "unauthenticated" && <Link href="/register">Register</Link>}
         </nav>}
         <div className="nexus-shell-account">
           {identity ? <span className="nexus-shell-account__email">{identity.email}</span> : null}
+          {identity ? <WorkspaceSwitcher roles={identity.roles} /> : null}
+          {identity ? <Link className="nexus-profile-link" href="/profile">Profile</Link> : null}
           {identity ? <NotificationCenter roles={identity.roles} /> : null}
           {identity ? <button type="button" onClick={handleSignOut} disabled={signingOut}>
             {signingOut ? "Signing out…" : "Sign out"}

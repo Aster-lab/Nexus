@@ -273,6 +273,14 @@ export async function createRepaymentTestContext(
     });
 
     async function cleanup() {
+      // Some eligibility and schedule tests temporarily mutate these fields to
+      // simulate an undistributed or non-active loan. Restore the persisted
+      // state that matches the already-posted disbursement before the context
+      // is reused by platform-wide reconciliation tests.
+      await prisma.loan.update({
+        where: { id: loan.id },
+        data: { status: loan.status, disbursedAt: loan.disbursedAt },
+      });
       await repaymentAccounts.cleanup();
     }
 
