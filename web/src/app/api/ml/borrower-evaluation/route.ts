@@ -6,6 +6,7 @@ import { requireRole } from "../../../../lib/api/authorization";
 import { apiSuccessResponse } from "../../../../lib/api/responses";
 import { parseJsonBody } from "../../../../lib/api/validation";
 import { prisma } from "../../../../lib/prisma";
+import { mlServiceEndpoint } from "../../../../lib/services/ml-service-url";
 import {
   FeatureSnapshotContractSchema,
   PersistedPredictionOutputSchema,
@@ -57,7 +58,7 @@ export async function POST(request: Request): Promise<Response> {
     }
     let response: Response;
     try {
-      response = await fetch(new URL("/predict", serviceUrl), {
+      response = await fetch(mlServiceEndpoint("predict", serviceUrl), {
         method: "POST",
         headers: { "content-type": "application/json", "X-ML-Service-Token": serviceToken },
         body: JSON.stringify({ schema_version: RISK_FEATURE_SCHEMA_VERSION, features: validatedSnapshot.data.feature_values }),

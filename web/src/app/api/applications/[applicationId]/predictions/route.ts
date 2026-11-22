@@ -7,6 +7,7 @@ import {
   RiskAssessmentStatus,
 } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { mlServiceEndpoint } from "@/lib/services/ml-service-url";
 import {
   FeatureSnapshotContractSchema,
   PERSISTED_PREDICTION_OUTPUT_SCHEMA_VERSION,
@@ -146,7 +147,7 @@ export async function POST(
 
     let mlResponse: Response;
     try {
-      mlResponse = await fetch(new URL("/predict", mlUrl), {
+      mlResponse = await fetch(mlServiceEndpoint("predict", mlUrl), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

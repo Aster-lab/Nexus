@@ -3,6 +3,7 @@ import { ApiError, apiErrorResponseFrom } from "../../../../lib/api/errors";
 import { requireInvestor } from "../../../../lib/api/investor";
 import { apiSuccessResponse } from "../../../../lib/api/responses";
 import { prisma } from "../../../../lib/prisma";
+import { mlServiceEndpoint } from "../../../../lib/services/ml-service-url";
 import {
   DynamicRecommendationRequestSchema,
   DynamicRecommendationResponseSchema,
@@ -135,7 +136,7 @@ export async function POST(request: Request): Promise<Response> {
     const startedAt = Date.now();
     let response: Response;
     try {
-      response = await fetch(new URL("/recommendations", serviceUrl), { method: "POST", headers: { "content-type": "application/json", "X-ML-Service-Token": serviceToken }, body: JSON.stringify(input), redirect: "error", cache: "no-store", signal: AbortSignal.timeout(SERVICE_TIMEOUT_MS) });
+      response = await fetch(mlServiceEndpoint("recommendations", serviceUrl), { method: "POST", headers: { "content-type": "application/json", "X-ML-Service-Token": serviceToken }, body: JSON.stringify(input), redirect: "error", cache: "no-store", signal: AbortSignal.timeout(SERVICE_TIMEOUT_MS) });
     } catch (error) {
       if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) throw new ApiError("ML_SERVICE_TIMEOUT", "The recommendation service timed out.", 504);
       throw new ApiError("ML_SERVICE_UNAVAILABLE", "The recommendation service is unavailable.", 503);
