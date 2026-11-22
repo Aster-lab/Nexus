@@ -637,7 +637,7 @@ describe("Investor refund integration", () => {
             expect(credit!.amountSatang).toBe(movement.amountSatang);
 
             expect(debit!.platformAccountId).toBeNull();
-            expect(credit!.platformAccountId).toBeNull();
+            expect(credit!.platformAccountId).not.toBeNull();
 
             creditedWalletIds.add(credit!.walletId!);
         }

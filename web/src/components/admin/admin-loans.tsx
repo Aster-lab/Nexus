@@ -29,14 +29,14 @@ const INITIAL_QUERY: AdminLoansQuery = { page: 1, limit: PAGE_SIZE, status: "ALL
 
 function LoanRow({ loan }: { loan: AdminLoanListItem }) {
   return <tr>
-    <td><Link className="admin-text-link admin-table__primary-link" href={`/admin/loans/${encodeURIComponent(loan.id)}`}>{loan.id.slice(0, 8)}</Link></td>
-    <td>{loan.borrowerProfile.legalName}</td>
-    <td>{formatSatang(loan.principalSatang)}</td>
-    <td>{formatSatang(loan.fundedSatang)}</td>
-    <td>{loan.termMonths} months</td>
-    <td><Badge variant={loan.status === "ACTIVE" ? "success" : loan.status === "FUNDING" ? "warning" : "outline"}>{loan.status}</Badge></td>
-    <td>{loan.fundingDeadline ? new Date(loan.fundingDeadline).toLocaleDateString() : "—"}</td>
-    <td><Link href={`/admin/loans/${encodeURIComponent(loan.id)}`}>View</Link></td>
+    <td data-label="Loan"><Link className="admin-text-link admin-table__primary-link" href={`/admin/loans/${encodeURIComponent(loan.id)}`}>{loan.id.slice(0, 8)}</Link></td>
+    <td data-label="Borrower">{loan.borrowerProfile.legalName}</td>
+    <td data-label="Principal">{formatSatang(loan.principalSatang)}</td>
+    <td data-label="Funded">{formatSatang(loan.fundedSatang)}</td>
+    <td data-label="Term">{loan.termMonths} months</td>
+    <td data-label="Status"><Badge variant={loan.status === "ACTIVE" ? "success" : loan.status === "FUNDING" ? "warning" : "outline"}>{loan.status}</Badge></td>
+    <td data-label="Funding deadline">{loan.fundingDeadline ? new Date(loan.fundingDeadline).toLocaleDateString() : "—"}</td>
+    <td data-label="Action"><Link href={`/admin/loans/${encodeURIComponent(loan.id)}`}>View</Link></td>
   </tr>;
 }
 
@@ -143,7 +143,7 @@ export function AdminLoanDetailPage({ loanId }: { loanId: string }) {
 
   async function disburse() {
     if (!loan || !canAdminDisburseLoan(loan.status, loan.disbursementConsentAt) || !reason.trim() || submitting) return;
-    if (!window.confirm("Submit this disbursement for posting? The backend will recheck loan eligibility and record the result.")) return;
+    if (!window.confirm("Disburse this loan? NEXUS will verify the funding and borrower consent before posting the transfer.")) return;
     setSubmitting(true);
     setConfirmation("");
     setLoanError("");
@@ -175,6 +175,6 @@ export function AdminLoanDetailPage({ loanId }: { loanId: string }) {
       {loan.status === "FUNDED" ? <Card><CardHeader><CardTitle>Disbursement</CardTitle><CardDescription>The borrower must confirm release before an administrator can post the simulated wallet credit.</CardDescription></CardHeader><CardContent>{loan.disbursementConsentAt ? <><p className="admin-success-note" role="status">Borrower confirmation recorded {new Date(loan.disbursementConsentAt).toLocaleString()}.</p><label className="admin-form-label" htmlFor="disbursement-reason">Reason<input className="admin-form-control" id="disbursement-reason" maxLength={1000} required value={reason} onChange={(event) => setReason(event.target.value)} /></label>{loanError ? <p className="admin-danger-note" role="alert">{loanError}</p> : null}{confirmation ? <p className="admin-success-note" role="status">{confirmation}</p> : null}<Button className="admin-action-button" disabled={!canAdminDisburseLoan(loan.status, loan.disbursementConsentAt) || !reason.trim() || submitting} onClick={() => void disburse()}>{submitting ? "Submitting…" : "Confirm disbursement"}</Button></> : <p className="admin-muted" role="status">Waiting for the borrower to confirm disbursement in their loan details.</p>}</CardContent></Card> : null}
     </div>
     <Card><CardHeader><CardTitle>Funding and escrow</CardTitle><CardDescription>Funding transaction details returned by the administrator API.</CardDescription></CardHeader><CardContent>{fundingState === "loading" ? <LoadingState label="Loading funding details" /> : null}{fundingState === "error" ? <ErrorState title="Funding details unavailable" message={fundingError} /> : null}{fundingState === "success" && funding ? <FundingContent funding={funding} /> : null}</CardContent></Card>
-    <Card><CardHeader><CardTitle>Repayment and installment activity</CardTitle><CardDescription>Latest persisted repayment rows, installment states, and linked ledger status.</CardDescription></CardHeader><CardContent>{repaymentState === "loading" ? <LoadingState label="Loading repayment activity" /> : null}{repaymentState === "error" ? <ErrorState title="Repayment activity unavailable" message={repaymentError} /> : null}{repaymentState === "success" ? <RepaymentActivity rows={repayments} /> : null}</CardContent></Card>
+    <Card><CardHeader><CardTitle>Repayment and installment activity</CardTitle><CardDescription>Recent repayments, installment statuses, and related ledger transactions.</CardDescription></CardHeader><CardContent>{repaymentState === "loading" ? <LoadingState label="Loading repayment activity" /> : null}{repaymentState === "error" ? <ErrorState title="Repayment activity unavailable" message={repaymentError} /> : null}{repaymentState === "success" ? <RepaymentActivity rows={repayments} /> : null}</CardContent></Card>
   </section>;
 }

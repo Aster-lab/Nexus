@@ -1,6 +1,10 @@
 import { Prisma } from "../../generated/prisma/client";
 import { prisma } from "../prisma";
 import { requireFinancialAdministrator } from "./financial-authorization.service";
+import {
+  LOAN_RECEIVABLE_ACCOUNT_CODE,
+  USER_WALLET_CONTROL_ACCOUNT_CODE,
+} from "./ledger-control-accounts.service";
 
 export interface ReconcileFinancialStateInput {
   actorUserId: string;
@@ -19,6 +23,11 @@ export interface FinancialReconciliationIssue {
 export interface FinancialReconciliationReport {
   valid: boolean;
   issues: FinancialReconciliationIssue[];
+  accountBalances: {
+    userWalletControlSatang: string | null;
+    loanPrincipalReceivableSatang: string | null;
+    expectedOutstandingPrincipalSatang: string | null;
+  };
   checked: {
     postedTransactions: number;
     wallets: number;
@@ -60,7 +69,7 @@ export async function reconcileFinancialState(
 ): Promise<FinancialReconciliationReport> {
   return prisma.$transaction(async (tx) => {
   await requireFinancialAdministrator(tx, input.actorUserId);
-  const [allTransactions, wallets, repayments, installments] = await Promise.all([
+  const [allTransactions, wallets, repayments, installments, controlAccounts, userWalletAggregate, receivableLoans] = await Promise.all([
     tx.ledgerTransaction.findMany({
       where: { status: "POSTED" },
       include: { entries: true },
@@ -107,6 +116,44 @@ export async function reconcileFinancialState(
       },
       orderBy: { id: "asc" },
     }),
+    tx.platformAccount.findMany({
+      where: { accountCode: { in: [USER_WALLET_CONTROL_ACCOUNT_CODE, LOAN_RECEIVABLE_ACCOUNT_CODE] } },
+      include: {
+        ledgerEntries: {
+          where: { ledgerTransaction: { status: "POSTED" } },
+          select: { entryType: true, amountSatang: true, currency: true },
+        },
+        ledgerEntryMappings: {
+          include: {
+            ledgerEntry: {
+              select: {
+                entryType: true,
+                amountSatang: true,
+                currency: true,
+                ledgerTransaction: { select: { status: true } },
+              },
+            },
+          },
+        },
+      },
+    }),
+    tx.wallet.aggregate({
+      where: { ownerUserId: { not: null } },
+      _sum: { balanceSatang: true },
+    }),
+    input.loanIds
+      ? Promise.resolve([])
+      : tx.loan.findMany({
+          where: { disbursedAt: { not: null }, status: { not: "CANCELLED" } },
+          select: {
+            id: true,
+            principalSatang: true,
+            repayments: {
+              where: { status: "POSTED", ledgerTransaction: { status: "POSTED" } },
+              select: { principalSatang: true, reversalOfRepaymentId: true },
+            },
+          },
+        }),
   ]);
 
   const scopedLoanIds = input.loanIds
@@ -134,6 +181,63 @@ export async function reconcileFinancialState(
   );
 
   const issues: FinancialReconciliationIssue[] = [];
+  let userWalletControlSatang: string | null = null;
+  let loanPrincipalReceivableSatang: string | null = null;
+  let expectedOutstandingPrincipalSatang: string | null = null;
+
+  const userWalletControl = controlAccounts.find(
+    (account) => account.accountCode === USER_WALLET_CONTROL_ACCOUNT_CODE,
+  );
+  const loanReceivable = controlAccounts.find(
+    (account) => account.accountCode === LOAN_RECEIVABLE_ACCOUNT_CODE,
+  );
+  if (
+    !userWalletControl || userWalletControl.status !== "ACTIVE" ||
+    userWalletControl.accountType !== "LIABILITY" || userWalletControl.currency !== "THB"
+  ) {
+    addIssue(issues, "USER_WALLET_CONTROL_CONFIGURATION", USER_WALLET_CONTROL_ACCOUNT_CODE, "Account 2100 must be an active THB liability account.");
+  } else {
+    const directBalance = userWalletControl.ledgerEntries.reduce(
+      (sum, entry) => sum + (entry.entryType === "CREDIT" ? entry.amountSatang : -entry.amountSatang), 0n,
+    );
+    const mappedBalance = userWalletControl.ledgerEntryMappings.reduce((sum, mapping) => {
+      const entry = mapping.ledgerEntry;
+      return sum + (entry.ledgerTransaction.status === "POSTED"
+        ? entry.entryType === "CREDIT" ? entry.amountSatang : -entry.amountSatang
+        : 0n);
+    }, 0n);
+    const ledgerBalance = directBalance + mappedBalance;
+    userWalletControlSatang = ledgerBalance.toString();
+    const walletBalance = userWalletAggregate._sum.balanceSatang ?? 0n;
+    if (ledgerBalance !== walletBalance) {
+      addIssue(issues, "USER_WALLET_CONTROL_MISMATCH", USER_WALLET_CONTROL_ACCOUNT_CODE, `Account 2100 balance ${ledgerBalance} does not equal user wallet balances ${walletBalance}.`);
+    }
+  }
+  if (
+    !loanReceivable || loanReceivable.status !== "ACTIVE" ||
+    loanReceivable.accountType !== "ASSET" || loanReceivable.currency !== "THB"
+  ) {
+    addIssue(issues, "LOAN_RECEIVABLE_CONFIGURATION", LOAN_RECEIVABLE_ACCOUNT_CODE, "Account 1200 must be an active THB asset account.");
+  } else if (!input.loanIds) {
+    const ledgerBalance = loanReceivable.ledgerEntries.reduce(
+      (sum, entry) => sum + (entry.entryType === "DEBIT" ? entry.amountSatang : -entry.amountSatang),
+      0n,
+    );
+    loanPrincipalReceivableSatang = ledgerBalance.toString();
+    const expectedBalance = receivableLoans.reduce((sum, loan) => {
+      const paidPrincipal = loan.repayments.reduce(
+        (principal, repayment) => principal + (repayment.reversalOfRepaymentId === null ? repayment.principalSatang : -repayment.principalSatang),
+        0n,
+      );
+      const outstanding = loan.principalSatang - paidPrincipal;
+      return sum + (outstanding > 0n ? outstanding : 0n);
+    }, 0n);
+    expectedOutstandingPrincipalSatang = expectedBalance.toString();
+    if (ledgerBalance !== expectedBalance) {
+      addIssue(issues, "LOAN_PRINCIPAL_RECEIVABLE_MISMATCH", LOAN_RECEIVABLE_ACCOUNT_CODE, `Account 1200 balance ${ledgerBalance} does not equal outstanding principal ${expectedBalance}.`);
+    }
+  }
+
   const transactionById = new Map(transactions.map((row) => [row.id, row]));
   const transactionTotals = new Map<string, bigint>();
 
@@ -171,7 +275,9 @@ export async function reconcileFinancialState(
     transactionTotals.set(
       transaction.id,
       transaction.entries
-        .filter((entry) => entry.entryType === "DEBIT")
+        // Domain repayment totals are the wallet transfer amount. Principal
+        // receivable reclassification adds its own balanced asset pair.
+        .filter((entry) => entry.entryType === "DEBIT" && entry.walletId !== null)
         .reduce((total, entry) => total + entry.amountSatang, 0n),
     );
   }
@@ -314,6 +420,11 @@ export async function reconcileFinancialState(
   return {
     valid: issues.length === 0,
     issues,
+    accountBalances: {
+      userWalletControlSatang,
+      loanPrincipalReceivableSatang,
+      expectedOutstandingPrincipalSatang,
+    },
     checked: {
       postedTransactions: transactions.length,
       wallets: wallets.length,

@@ -12,6 +12,7 @@ export interface AdminLedgerEntryRow {
   id: string; walletId: string | null; platformAccountId: string | null; entryType: string; amountSatang: string; currency: string;
   wallet: null | { ownerUser: null | { id: string; email: string }; ownerPlatformAccount: null | { accountCode: string; accountName: string } };
   platformAccount: null | { accountCode: string; accountName: string };
+  accountMappings: Array<{ entryType: string; amountSatang: string; platformAccount: { accountCode: string; accountName: string } }>;
 }
 export interface AdminLedgerTransactionRow {
   id: string; transactionType: string; status: string; referenceType: string | null; referenceId: string | null; description: string; createdAt: string; postedAt: string | null; reversedTransactionId: string | null; entries: AdminLedgerEntryRow[];

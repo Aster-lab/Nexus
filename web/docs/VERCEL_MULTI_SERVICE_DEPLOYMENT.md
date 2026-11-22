@@ -54,9 +54,48 @@ Do not set `ML_SERVICE_URL` manually. Do not set `NEXUS_DEMO_MODE=true` for stag
 
 ## Database and first-admin readiness
 
-This Vercel config does not migrate or seed PostgreSQL. Apply committed migrations and required reference/platform seeds to the separate staging database before using application workflows. Do not run demo reset/setup against staging.
+This Vercel config does not migrate or seed PostgreSQL. The project now includes guarded staging commands. They require `DATABASE_ENV=staging`, a non-loopback PostgreSQL URL, a SHA-256 fingerprint matching the exact `DATABASE_URL`, and they reject the known `nexus_dev`, `nexus_test`, and `nexus_demo` database names. Staging cannot use the destructive database reset command.
 
-The current first-admin CLI does not accept `DATABASE_ENV=staging`; it only accepts development or production. Do not label staging as production to bypass this guard. Add and review explicit staging safeguards before provisioning the first staging administrator.
+### Prepare the local staging operations file
+
+Create `web/.env.staging.runtime` locally. This file is Git-ignored and is separate from `web/.env.staging`, which contains browser E2E credentials. Do not commit or share the runtime file.
+
+```dotenv
+DATABASE_URL="postgresql://USER:URL_ENCODED_PASSWORD@HOST:5432/STAGING_DATABASE?sslmode=require"
+DATABASE_ENV=staging
+DATABASE_URL_SHA256=FILL_WITH_FINGERPRINT
+```
+
+Use the connection URL for the separate staging database. URL-encode reserved characters in its password. Generate the fingerprint from the exact `DATABASE_URL` value without printing the URL:
+
+```powershell
+npx dotenv run -f .env.staging.runtime -- node -e "process.stdout.write(require('node:crypto').createHash('sha256').update(process.env.DATABASE_URL).digest('hex') + '\n')"
+```
+
+Put the output in `DATABASE_URL_SHA256`, then run the staging status check:
+
+```powershell
+npm run db:status:staging
+```
+
+If the URL and fingerprint are verified and the target is the intended staging database, apply committed migrations and platform reference seeds:
+
+```powershell
+npm run db:migrate:staging
+npm run db:seed:staging
+```
+
+Then create the first staging administrator through the interactive CLI:
+
+```powershell
+npm run admin:bootstrap:staging
+```
+
+The CLI requires `DATABASE_ENV=staging`, matching URL fingerprint, a remote PostgreSQL host, the `--confirm-staging` flag (provided by the npm script), an exact staging confirmation phrase, and re-entry of the administrator email. It prompts for the password without echoing it and still refuses if any ADMIN role assignment already exists. It never accepts a Production URL relabeled as staging solely to bypass validation; the operator must verify the separate staging database URL before running it.
+
+After deployment, make sure Preview `DATABASE_URL` points to this same staging database. Vercel provides `ML_SERVICE_URL` through the binding; do not override it manually. Set the Preview `ML_SERVICE_TOKEN` for the web and ML services to the same random secret. The prediction feature still depends on the existing approved model/data readiness decision and remains unavailable until explicitly enabled.
+
+Never run `db:reset:*`, demo reset/setup, or Production admin bootstrap against staging. The staging database must remain separate from Production and the disposable demo database.
 
 ## Local development
 

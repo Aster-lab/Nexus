@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { prisma } from "../../src/lib/prisma";
 import { submitRepayment } from "../../src/lib/services/repayment/repayment-submitrepayment";
+import { getRepaymentPayableThroughDate } from "../../src/lib/services/repayment/repayment-due-window";
 import type { RepaymentReceipt } from "../../src/lib/services/repayment/repayment-receipt";
 import {
   createRepaymentAllocationLifecycleContext,
@@ -26,7 +27,7 @@ async function getPayableInstallments(context: TestContext) {
   return prisma.installment.findMany({
     where: {
       scheduleVersion: { schedule: { loanId: context.loan.id } },
-      dueDate: { lte: new Date() },
+      dueDate: { lte: getRepaymentPayableThroughDate() },
       status: { in: ["PENDING", "PARTIALLY_PAID", "OVERDUE"] },
     },
     orderBy: [{ dueDate: "asc" }, { installmentNumber: "asc" }],

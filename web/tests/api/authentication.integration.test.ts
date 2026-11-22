@@ -405,7 +405,9 @@ describe("API-02 authentication and current-user APIs", () => {
       body: JSON.stringify({ email, password }),
     }));
     const signedIn = await expectApiSuccess<{ id: string; roles: string[] }>(loginResponse);
-    expect(signedIn).toMatchObject({ id: created.id, roles: ["BORROWER", "INVESTOR"] });
+    expect(signedIn.id).toBe(created.id);
+    expect(signedIn.roles).toHaveLength(2);
+    expect(signedIn.roles).toEqual(expect.arrayContaining(["BORROWER", "INVESTOR"]));
     expect(loginResponse.headers.get("set-cookie")).toContain("nexus_session=");
     expect(JSON.stringify(created)).not.toContain(password);
   });

@@ -19,7 +19,12 @@ export async function bootstrapFirstAdmin(input: { email: string; password: stri
   const passwordHash = await hashPassword(validated.password);
 
   return prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT pg_advisory_xact_lock(726531948201::bigint)`;
+    // Project a supported scalar instead of returning PostgreSQL's `void`
+    // advisory-lock result, which Prisma cannot deserialize via $queryRaw.
+    await tx.$queryRaw<Array<{ locked: number }>>`
+      SELECT 1::int AS locked
+      FROM (SELECT pg_advisory_xact_lock(726531948201::bigint)) AS bootstrap_lock
+    `;
 
     const existingAdmin = await tx.userRole.findFirst({
       where: { role: { code: "ADMIN" } },

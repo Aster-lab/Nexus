@@ -59,7 +59,7 @@ export function InvestorDashboardPage({ initialData }: { initialData?: InvestorD
   }, []);
 
   return <main className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6 sm:px-6 sm:py-9">
-    <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="text-sm font-semibold text-primary">Investor workspace</p><h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Welcome back, {displayName}</h1><p className="mt-2 max-w-2xl text-sm text-muted-foreground">Track your confirmed wallet balance, investments, and payouts. All figures come from persisted NEXUS records.</p></div><div className="flex flex-wrap gap-2"><RoleOnboardingTour userId={identity?.id ?? null} role="INVESTOR"/><Button variant="outline" onClick={() => { void refresh(); }}><RefreshCw className="size-4"/>Refresh</Button></div></header>
+    <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="text-sm font-semibold text-primary">Investor workspace</p><h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Welcome back, {displayName}</h1><p className="mt-2 max-w-2xl text-sm text-muted-foreground">Keep track of your simulated wallet, investments, and completed payouts.</p></div><div className="flex flex-wrap gap-2"><RoleOnboardingTour userId={identity?.id ?? null} role="INVESTOR"/><Button variant="outline" onClick={() => { void refresh(); }}><RefreshCw className="size-4"/>Refresh</Button></div></header>
 
     <section aria-label="Portfolio summary" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {data.portfolio.status === "loading" ? Array.from({ length: 4 }, (_, i) => <Card key={i}><CardContent className="pt-5"><SectionLoading label="portfolio summary"/></CardContent></Card>) : null}
@@ -75,7 +75,7 @@ export function InvestorDashboardPage({ initialData }: { initialData?: InvestorD
     {data.portfolio.status === "success" ? <InvestmentStatusChart active={data.portfolio.data.investmentCounts.active} completed={data.portfolio.data.investmentCounts.completed} /> : null}
 
     <section className="grid gap-5 lg:grid-cols-2">
-      <SectionCard title="Recent investments" description="Latest investment and loan references, dates, and current backend status." href="/investor/portfolio" tourTarget="investor-portfolio">
+      <SectionCard title="Recent investments" description="Your latest investments, loan references, and current status." href="/investor/portfolio" tourTarget="investor-portfolio">
         {data.investments.status === "loading" ? <SectionLoading label="recent investments"/> : null}
         {data.investments.status === "error" ? <SectionError message={data.investments.message} retry={() => retry("investments")}/> : null}
         {data.investments.status === "success" && data.investments.data.length === 0 ? <p className="py-5 text-sm text-muted-foreground">No investments yet. Browse the marketplace to review currently eligible opportunities.</p> : null}
@@ -110,7 +110,7 @@ function InvestmentStatusChart({ active, completed }: { active: number; complete
   const activePercent = total === 0 ? 0 : Math.round((active / total) * 100);
   const completedPercent = total === 0 ? 0 : 100 - activePercent;
   return <Card aria-labelledby="investment-status-title">
-    <CardHeader><CardTitle id="investment-status-title">Investment status</CardTitle><CardDescription>How your investments are currently distributed by backend status. This is a count view, not a return or performance measure.</CardDescription></CardHeader>
+    <CardHeader><CardTitle id="investment-status-title">Investment status</CardTitle><CardDescription>A count of your investments by current status. This chart does not show returns or performance.</CardDescription></CardHeader>
     <CardContent>
       {total === 0 ? <p className="rounded-lg bg-secondary/50 p-4 text-sm text-muted-foreground">Your investment status chart will appear after you make an investment.</p> : <>
         <div className="flex h-4 w-full overflow-hidden rounded-full bg-secondary" role="img" aria-label={`${active} active investments, ${completed} completed investments`}>

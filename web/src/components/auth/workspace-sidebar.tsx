@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, ArrowLeftToLine, ArrowRightToLine, Banknote, Bell, BriefcaseBusiness, ClipboardCheck, FileText, LayoutDashboard, Landmark, Lightbulb, ScrollText, WalletCards, X, Users } from "lucide-react";
+import { Activity, ArrowLeftToLine, ArrowRightToLine, Banknote, Bell, BookOpen, BriefcaseBusiness, ClipboardCheck, FileText, LayoutDashboard, Landmark, Lightbulb, ScrollText, WalletCards, X, Users, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { getRoleNavigation, type NexusRole } from "../../lib/client/auth-access";
 import { cn } from "../../lib/utils";
@@ -12,7 +12,8 @@ const ICONS: Record<string, typeof LayoutDashboard> = {
   Loans: Landmark, "Loans and repayments": Landmark, "Repayment history": Activity, Repayments: Activity,
   Marketplace: Banknote, Portfolio: BriefcaseBusiness, Allocations: ClipboardCheck,
   "Payout history": Banknote, "Investor payouts": Banknote, Wallet: WalletCards,
-  Recommendations: Lightbulb, "Financial overview": ClipboardCheck, Users, "Audit logs": ScrollText,
+  Recommendations: Lightbulb, "Financial overview": ClipboardCheck, Policies: ShieldCheck, Users, "Audit logs": ScrollText,
+  "User guide": BookOpen,
 };
 
 export function WorkspaceSidebar({ role }: { role: NexusRole }) {

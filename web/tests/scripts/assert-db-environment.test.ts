@@ -39,7 +39,7 @@ describe("assertDbEnvironment", () => {
         expect(() =>
             assertDbEnvironment("production", validTestEnvironment),
         ).toThrow(
-            "Specify the expected environment: development or test.",
+            "Specify the expected environment: development, test, or staging.",
         );
     });
 
@@ -47,7 +47,7 @@ describe("assertDbEnvironment", () => {
         expect(() =>
             assertDbEnvironment(undefined, validTestEnvironment),
         ).toThrow(
-            "Specify the expected environment: development or test.",
+            "Specify the expected environment: development, test, or staging.",
         );
     });
 

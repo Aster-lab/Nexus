@@ -660,7 +660,7 @@ model LoanApplication {
   riskAssessments     RiskAssessment[]
   documents           ApplicationDocument[]
 
-  // Active-application uniqueness is enforced by a partial SQL index.
+  // Multiple active applications per borrower are allowed; each application keeps its own lifecycle.
   @@unique([id, currentVersionId], map: "loan_applications_id_current_version_id_key")
   @@unique([id, borrowerProfileId], map: "loan_applications_id_borrower_profile_id_key")
   @@index([borrowerProfileId, status])
@@ -870,6 +870,7 @@ model PlatformAccount {
 
   wallets       Wallet[]
   ledgerEntries LedgerEntry[]
+  ledgerEntryMappings LedgerEntryAccountMapping[]
 
   @@index([accountType, status])
   @@map("platform_accounts")
@@ -918,12 +919,31 @@ model LedgerEntry {
   ledgerTransaction LedgerTransaction @relation(fields: [ledgerTransactionId], references: [id], onDelete: Restrict)
   wallet            Wallet?           @relation(fields: [walletId], references: [id], onDelete: Restrict)
   platformAccount   PlatformAccount?  @relation(fields: [platformAccountId], references: [id], onDelete: Restrict)
+  accountMappings   LedgerEntryAccountMapping[]
 
-  // Account XOR, positive amounts, posted transaction balance, and posted-entry immutability are enforced by SQL.
+  // Wallet entries may also carry account 2100 as a control-ledger dimension.
+  // Positive amounts, posting balance, and posted-entry immutability are SQL-enforced.
   @@index([ledgerTransactionId])
   @@index([walletId, createdAt])
   @@index([platformAccountId, createdAt])
   @@map("ledger_entries")
+}
+
+model LedgerEntryAccountMapping {
+  id                String          @id @default(uuid()) @db.Uuid
+  ledgerEntryId     String          @map("ledger_entry_id") @db.Uuid
+  platformAccountId String          @map("platform_account_id") @db.Uuid
+  entryType         LedgerEntryType @map("entry_type")
+  amountSatang      BigInt          @map("amount_satang")
+  currency          String          @default("THB") @db.Char(3)
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  ledgerEntry     LedgerEntry     @relation(fields: [ledgerEntryId], references: [id], onDelete: Restrict, map: "ledger_entry_account_mappings_entry_fkey")
+  platformAccount PlatformAccount @relation(fields: [platformAccountId], references: [id], onDelete: Restrict, map: "ledger_entry_account_mappings_account_fkey")
+
+  @@unique([ledgerEntryId, platformAccountId], map: "ledger_entry_account_mappings_entry_account_key")
+  @@index([platformAccountId, createdAt], map: "ledger_entry_account_mappings_account_created_idx")
+  @@map("ledger_entry_account_mappings")
 }
 
 model OpeningBalance {

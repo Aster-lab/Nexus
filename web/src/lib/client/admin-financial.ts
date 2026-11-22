@@ -12,6 +12,11 @@ export interface AdminFinancialReconciliation {
   financial: {
     valid: boolean;
     issues: AdminReconciliationIssue[];
+    accountBalances: {
+      userWalletControlSatang: string | null;
+      loanPrincipalReceivableSatang: string | null;
+      expectedOutstandingPrincipalSatang: string | null;
+    };
     checked: { postedTransactions: number; wallets: number; repayments: number; installments: number; allocations: number };
   };
   payouts: {

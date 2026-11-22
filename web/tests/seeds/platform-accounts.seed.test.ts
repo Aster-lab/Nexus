@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { findUniqueMock, createMock, walletUpsertMock, transactionMock } = vi.hoisted(() => ({
+const { findUniqueMock, createMock, updateMock, walletUpsertMock, transactionMock } = vi.hoisted(() => ({
     findUniqueMock: vi.fn(),
     createMock: vi.fn(),
+    updateMock: vi.fn(),
     walletUpsertMock: vi.fn(),
     transactionMock: vi.fn(),
 }));
@@ -21,14 +22,14 @@ const expectedAccounts = [
         accountName: "Simulated Loan Principal Receivable",
         accountType: "ASSET",
         currency: "THB",
-        status: "INACTIVE",
+        status: "ACTIVE",
     },
     {
         accountCode: "2100",
         accountName: "Shared User-Wallet Control",
         accountType: "LIABILITY",
         currency: "THB",
-        status: "INACTIVE",
+        status: "ACTIVE",
     },
     {
         accountCode: "2200",
@@ -59,6 +60,7 @@ describe("seedPlatformAccounts", () => {
 
         findUniqueMock.mockResolvedValue(null);
         createMock.mockImplementation(async ({ data }) => ({ id: `id-${data.accountCode}`, ...data }));
+        updateMock.mockImplementation(async ({ where, data }) => ({ id: where.id, ...data }));
         walletUpsertMock.mockResolvedValue({});
 
         transactionMock.mockImplementation(async (callback) =>
@@ -66,6 +68,7 @@ describe("seedPlatformAccounts", () => {
                 platformAccount: {
                     findUnique: findUniqueMock,
                     create: createMock,
+                    update: updateMock,
                 },
                 wallet: { upsert: walletUpsertMock },
             }),
@@ -215,22 +218,24 @@ describe("seedPlatformAccounts", () => {
         expect(createMock).not.toHaveBeenCalled();
     });
 
-    it("preserves an existing operational status", async () => {
+    it("reactivates required financial control accounts while preserving optional account statuses", async () => {
         findUniqueMock.mockImplementation(async ({ where }) => {
-            if (where.accountCode === "1200") {
+            if (["1200", "2100", "1300"].includes(where.accountCode)) {
                 return {
-                    ...expectedAccounts[0],
-                    status: "ACTIVE",
+                    ...expectedAccounts.find((account) => account.accountCode === where.accountCode),
+                    id: `existing-${where.accountCode}`,
+                    status: "INACTIVE",
                 };
             }
             return null;
         });
 
         await expect(seedPlatformAccounts()).resolves.toBeUndefined();
-        expect(createMock).toHaveBeenCalledTimes(expectedAccounts.length - 1);
-        expect(createMock).not.toHaveBeenCalledWith({
-            data: expectedAccounts[0],
-        });
+        expect(updateMock).toHaveBeenCalledTimes(3);
+        expect(updateMock).toHaveBeenCalledWith({ where: { id: "existing-1200" }, data: { status: "ACTIVE" } });
+        expect(updateMock).toHaveBeenCalledWith({ where: { id: "existing-2100" }, data: { status: "ACTIVE" } });
+        expect(updateMock).toHaveBeenCalledWith({ where: { id: "existing-1300" }, data: { status: "ACTIVE" } });
+        expect(createMock).toHaveBeenCalledTimes(2);
     });
 
     it("propagates database errors", async () => {

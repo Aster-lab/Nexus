@@ -2,6 +2,7 @@
 import { randomUUID } from "node:crypto";
 import { Prisma } from "../../generated/prisma/client";
 import { prisma } from "../prisma";
+import { requireUserWalletControlAccount } from "./ledger-control-accounts.service";
 
 const OPENING_BALANCE_ACCOUNT_CODE = "1300";
 const ADMIN_ROLE_CODE = "ADMIN";
@@ -404,6 +405,7 @@ export async function postOpeningBalance(
 
       const newWalletBalance =
         wallet.balanceSatang + input.amountSatang;
+      const walletControlAccount = await requireUserWalletControlAccount(tx);
 
       const now = new Date();
       const openingBalanceId = randomUUID();
@@ -438,6 +440,7 @@ export async function postOpeningBalance(
           {
             ledgerTransactionId: ledgerTransaction.id,
             walletId: wallet.id,
+            platformAccountId: walletControlAccount.id,
             entryType: "CREDIT",
             amountSatang: input.amountSatang,
             currency: CURRENCY,

@@ -52,10 +52,47 @@ export function mapApiError(error: unknown): MappedApiError {
         body: apiError("BUSINESS_RULE_VIOLATION", "The repayment cannot be made against the current payable balance."),
       };
     }
-    if (error.message === "Insufficient borrower wallet balance.") {
+    if (
+      error.message === "Insufficient borrower wallet balance." ||
+      error.message === "Debit wallet balance changed or is insufficient."
+    ) {
       return {
         status: 422,
         body: apiError("INSUFFICIENT_FUNDS", "The borrower wallet does not have sufficient available balance."),
+      };
+    }
+    if (error.message === "Borrower's active THB wallet was not found.") {
+      return {
+        status: 503,
+        body: apiError("WALLET_UNAVAILABLE", "Your simulated THB wallet is unavailable. Open the wallet page or contact an administrator."),
+      };
+    }
+    if (
+      error.message === "Repayment Clearing account 2300 is not correctly configured." ||
+      error.message === "Repayment Clearing platform wallet is not active or valid."
+    ) {
+      return {
+        status: 503,
+        body: apiError("REPAYMENT_SERVICE_UNAVAILABLE", "Repayment posting is temporarily unavailable. Please contact an administrator."),
+      };
+    }
+    if (
+      error.message === "Both wallets must be ACTIVE." ||
+      error.message === "Only THB wallet transfers are supported."
+    ) {
+      return {
+        status: 503,
+        body: apiError("REPAYMENT_SERVICE_UNAVAILABLE", "A repayment wallet is not configured for THB posting. Please contact an administrator."),
+      };
+    }
+    if (
+      error.message === "Idempotency key is already associated with a different transaction." ||
+      error.message === "Idempotency key has already been used for a different or incomplete operation." ||
+      error.message === "Idempotency key conflicts with the original ledger posting."
+    ) {
+      return {
+        status: 409,
+        body: apiError("IDEMPOTENCY_KEY_CONFLICT", "This repayment request key is associated with a different or incomplete financial operation. Contact an administrator before submitting another repayment."),
       };
     }
     if (error.message === "Only the loan borrower can submit a repayment.") {

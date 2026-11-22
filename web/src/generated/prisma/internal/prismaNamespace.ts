@@ -418,6 +418,7 @@ export const ModelName = {
   PlatformAccount: 'PlatformAccount',
   LedgerTransaction: 'LedgerTransaction',
   LedgerEntry: 'LedgerEntry',
+  LedgerEntryAccountMapping: 'LedgerEntryAccountMapping',
   OpeningBalance: 'OpeningBalance',
   Investment: 'Investment',
   InvestmentContribution: 'InvestmentContribution',
@@ -480,7 +481,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "role" | "userRole" | "borrowerProfile" | "investorProfile" | "session" | "oAuthAccount" | "securityEvent" | "accountRestriction" | "loanApplication" | "applicationVersion" | "borrowerFinancialInformation" | "applicationReview" | "informationRequest" | "loanOffer" | "loan" | "loanStatusHistory" | "wallet" | "platformAccount" | "ledgerTransaction" | "ledgerEntry" | "openingBalance" | "investment" | "investmentContribution" | "investmentRefund" | "escrowAccount" | "escrowTransaction" | "repaymentSchedule" | "scheduleVersion" | "installment" | "repayment" | "payoutAllocation" | "investorPayout" | "modelVersion" | "modelActivationHistory" | "featureSnapshot" | "predictionRecord" | "riskAssessment" | "auditLog" | "platformPolicy" | "policyVersion" | "alert" | "alertHistory" | "notification" | "notificationPreference" | "notificationDelivery" | "supportRequest" | "supportHistory" | "feedback" | "withdrawalRequest" | "idempotencyRecord" | "outboxEvent" | "systemEvent" | "applicationDocument" | "documentSecurityScan" | "documentAccessLog" | "dataAccessRequest" | "dataCorrectionRequest" | "legalHold" | "investorPreference" | "investorBehavior" | "recommendationRun" | "recommendationResult" | "savedLoan" | "savedLoanHistory" | "retentionPolicy" | "retentionExecution" | "backupRecord"
+    modelProps: "user" | "role" | "userRole" | "borrowerProfile" | "investorProfile" | "session" | "oAuthAccount" | "securityEvent" | "accountRestriction" | "loanApplication" | "applicationVersion" | "borrowerFinancialInformation" | "applicationReview" | "informationRequest" | "loanOffer" | "loan" | "loanStatusHistory" | "wallet" | "platformAccount" | "ledgerTransaction" | "ledgerEntry" | "ledgerEntryAccountMapping" | "openingBalance" | "investment" | "investmentContribution" | "investmentRefund" | "escrowAccount" | "escrowTransaction" | "repaymentSchedule" | "scheduleVersion" | "installment" | "repayment" | "payoutAllocation" | "investorPayout" | "modelVersion" | "modelActivationHistory" | "featureSnapshot" | "predictionRecord" | "riskAssessment" | "auditLog" | "platformPolicy" | "policyVersion" | "alert" | "alertHistory" | "notification" | "notificationPreference" | "notificationDelivery" | "supportRequest" | "supportHistory" | "feedback" | "withdrawalRequest" | "idempotencyRecord" | "outboxEvent" | "systemEvent" | "applicationDocument" | "documentSecurityScan" | "documentAccessLog" | "dataAccessRequest" | "dataCorrectionRequest" | "legalHold" | "investorPreference" | "investorBehavior" | "recommendationRun" | "recommendationResult" | "savedLoan" | "savedLoanHistory" | "retentionPolicy" | "retentionExecution" | "backupRecord"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2035,6 +2036,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.LedgerEntryCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.LedgerEntryCountAggregateOutputType> | number
+        }
+      }
+    }
+    LedgerEntryAccountMapping: {
+      payload: Prisma.$LedgerEntryAccountMappingPayload<ExtArgs>
+      fields: Prisma.LedgerEntryAccountMappingFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.LedgerEntryAccountMappingFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerEntryAccountMappingPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.LedgerEntryAccountMappingFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerEntryAccountMappingPayload>
+        }
+        findFirst: {
+          args: Prisma.LedgerEntryAccountMappingFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerEntryAccountMappingPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.LedgerEntryAccountMappingFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerEntryAccountMappingPayload>
+        }
+        findMany: {
+          args: Prisma.LedgerEntryAccountMappingFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerEntryAccountMappingPayload>[]
+        }
+        create: {
+          args: Prisma.LedgerEntryAccountMappingCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerEntryAccountMappingPayload>
+        }
+        createMany: {
+          args: Prisma.LedgerEntryAccountMappingCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.LedgerEntryAccountMappingCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerEntryAccountMappingPayload>[]
+        }
+        delete: {
+          args: Prisma.LedgerEntryAccountMappingDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerEntryAccountMappingPayload>
+        }
+        update: {
+          args: Prisma.LedgerEntryAccountMappingUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerEntryAccountMappingPayload>
+        }
+        deleteMany: {
+          args: Prisma.LedgerEntryAccountMappingDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.LedgerEntryAccountMappingUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.LedgerEntryAccountMappingUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerEntryAccountMappingPayload>[]
+        }
+        upsert: {
+          args: Prisma.LedgerEntryAccountMappingUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LedgerEntryAccountMappingPayload>
+        }
+        aggregate: {
+          args: Prisma.LedgerEntryAccountMappingAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateLedgerEntryAccountMapping>
+        }
+        groupBy: {
+          args: Prisma.LedgerEntryAccountMappingGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LedgerEntryAccountMappingGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.LedgerEntryAccountMappingCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LedgerEntryAccountMappingCountAggregateOutputType> | number
         }
       }
     }
@@ -5837,6 +5912,19 @@ export const LedgerEntryScalarFieldEnum = {
 export type LedgerEntryScalarFieldEnum = (typeof LedgerEntryScalarFieldEnum)[keyof typeof LedgerEntryScalarFieldEnum]
 
 
+export const LedgerEntryAccountMappingScalarFieldEnum = {
+  id: 'id',
+  ledgerEntryId: 'ledgerEntryId',
+  platformAccountId: 'platformAccountId',
+  entryType: 'entryType',
+  amountSatang: 'amountSatang',
+  currency: 'currency',
+  createdAt: 'createdAt'
+} as const
+
+export type LedgerEntryAccountMappingScalarFieldEnum = (typeof LedgerEntryAccountMappingScalarFieldEnum)[keyof typeof LedgerEntryAccountMappingScalarFieldEnum]
+
+
 export const OpeningBalanceScalarFieldEnum = {
   id: 'id',
   walletId: 'walletId',
@@ -7471,6 +7559,7 @@ export type GlobalOmitConfig = {
   platformAccount?: Prisma.PlatformAccountOmit
   ledgerTransaction?: Prisma.LedgerTransactionOmit
   ledgerEntry?: Prisma.LedgerEntryOmit
+  ledgerEntryAccountMapping?: Prisma.LedgerEntryAccountMappingOmit
   openingBalance?: Prisma.OpeningBalanceOmit
   investment?: Prisma.InvestmentOmit
   investmentContribution?: Prisma.InvestmentContributionOmit

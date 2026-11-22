@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ChangeEvent, type InputHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type InputHTMLAttributes, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, FileCheck2 } from "lucide-react";
 import { useAuth } from "../auth/auth-provider";
 import { Badge } from "../ui/badge";
@@ -25,8 +25,21 @@ import { formatDashboardStatus, formatSatang, notifyBorrowerDashboardMutationCom
 
 type FormStep = "edit" | "review" | "success";
 type ApplicationDraftResult = { id: string; status: string; borrowerProfileId: string };
+type GeoModule = typeof import("@geothai/core");
+type GeoProvince = ReturnType<GeoModule["provinces"]>[number];
+type GeoDistrict = ReturnType<GeoModule["districts"]>[number];
+type GeoSubdistrict = ReturnType<GeoModule["subdistricts"]>[number];
 
-const inputClass = "h-11 w-full rounded-md border border-border bg-background px-3 text-foreground shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring";
+const PURPOSE_OPTIONS = [
+  { value: "business", label: "Business" },
+  { value: "education", label: "Education" },
+  { value: "medical", label: "Medical or healthcare" },
+  { value: "personal", label: "Personal" },
+  { value: "home", label: "Home or housing" },
+  { value: "other", label: "Other" },
+] as const;
+
+const inputClass = "h-11 w-full min-w-0 rounded-md border border-border bg-background px-3 text-foreground shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring";
 
 function FormField({
   id,
@@ -79,6 +92,8 @@ function SelectInput({
   onChange,
   error,
   required,
+  disabled,
+  autoComplete,
   children,
 }: {
   id: string;
@@ -86,6 +101,8 @@ function SelectInput({
   onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
   error?: string;
   required?: boolean;
+  disabled?: boolean;
+  autoComplete?: string;
   children: ReactNode;
 }) {
   return <select
@@ -93,6 +110,8 @@ function SelectInput({
     id={id}
     value={value}
     onChange={onChange}
+    disabled={disabled}
+    autoComplete={autoComplete}
     aria-invalid={Boolean(error)}
     aria-required={required}
     aria-describedby={error ? `${id}-error` : undefined}
@@ -108,6 +127,8 @@ export function BorrowerApplicationForm() {
   const [draft, setDraft] = useState<ApplicationDraftResult | null>(null);
   const [formDraftOwner, setFormDraftOwner] = useState<string | null>(null);
   const [restoredDraft, setRestoredDraft] = useState(false);
+  const [geo, setGeo] = useState<GeoModule | null>(null);
+  const [geoError, setGeoError] = useState(false);
   const [values, setValues] = useState<BorrowerApplicationFormValues>(() => ({
     legalName: identity?.borrowerProfile?.legalName ?? "",
     phone: identity?.borrowerProfile?.phone ?? "",
@@ -127,6 +148,42 @@ export function BorrowerApplicationForm() {
     purpose: "",
   }));
   const [submissionLock] = useState(() => createApplicationSubmissionLock());
+
+  useEffect(() => {
+    let active = true;
+    void import("@geothai/core").then((module) => {
+      if (active) setGeo(module);
+    }).catch(() => {
+      if (active) setGeoError(true);
+    });
+    return () => { active = false; };
+  }, []);
+
+  const provinces = useMemo(() => geo?.provinces() ?? [], [geo]);
+  const selectedProvince = useMemo(
+    () => provinces.find((province: GeoProvince) => province.name_en === values.province),
+    [provinces, values.province],
+  );
+  const legacyProvinceValue = values.province && !selectedProvince ? `legacy:${values.province}` : "";
+  const districts = useMemo(
+    () => selectedProvince && geo ? geo.districts(selectedProvince.code) : [],
+    [geo, selectedProvince],
+  );
+  const selectedDistrict = useMemo(
+    () => districts.find((district: GeoDistrict) => district.name_en === values.district),
+    [districts, values.district],
+  );
+  const legacyDistrictValue = values.district && !selectedDistrict ? `legacy:${values.district}` : "";
+  const subdistricts = useMemo(
+    () => selectedDistrict && geo ? geo.subdistricts(selectedDistrict.code) : [],
+    [geo, selectedDistrict],
+  );
+  const selectedSubdistrict = useMemo(
+    () => subdistricts.find((subdistrict: GeoSubdistrict) => subdistrict.name_en === values.subdistrict),
+    [subdistricts, values.subdistrict],
+  );
+  const legacySubdistrictValue = values.subdistrict && !selectedSubdistrict ? `legacy:${values.subdistrict}` : "";
+  const postalCodes = selectedSubdistrict?.postal_codes ?? [];
 
   useEffect(() => {
     const userId = identity?.id;
@@ -211,8 +268,8 @@ export function BorrowerApplicationForm() {
       </h1>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
         {step === "success"
-          ? "Your draft is saved. You can review it and submit it in the application details step."
-          : "Enter the information required by the application contract. Review your summary before saving a draft."}
+          ? "Your draft is saved. You can review and submit it from the application details page."
+          : "Add your details and loan request, then review everything before saving your draft."}
       </p>
     </header>
 
@@ -238,7 +295,7 @@ export function BorrowerApplicationForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {restoredDraft && step === "edit" ? <p className="mb-5 rounded-md border border-primary/20 bg-primary/5 p-3 text-sm text-primary" role="status">Your unfinished application was restored in this tab.</p> : null}
+        {restoredDraft && step === "edit" ? <p className="mb-5 rounded-md border border-primary/20 bg-primary/5 p-3 text-sm text-primary" role="status">We restored your unfinished application so you can pick up where you left off.</p> : null}
         {apiError ? <div className="mb-5 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">{apiError}</div> : null}
 
         {step === "edit" ? <form className="space-y-8" onSubmit={(event) => event.preventDefault()} noValidate>
@@ -259,17 +316,55 @@ export function BorrowerApplicationForm() {
               <FormField id="addressLine2" label="Address line 2">
                 <TextInput id="addressLine2" autoComplete="address-line2" value={values.addressLine2} onChange={(event) => update("addressLine2", event.target.value)} />
               </FormField>
-              <FormField id="subdistrict" label="Subdistrict">
-                <TextInput id="subdistrict" value={values.subdistrict} onChange={(event) => update("subdistrict", event.target.value)} />
+              <FormField id="province" label="Province">
+                <SelectInput id="province" value={selectedProvince?.code ?? legacyProvinceValue} autoComplete="address-level1" disabled={!geo} onChange={(event) => {
+                  if (event.target.value === legacyProvinceValue) return;
+                  const province = provinces.find((item: GeoProvince) => item.code === event.target.value);
+                  setValues((current) => ({ ...current, province: province?.name_en ?? "", district: "", subdistrict: "", postalCode: "" }));
+                  setErrors((current) => ({ ...current, province: undefined, district: undefined, subdistrict: undefined, postalCode: undefined }));
+                  setApiError(null);
+                }}>
+                  <option value="">Select province (optional)</option>
+                  {legacyProvinceValue ? <option value={legacyProvinceValue}>Previously saved: {values.province}</option> : null}
+                  {provinces.map((province: GeoProvince) => <option key={province.code} value={province.code}>{province.name_en} — {province.name_th}</option>)}
+                </SelectInput>
               </FormField>
               <FormField id="district" label="District">
-                <TextInput id="district" value={values.district} onChange={(event) => update("district", event.target.value)} />
+                <SelectInput id="district" value={selectedDistrict?.code ?? legacyDistrictValue} autoComplete="address-level2" disabled={!selectedProvince} onChange={(event) => {
+                  if (event.target.value === legacyDistrictValue) return;
+                  const district = districts.find((item: GeoDistrict) => item.code === event.target.value);
+                  setValues((current) => ({ ...current, district: district?.name_en ?? "", subdistrict: "", postalCode: "" }));
+                  setErrors((current) => ({ ...current, district: undefined, subdistrict: undefined, postalCode: undefined }));
+                  setApiError(null);
+                }}>
+                  <option value="">Select district (optional)</option>
+                  {legacyDistrictValue ? <option value={legacyDistrictValue}>Previously saved: {values.district}</option> : null}
+                  {districts.map((district: GeoDistrict) => <option key={district.code} value={district.code}>{district.name_en} — {district.name_th}</option>)}
+                </SelectInput>
               </FormField>
-              <FormField id="province" label="Province">
-                <TextInput id="province" autoComplete="address-level1" value={values.province} onChange={(event) => update("province", event.target.value)} />
+              <FormField id="subdistrict" label="Subdistrict">
+                <SelectInput id="subdistrict" value={selectedSubdistrict?.code ?? legacySubdistrictValue} autoComplete="address-level3" disabled={!selectedDistrict} onChange={(event) => {
+                  if (event.target.value === legacySubdistrictValue) return;
+                  const subdistrict = subdistricts.find((item: GeoSubdistrict) => item.code === event.target.value);
+                  setValues((current) => ({
+                    ...current,
+                    subdistrict: subdistrict?.name_en ?? "",
+                    postalCode: subdistrict?.postal_codes.length === 1 ? subdistrict.postal_codes[0] : "",
+                  }));
+                  setErrors((current) => ({ ...current, subdistrict: undefined, postalCode: undefined }));
+                  setApiError(null);
+                }}>
+                  <option value="">Select subdistrict (optional)</option>
+                  {legacySubdistrictValue ? <option value={legacySubdistrictValue}>Previously saved: {values.subdistrict}</option> : null}
+                  {subdistricts.map((subdistrict: GeoSubdistrict) => <option key={subdistrict.code} value={subdistrict.code}>{subdistrict.name_en} — {subdistrict.name_th}</option>)}
+                </SelectInput>
               </FormField>
               <FormField id="postalCode" label="Postal code">
-                <TextInput id="postalCode" autoComplete="postal-code" value={values.postalCode} onChange={(event) => update("postalCode", event.target.value)} />
+                <SelectInput id="postalCode" value={values.postalCode} autoComplete="postal-code" disabled={!selectedSubdistrict} onChange={(event) => update("postalCode", event.target.value)}>
+                  <option value="">Select postal code (optional)</option>
+                  {values.postalCode && !postalCodes.includes(values.postalCode) ? <option value={values.postalCode}>Previously saved: {values.postalCode}</option> : null}
+                  {postalCodes.map((postalCode: string) => <option key={postalCode} value={postalCode}>{postalCode}</option>)}
+                </SelectInput>
               </FormField>
               <FormField id="countryCode" label="Country code">
                 <TextInput id="countryCode" autoComplete="country" value={values.countryCode} onChange={(event) => update("countryCode", event.target.value)} />
@@ -308,9 +403,15 @@ export function BorrowerApplicationForm() {
                 </SelectInput>
               </FormField>
               <FormField id="purpose" label="Purpose" required error={errors.purpose}>
-                <TextInput id="purpose" required value={values.purpose} onChange={(event) => update("purpose", event.target.value)} error={errors.purpose} placeholder="What will the loan be used for?" />
+                <SelectInput id="purpose" required value={values.purpose} onChange={(event) => update("purpose", event.target.value)} error={errors.purpose}>
+                  <option value="">Choose a purpose</option>
+                  {values.purpose && !PURPOSE_OPTIONS.some((option) => option.value === values.purpose) ? <option value={values.purpose}>Previously saved: {values.purpose}</option> : null}
+                  {PURPOSE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                </SelectInput>
               </FormField>
             </div>
+            {geoError ? <p className="text-sm text-destructive" role="alert">The Thailand address list could not be loaded. Refresh the page or continue without optional address details.</p> : null}
+            {!geo && !geoError ? <p className="text-sm text-muted-foreground" role="status">Loading Thailand address options…</p> : null}
           </section>
           <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
             <Link className={buttonVariants({ variant: "outline" })} href="/borrower/applications">Cancel</Link>

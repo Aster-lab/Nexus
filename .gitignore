@@ -17,6 +17,8 @@ ML/venv/
 ML/.venv/
 ML/.env
 ML/.env.example
+ML/.env.staging
+ML/.env.production
 ML/env/
 ML/data/
 *.csv
@@ -38,6 +40,8 @@ web/out/
 web/build/
 web/dist/
 web/.turbo/
+web/test-results/
+web/playwright-report/
 
 # Prisma local database files (if using SQLite for dev)
 web/prisma/*.db
@@ -56,5 +60,6 @@ web/.env.local
 web/.env.*
 !web/.env.demo.example
 !web/.env.staging.example
+!web/.env.production.example
 !.env.example
 !web/.env.example

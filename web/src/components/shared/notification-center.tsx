@@ -79,7 +79,7 @@ export function NotificationCenter({ roles }: { roles: string[] }) {
       <Bell aria-hidden="true" className="size-5" />
       {count !== null ? <span aria-hidden="true" className="absolute -right-0.5 -top-0.5 grid min-h-5 min-w-5 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">{count > 99 ? "99+" : count}</span> : null}
     </Button>
-    {open ? <section id="nexus-notification-panel" aria-label="Notifications" className="nexus-notification-panel absolute right-0 z-50 mt-2 w-[min(24rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border bg-card text-card-foreground shadow-xl">
+    {open ? <section id="nexus-notification-panel" aria-label="Notifications" className="nexus-notification-panel fixed right-3 top-[5.25rem] z-50 w-[min(24rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border bg-card text-card-foreground shadow-xl">
       <header className="flex items-start justify-between gap-3 border-b p-4">
         <div><h2 className="font-semibold">Notifications</h2><p className="mt-1 text-xs text-muted-foreground">Account updates and next steps</p></div>
         {count !== null ? <Badge variant="secondary">{count} unread</Badge> : null}

@@ -226,7 +226,7 @@ const RecommendationRangeSchema = z
   .strict()
   .refine((range) => range.min <= range.max, "min must not exceed max");
 
-export const InvestorPreferenceContractSchema = z
+export const InvestorPreferenceLegacyContractSchema = z
   .object({
     schema_version: z.literal("nexus_investor_preference.v1"),
     risk_tier: z.array(z.enum(["TIER_A", "TIER_B", "TIER_C", "TIER_D"])).min(1),
@@ -237,9 +237,34 @@ export const InvestorPreferenceContractSchema = z
   })
   .strict();
 
-// Persisted financial amounts are satang. Investor preference amounts and the
-// Python recommendation algorithm use THB; the adapter converts the remaining
-// funding amount to THB before scoring.
+export const InvestorPreferenceContractSchema = z
+  .object({
+    schema_version: z.literal("nexus_investor_preference.v2"),
+    interest_rate: RecommendationRangeSchema,
+    loan_duration: RecommendationRangeSchema,
+    investment_amount: RecommendationRangeSchema,
+    loan_purpose: z.array(z.enum(["business", "education", "medical", "personal", "home", "other"])).min(1),
+  })
+  .strict();
+
+/** Normalize persisted v1 preferences while dropping model-dependent risk tiers. */
+export function normalizeInvestorPreference(value: unknown): z.infer<typeof InvestorPreferenceContractSchema> | null {
+  const current = InvestorPreferenceContractSchema.safeParse(value);
+  if (current.success) return current.data;
+  const legacy = InvestorPreferenceLegacyContractSchema.safeParse(value);
+  if (!legacy.success) return null;
+  return {
+    schema_version: "nexus_investor_preference.v2",
+    interest_rate: legacy.data.interest_rate,
+    loan_duration: legacy.data.loan_duration,
+    investment_amount: legacy.data.investment_amount,
+    loan_purpose: legacy.data.loan_purpose,
+  };
+}
+
+// Legacy Python recommendation contract retained for deployments that still
+// expose that service. The investor-facing preference matcher uses the local
+// deterministic contract below and does not require these risk fields.
 export const DynamicRecommendationCandidateSchema = z.object({
   loan_id: z.uuid(),
   principal_satang: z.number().int().positive().safe(),
@@ -252,7 +277,7 @@ export const DynamicRecommendationCandidateSchema = z.object({
 
 export const DynamicRecommendationRequestSchema = z.object({
   schema_version: z.literal("nexus_investor_recommendation_request.v1"),
-  preferences: InvestorPreferenceContractSchema,
+  preferences: InvestorPreferenceLegacyContractSchema,
   candidates: z.array(DynamicRecommendationCandidateSchema).max(200),
 }).strict().superRefine((request, ctx) => {
   const ids = new Set<string>();
@@ -299,13 +324,32 @@ export const RecommendationResultExplanationSchema = z
   })
   .strict();
 
-export const RecommendationRunPreferenceSnapshotSchema = z
+export const PreferenceMatchExplanationSchema = z
   .object({
-    schema_version: z.literal("nexus_recommendation_preferences_snapshot.v1"),
-    captured_at: z.iso.datetime({ offset: true }),
-    preferences: InvestorPreferenceContractSchema,
+    schema_version: z.literal("nexus_recommendation_explanation.v2"),
+    algorithm: z.literal("weighted_preference_match.v1"),
+    weights: z.object({ interest_rate: z.number(), loan_duration: z.number(), investment_amount: z.number(), loan_purpose: z.number() }).strict(),
+    feature_scores: z.object({
+      interest_rate: z.number().finite().min(0).max(1),
+      loan_duration: z.number().finite().min(0).max(1),
+      investment_amount: z.number().finite().min(0).max(1),
+      loan_purpose: z.number().finite().min(0).max(1),
+    }).strict(),
   })
   .strict();
+
+export const RecommendationRunPreferenceSnapshotSchema = z.union([
+  z.object({
+    schema_version: z.literal("nexus_recommendation_preferences_snapshot.v1"),
+    captured_at: z.iso.datetime({ offset: true }),
+    preferences: InvestorPreferenceLegacyContractSchema,
+  }).strict(),
+  z.object({
+    schema_version: z.literal("nexus_recommendation_preferences_snapshot.v2"),
+    captured_at: z.iso.datetime({ offset: true }),
+    preferences: InvestorPreferenceContractSchema,
+  }).strict(),
+]);
 
 const RecommendationCandidateSchema = z
   .object({

@@ -24,7 +24,7 @@ export * as $Enums from './enums'
 export * from "./enums"
 /**
  * ## Prisma Client
- * 
+ *
  * Type-safe database client for TypeScript
  * @example
  * ```
@@ -146,6 +146,11 @@ export type LedgerTransaction = Prisma.LedgerTransactionModel
  * 
  */
 export type LedgerEntry = Prisma.LedgerEntryModel
+/**
+ * Model LedgerEntryAccountMapping
+ *
+ */
+export type LedgerEntryAccountMapping = Prisma.LedgerEntryAccountMappingModel
 /**
  * Model OpeningBalance
  * 

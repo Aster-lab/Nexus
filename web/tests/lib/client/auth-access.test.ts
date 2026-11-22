@@ -37,10 +37,11 @@ describe("WP9.3 role access decisions", () => {
       { label: "Loans", href: "/borrower/loans" },
       { label: "Repayment history", href: "/borrower/repayments" },
       { label: "Wallet", href: "/borrower/wallet" },
+      { label: "User guide", href: "/borrower/guide" },
     ]);
     expect(getRoleNavigation(["INVESTOR", "ADMIN"]).map(({ href }) => href)).toEqual([
-      "/investor", "/investor/marketplace", "/investor/portfolio", "/investor/allocations", "/investor/payouts", "/investor/wallet", "/investor/recommendations",
-      "/admin", "/admin/applications", "/admin/loans", "/admin/repayments", "/admin/payouts", "/admin/financial", "/admin/users", "/admin/audit-logs",
+      "/investor", "/investor/marketplace", "/investor/portfolio", "/investor/allocations", "/investor/payouts", "/investor/wallet", "/investor/recommendations", "/investor/guide",
+      "/admin", "/admin/applications", "/admin/loans", "/admin/repayments", "/admin/payouts", "/admin/financial", "/admin/policies", "/admin/users", "/admin/audit-logs", "/admin/guide",
     ]);
   });
 });

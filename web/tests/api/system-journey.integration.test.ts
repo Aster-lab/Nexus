@@ -11,6 +11,7 @@ import { GET as listInvestorInvestments, POST as postInvestorInvestment } from "
 import { POST as postAdminOpeningBalance } from "../../src/app/api/admin/opening-balances/route";
 import { POST as postAdminDisbursement } from "../../src/app/api/admin/loans/[loanId]/disburse/route";
 import { POST as postBorrowerConsent } from "../../src/app/api/borrower/loans/[loanId]/disbursement-consent/route";
+import { POST as postBorrowerWalletTopUp } from "../../src/app/api/borrower/wallet/top-ups/route";
 import { GET as listAdminPendingAllocations } from "../../src/app/api/admin/payout-allocations/route";
 import { GET as getAdminReconciliation } from "../../src/app/api/admin/reconciliation/route";
 import { POST as processAdminPayout } from "../../src/app/api/admin/payouts/route";
@@ -204,6 +205,17 @@ describe("WP10 cross-role financial system journey", () => {
     }));
     const payableAmount = BigInt(payable.payableAmountSatang);
     expect(payableAmount).toBeGreaterThan(0n);
+    const currentBorrowerBalance = (await prisma.wallet.findUniqueOrThrow({
+      where: { ownerUserId: borrowerUser.id },
+      select: { balanceSatang: true },
+    })).balanceSatang;
+    if (currentBorrowerBalance < payableAmount) {
+      await expectApiSuccess(await postBorrowerWalletTopUp(apiRequest(borrower, "http://localhost/api/borrower/wallet/top-ups", {
+        method: "POST",
+        headers: { "content-type": "application/json", "idempotency-key": `journey-borrower-top-up-${randomUUID()}` },
+        body: JSON.stringify({ amountSatang: (payableAmount - currentBorrowerBalance).toString() }),
+      })), 201);
+    }
     const repayment = await expectApiSuccess<{ ledgerTransactionId: string; totalSatang: string; receipt: { repaymentIds: string[]; status: string } }>(await submitBorrowerRepayment(apiRequest(borrower, "http://localhost/api/borrower/repayments", {
       method: "POST", headers: { "content-type": "application/json", "idempotency-key": `journey-repayment-${randomUUID()}` },
       body: JSON.stringify({ loanId: loan.loanId, amountSatang: payableAmount.toString() }),
@@ -264,6 +276,17 @@ describe("WP10 cross-role financial system journey", () => {
     );
     const amountSatang = BigInt(payable.payableAmountSatang);
     expect(amountSatang).toBeGreaterThan(0n);
+    const borrowerBalance = (await prisma.wallet.findUniqueOrThrow({
+      where: { id: journeyContext.borrowerWalletId },
+      select: { balanceSatang: true },
+    })).balanceSatang;
+    if (borrowerBalance < amountSatang) {
+      await expectApiSuccess(await postBorrowerWalletTopUp(apiRequest(borrower, "http://localhost/api/borrower/wallet/top-ups", {
+        method: "POST",
+        headers: { "content-type": "application/json", "idempotency-key": `wp10-borrower-top-up-${randomUUID()}` },
+        body: JSON.stringify({ amountSatang: (amountSatang - borrowerBalance).toString() }),
+      })), 201);
+    }
     const borrowerWalletBefore = await prisma.wallet.findUniqueOrThrow({
       where: { id: journeyContext.borrowerWalletId },
       select: { balanceSatang: true },

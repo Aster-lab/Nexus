@@ -1,6 +1,11 @@
 
 import { Prisma } from "../../generated/prisma/client";
 import {prisma} from "../prisma";
+import {
+  getAssetAccountBalance,
+  requireLoanPrincipalAccounts,
+  requireUserWalletControlAccount,
+} from "./ledger-control-accounts.service";
 
 const CURRENCY = "THB";
 
@@ -15,6 +20,8 @@ export interface PostWalletTransferInput {
   creditWalletId: string;
 
   amountSatang: bigint;
+  /** Optional principal-only asset reclassification: DR 1300, CR 1200. */
+  principalReceivableMovement?: { amountSatang: bigint };
 }
 
 export interface PostedWalletTransfer {
@@ -48,6 +55,8 @@ function validateInput(input: PostWalletTransferInput): void {
 async function findExistingPosting(
   tx: Prisma.TransactionClient,
   input: PostWalletTransferInput,
+  userControlAccountId: string | null,
+  principalAccounts: Awaited<ReturnType<typeof requireLoanPrincipalAccounts>> | null,
 ): Promise<PostedWalletTransfer | null> {
   const existing = await tx.ledgerTransaction.findUnique({
     where: {
@@ -84,21 +93,30 @@ async function findExistingPosting(
   const debitEntries = existing.entries.filter(
     (entry) =>
       entry.walletId === input.debitWalletId &&
-      entry.platformAccountId === null &&
+      (entry.platformAccountId === null || entry.platformAccountId === userControlAccountId) &&
       entry.entryType === "DEBIT",
   );
 
   const creditEntries = existing.entries.filter(
     (entry) =>
       entry.walletId === input.creditWalletId &&
-      entry.platformAccountId === null &&
+      (entry.platformAccountId === null || entry.platformAccountId === userControlAccountId) &&
       entry.entryType === "CREDIT",
   );
 
+  const principalAmount = input.principalReceivableMovement?.amountSatang ?? 0n;
+  const debitReceivable = principalAccounts
+    ? existing.entries.filter((entry) => entry.walletId === null && entry.platformAccountId === principalAccounts.fundingAsset.id && entry.entryType === "DEBIT" && entry.amountSatang === principalAmount && entry.currency === CURRENCY)
+    : [];
+  const creditReceivable = principalAccounts
+    ? existing.entries.filter((entry) => entry.walletId === null && entry.platformAccountId === principalAccounts.loanReceivable.id && entry.entryType === "CREDIT" && entry.amountSatang === principalAmount && entry.currency === CURRENCY)
+    : [];
+  const expectedEntryCount = principalAmount > 0n ? 4 : 2;
   const valid =
-    existing.entries.length === 2 &&
+    existing.entries.length === expectedEntryCount &&
     debitEntries.length === 1 &&
     creditEntries.length === 1 &&
+    (principalAmount === 0n || (debitReceivable.length === 1 && creditReceivable.length === 1)) &&
     debitEntries[0].amountSatang === input.amountSatang &&
     creditEntries[0].amountSatang === input.amountSatang &&
     debitEntries[0].currency === CURRENCY &&
@@ -118,7 +136,8 @@ async function findExistingPosting(
 }
 
 /**
- * Posts a balanced transfer between two existing wallets.
+ * Posts a balanced transfer between two existing wallets and, when requested,
+ * its principal-only receivable reclassification in the same transaction.
  *
  * MUST be called inside the caller's Prisma transaction.
  *
@@ -137,13 +156,6 @@ export async function postWalletTransfer(
   input: PostWalletTransferInput,
 ): Promise<PostedWalletTransfer> {
   validateInput(input);
-
-  // Return the original successful posting for an identical retry.
-  const existing = await findExistingPosting(tx, input);
-
-  if (existing) {
-    return existing;
-  }
 
   const wallets = await tx.wallet.findMany({
     where: {
@@ -174,6 +186,32 @@ export async function postWalletTransfer(
 
   if (!debitWallet || !creditWallet) {
     throw new Error("One or both wallets do not exist.");
+  }
+
+  const userControlAccount =
+    debitWallet.ownerUserId !== null || creditWallet.ownerUserId !== null
+      ? await requireUserWalletControlAccount(tx)
+      : null;
+  const principalAccounts = input.principalReceivableMovement
+    ? await requireLoanPrincipalAccounts(tx)
+    : null;
+  if (input.principalReceivableMovement && input.principalReceivableMovement.amountSatang <= 0n) {
+    throw new Error("Principal receivable movement must be greater than zero.");
+  }
+
+  // Return the original successful posting for an identical retry.
+  const existing = await findExistingPosting(
+    tx,
+    input,
+    userControlAccount?.id ?? null,
+    principalAccounts,
+  );
+  if (existing) return existing;
+  if (input.principalReceivableMovement && principalAccounts) {
+    const receivableBalance = await getAssetAccountBalance(tx, principalAccounts.loanReceivable.id);
+    if (receivableBalance < input.principalReceivableMovement.amountSatang) {
+      throw new Error("Loan receivable account 1200 has insufficient principal balance for this repayment.");
+    }
   }
 
   for (const wallet of [debitWallet, creditWallet]) {
@@ -212,13 +250,13 @@ export async function postWalletTransfer(
     },
   });
 
-  // 2. Create the two balanced wallet entries.
-  await tx.ledgerEntry.createMany({
-    data: [
+  // 2. Create wallet entries. User wallet lines also point at the 2100
+  // control account as a subledger dimension; amounts are counted once.
+  const entries: Prisma.LedgerEntryCreateManyInput[] = [
       {
         ledgerTransactionId: transaction.id,
         walletId: input.debitWalletId,
-        platformAccountId: null,
+        platformAccountId: debitWallet.ownerUserId ? userControlAccount?.id ?? null : null,
         entryType: "DEBIT",
         amountSatang: input.amountSatang,
         currency: CURRENCY,
@@ -226,13 +264,31 @@ export async function postWalletTransfer(
       {
         ledgerTransactionId: transaction.id,
         walletId: input.creditWalletId,
-        platformAccountId: null,
+        platformAccountId: creditWallet.ownerUserId ? userControlAccount?.id ?? null : null,
         entryType: "CREDIT",
         amountSatang: input.amountSatang,
         currency: CURRENCY,
       },
-    ],
-  });
+  ];
+  if (input.principalReceivableMovement && principalAccounts) {
+    entries.push(
+      {
+        ledgerTransactionId: transaction.id,
+        platformAccountId: principalAccounts.fundingAsset.id,
+        entryType: "DEBIT",
+        amountSatang: input.principalReceivableMovement.amountSatang,
+        currency: CURRENCY,
+      },
+      {
+        ledgerTransactionId: transaction.id,
+        platformAccountId: principalAccounts.loanReceivable.id,
+        entryType: "CREDIT",
+        amountSatang: input.principalReceivableMovement.amountSatang,
+        currency: CURRENCY,
+      },
+    );
+  }
+  await tx.ledgerEntry.createMany({ data: entries });
 
   // 3. Update the debit wallet exactly once.
   const debitUpdate = await tx.wallet.updateMany({

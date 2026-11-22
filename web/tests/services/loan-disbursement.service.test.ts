@@ -213,7 +213,9 @@ describe("Loan Disbursement integration", () => {
         where: { ledgerTransactionId: result.id },
         });
 
-        expect(entries).toHaveLength(2);
+        expect(entries).toHaveLength(4);
+        expect(entries.filter((entry) => entry.walletId !== null)).toHaveLength(2);
+        expect(entries.filter((entry) => entry.walletId === null)).toHaveLength(2);
         expect(entries.every(
         (entry) => entry.amountSatang === fixture.loan.principalSatang,
         )).toBe(true);
@@ -247,7 +249,7 @@ describe("Loan Disbursement integration", () => {
         expect(loanAfter.disbursedAt).not.toBeNull();
         });
 
-    it("creates exactly two balanced ledger entries in the correct direction", async () => {
+    it("creates balanced wallet and principal-control ledger entries in the correct direction", async () => {
       const { approval } = await createApprovedDisbursement();
 
       const result = await postLoanDisbursement({
@@ -258,7 +260,7 @@ describe("Loan Disbursement integration", () => {
 
       const entries = await getLedgerEntries(result.id);
 
-      expect(entries).toHaveLength(2);
+      expect(entries).toHaveLength(4);
 
       const debit = entries.find(
         (entry) => entry.entryType === "DEBIT",
@@ -281,6 +283,9 @@ describe("Loan Disbursement integration", () => {
 
       expect(debit!.currency).toBe("THB");
       expect(credit!.currency).toBe("THB");
+
+      expect(entries.filter((entry) => entry.walletId !== null)).toHaveLength(2);
+      expect(entries.filter((entry) => entry.walletId === null)).toHaveLength(2);
 
       const ledger = await prisma.ledgerTransaction.findUniqueOrThrow({
         where: { id: result.id },
@@ -548,7 +553,7 @@ describe("Loan Disbursement integration", () => {
       expect(movements).toHaveLength(1);
 
       const entries = await getLedgerEntries(first.id);
-      expect(entries).toHaveLength(2);
+      expect(entries).toHaveLength(4);
 
       const loan = await prisma.loan.findUniqueOrThrow({
         where: { id: fixture.loan.id },

@@ -37,6 +37,19 @@ export interface ApiPostOptions extends Omit<ApiRequestOptions, "method" | "body
   idempotencyKey?: string;
 }
 
+const API_READ_CACHE_TTL_MS = 8_000;
+const API_READ_CACHE_MAX_ENTRIES = 100;
+type CachedApiRead = { expiresAt: number; value: ApiSuccessEnvelope<unknown> };
+const apiReadCache = new Map<string, CachedApiRead>();
+const pendingApiReads = new Map<string, Promise<ApiSuccessEnvelope<unknown>>>();
+let apiReadCacheRevision = 0;
+
+function clearApiReadCache(): void {
+  apiReadCacheRevision += 1;
+  apiReadCache.clear();
+  pendingApiReads.clear();
+}
+
 function assertSameOriginApiPath(path: string): void {
   try {
     const parsed = new URL(path, "https://nexus.invalid");
@@ -70,6 +83,8 @@ function toHeaderRecord(input?: HeadersInit): Record<string, string> {
 export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<ApiSuccessEnvelope<T>> {
   assertSameOriginApiPath(path);
   const { fetcher = fetch, headers: suppliedHeaders, onUnauthorized, ...init } = options;
+  const method = init.method ?? "GET";
+  if (method !== "GET") clearApiReadCache();
   const headers = toHeaderRecord(suppliedHeaders);
   if (init.body !== undefined && !Object.keys(headers).some((name) => name.toLowerCase() === "content-type")) {
     headers["content-type"] = "application/json";
@@ -79,7 +94,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   try {
     response = await fetcher(path, {
       ...init,
-      method: init.method ?? "GET",
+      method,
       headers,
       credentials: "same-origin",
       cache: "no-store",
@@ -133,8 +148,45 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   return payload as unknown as ApiSuccessEnvelope<T>;
 }
 
-export function apiGet<T>(path: string, options: Omit<ApiRequestOptions, "method" | "body"> = {}) {
-  return apiRequest<T>(path, { ...options, method: "GET" });
+export interface ApiGetOptions extends Omit<ApiRequestOptions, "method" | "body"> {
+  /** Set to 0 to bypass the short in-memory cache for especially time-sensitive reads. */
+  revalidateMs?: number;
+}
+
+export function apiGet<T>(path: string, options: ApiGetOptions = {}): Promise<ApiSuccessEnvelope<T>> {
+  const { revalidateMs = API_READ_CACHE_TTL_MS, fetcher, ...requestOptions } = options;
+  if (revalidateMs <= 0 || typeof window === "undefined" || fetcher) {
+    return apiRequest<T>(path, { ...requestOptions, fetcher, method: "GET" });
+  }
+
+  const cacheKey = path;
+  const cached = apiReadCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    // Refresh insertion order so frequently revisited pages stay in the small cache.
+    apiReadCache.delete(cacheKey);
+    apiReadCache.set(cacheKey, cached);
+    return Promise.resolve(cached.value as ApiSuccessEnvelope<T>);
+  }
+  if (cached) apiReadCache.delete(cacheKey);
+
+  const pending = pendingApiReads.get(cacheKey);
+  if (pending) return pending as Promise<ApiSuccessEnvelope<T>>;
+
+  const revision = apiReadCacheRevision;
+  const request = apiRequest<T>(path, { ...requestOptions, method: "GET" })
+    .then((value) => {
+      if (revision === apiReadCacheRevision) {
+        apiReadCache.set(cacheKey, { expiresAt: Date.now() + revalidateMs, value });
+        if (apiReadCache.size > API_READ_CACHE_MAX_ENTRIES) {
+          const oldestKey = apiReadCache.keys().next().value;
+          if (oldestKey) apiReadCache.delete(oldestKey);
+        }
+      }
+      return value;
+    })
+    .finally(() => pendingApiReads.delete(cacheKey));
+  pendingApiReads.set(cacheKey, request as Promise<ApiSuccessEnvelope<unknown>>);
+  return request;
 }
 
 export function apiPost<T, TBody>(path: string, body: TBody, options: ApiPostOptions = {}) {

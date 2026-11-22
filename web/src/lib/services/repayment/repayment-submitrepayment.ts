@@ -15,6 +15,12 @@ import {
   type RepaymentReceipt,
 } from "./repayment-receipt";
 import { createInAppNotification } from "../notification.service";
+import { getRepaymentPayableThroughDate } from "./repayment-due-window";
+import {
+  LOAN_RECEIVABLE_ACCOUNT_CODE,
+  SIMULATED_FUNDING_ASSET_ACCOUNT_CODE,
+  USER_WALLET_CONTROL_ACCOUNT_CODE,
+} from "../ledger-control-accounts.service";
 
 const CURRENCY = "THB";
 const REPAYMENT_CLEARING_ACCOUNT_CODE = "2300";
@@ -256,15 +262,21 @@ async function findExistingRepayment(
     );
   }
 
-  if (transaction.entries.length !== 2) {
+  if (transaction.entries.length !== 2 && transaction.entries.length !== 4) {
     throw new Error("Existing repayment ledger transaction is invalid.");
   }
+
+  const [controlAccount, fundingAccount, receivableAccount] = await Promise.all([
+    tx.platformAccount.findUnique({ where: { accountCode: USER_WALLET_CONTROL_ACCOUNT_CODE }, select: { id: true } }),
+    tx.platformAccount.findUnique({ where: { accountCode: SIMULATED_FUNDING_ASSET_ACCOUNT_CODE }, select: { id: true } }),
+    tx.platformAccount.findUnique({ where: { accountCode: LOAN_RECEIVABLE_ACCOUNT_CODE }, select: { id: true } }),
+  ]);
 
   const debitEntry = transaction.entries.find(
     (entry) =>
       entry.entryType === "DEBIT" &&
       entry.walletId === borrowerWalletId &&
-      entry.platformAccountId === null,
+      (entry.platformAccountId === null || entry.platformAccountId === controlAccount?.id),
   );
 
   const creditEntry = transaction.entries.find(
@@ -304,10 +316,24 @@ async function findExistingRepayment(
       repayment.totalSatang !==
         repayment.principalSatang + repayment.interestSatang,
   );
+  const principalSatang = transaction.repayments.reduce(
+    (total, repayment) => total + repayment.principalSatang,
+    0n,
+  );
+  const fundingDebit = transaction.entries.filter(
+    (entry) => entry.walletId === null && entry.platformAccountId === fundingAccount?.id && entry.entryType === "DEBIT" && entry.amountSatang === principalSatang,
+  );
+  const receivableCredit = transaction.entries.filter(
+    (entry) => entry.walletId === null && entry.platformAccountId === receivableAccount?.id && entry.entryType === "CREDIT" && entry.amountSatang === principalSatang,
+  );
+  const principalPostingValid = transaction.entries.length === 2
+    ? true // Legacy repayments predate the principal-control entries.
+    : principalSatang > 0n && fundingDebit.length === 1 && receivableCredit.length === 1;
 
   if (
     persistedTotal !== input.amountSatang ||
-    componentMismatch
+    componentMismatch ||
+    !principalPostingValid
   ) {
     throw new Error(
       "Existing repayment records do not reconcile to the requested amount.",
@@ -349,6 +375,10 @@ async function lockRepaymentResources(
   walletIds: string[],
   scheduleVersionId: string,
 ): Promise<void> {
+  const payableThroughDate = getRepaymentPayableThroughDate()
+    .toISOString()
+    .slice(0, 10);
+
   await tx.$queryRaw<Array<{ id: string }>>`
     SELECT id
     FROM loans
@@ -369,7 +399,7 @@ async function lockRepaymentResources(
     SELECT id
     FROM installments
     WHERE schedule_version_id = ${scheduleVersionId}::uuid
-      AND due_date <= CURRENT_DATE
+      AND due_date <= ${payableThroughDate}::date
       AND status IN ('PENDING', 'PARTIALLY_PAID', 'OVERDUE')
     ORDER BY due_date ASC, installment_number ASC
     FOR UPDATE
@@ -383,7 +413,7 @@ async function getPayableInstallments(
   const installments = await tx.installment.findMany({
     where: {
       scheduleVersionId,
-      dueDate: { lte: getStartOfTodayUtc() },
+      dueDate: { lte: getRepaymentPayableThroughDate() },
       status: { in: [...PAYABLE_INSTALLMENT_STATUSES] },
     },
     orderBy: [
@@ -429,7 +459,7 @@ export async function getBorrowerPayableSummary(input: {
   const installments = await prisma.installment.findMany({
     where: {
       scheduleVersionId,
-      dueDate: { lte: getStartOfTodayUtc() },
+      dueDate: { lte: getRepaymentPayableThroughDate() },
       status: { in: [...PAYABLE_INSTALLMENT_STATUSES] },
     },
     orderBy: [{ dueDate: "asc" }, { installmentNumber: "asc" }],
@@ -716,6 +746,10 @@ async function submitRepaymentInTransaction(
     installments,
     input.amountSatang,
   );
+  const principalSatang = allocations.reduce(
+    (total, allocation) => total + allocation.principalSatang,
+    0n,
+  );
 
   const transfer = await (options.postTransfer ?? postWalletTransfer)(tx, {
     transactionType: TRANSACTION_TYPE,
@@ -726,6 +760,9 @@ async function submitRepaymentInTransaction(
     debitWalletId: borrowerWallet.id,
     creditWalletId: clearingWallet.id,
     amountSatang: input.amountSatang,
+    ...(principalSatang > 0n
+      ? { principalReceivableMovement: { amountSatang: principalSatang } }
+      : {}),
   });
 
   // If the shared posting helper found an existing posting, validate and

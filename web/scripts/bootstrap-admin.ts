@@ -10,15 +10,20 @@ function verifyBootstrapDatabase() {
   const url = process.env.DATABASE_URL;
   const fingerprint = process.env.DATABASE_URL_SHA256;
   if (!url || !fingerprint || !environment) throw new Error("DATABASE_URL, DATABASE_ENV, and DATABASE_URL_SHA256 must be configured.");
-  if (environment !== "development" && environment !== "production") {
-    throw new Error("Admin bootstrap is only allowed for an explicitly configured development or production database.");
+  if (environment !== "development" && environment !== "staging" && environment !== "production") {
+    throw new Error("Admin bootstrap requires DATABASE_ENV=development, staging, or production.");
   }
   const actualFingerprint = createHash("sha256").update(url).digest("hex");
   if (actualFingerprint !== fingerprint) throw new Error("DATABASE_URL fingerprint does not match the configured database fingerprint.");
   const hostname = new URL(url).hostname.toLowerCase();
   const localHost = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(hostname);
   if (environment === "development" && !localHost) throw new Error("Development bootstrap requires a loopback PostgreSQL host.");
-  if (environment === "production" && localHost) throw new Error("Production bootstrap cannot target a loopback database.");
+  if ((environment === "staging" || environment === "production") && localHost) {
+    throw new Error(`${environment} bootstrap cannot target a loopback database.`);
+  }
+  if (environment === "staging" && !process.argv.includes("--confirm-staging")) {
+    throw new Error("Staging bootstrap requires the explicit --confirm-staging flag.");
+  }
   if (environment === "production" && !process.argv.includes("--confirm-production")) {
     throw new Error("Production bootstrap requires the explicit --confirm-production flag.");
   }
@@ -58,9 +63,12 @@ async function main() {
   try {
     console.log(`Target database environment: ${environment}`);
     const email = (await prompt.question("First administrator email: ")).trim();
-    if (environment === "production") {
-      const confirmation = await prompt.question('Type "BOOTSTRAP FIRST NEXUS ADMIN" to confirm production provisioning: ');
-      if (confirmation !== "BOOTSTRAP FIRST NEXUS ADMIN") throw new Error("Production confirmation did not match.");
+    if (environment === "staging" || environment === "production") {
+      const confirmationPhrase = environment === "staging"
+        ? "BOOTSTRAP FIRST NEXUS STAGING ADMIN"
+        : "BOOTSTRAP FIRST NEXUS ADMIN";
+      const confirmation = await prompt.question(`Type "${confirmationPhrase}" to confirm ${environment} provisioning: `);
+      if (confirmation !== confirmationPhrase) throw new Error(`${environment} confirmation did not match.`);
     }
     const confirmedEmail = (await prompt.question("Re-enter administrator email to confirm: ")).trim();
     if (confirmedEmail.toLowerCase() !== email.toLowerCase()) throw new Error("Email confirmation did not match.");
