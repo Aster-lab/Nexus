@@ -1,7 +1,12 @@
-import { apiGet, type ApiPagination, type ApiSuccessEnvelope } from "./api-client";
+import { ApiClientError, apiGet, type ApiPagination, type ApiSuccessEnvelope } from "./api-client";
 
 export type AdminDashboardFetcher = <T>(path: string, options?: { signal?: AbortSignal }) => Promise<ApiSuccessEnvelope<T>>;
 export type AdminDashboardResource = "users" | "applications" | "loans" | "repayments" | "payout-allocations" | "audit-logs";
+
+export type AdminDashboardSection<T> =
+  | { status: "loading" }
+  | { status: "success"; data: T }
+  | { status: "error"; message: string };
 
 export interface AdminDashboardAuditRow {
   id: string;
@@ -24,6 +29,51 @@ export interface AdminDashboardRepaymentRow {
   receivedAt: string;
   installment: { installmentNumber: number; dueDate: string; status: string };
   ledgerTransaction: { status: string; postedAt: string | null };
+}
+
+export interface AdminDashboardOverview {
+  users: AdminDashboardSection<{ total: number; borrowers: number; investors: number }>;
+  applications: AdminDashboardSection<{ total: number }>;
+  loans: AdminDashboardSection<{ active: number }>;
+  payouts: AdminDashboardSection<{ pending: number }>;
+  repayments: AdminDashboardSection<AdminDashboardRepaymentRow[]>;
+  audit: AdminDashboardSection<AdminDashboardAuditRow[]>;
+}
+
+const ADMIN_DASHBOARD_PATH = "/api/admin/dashboard/overview";
+const ADMIN_DASHBOARD_CACHE_TTL_MS = 10_000;
+const adminDashboardCache = new Map<string, { expiresAt: number; data: AdminDashboardOverview }>();
+
+export async function loadAdminDashboardOverview(
+  fetcher: AdminDashboardFetcher = apiGet,
+  signal?: AbortSignal,
+  cacheKey?: string,
+): Promise<AdminDashboardOverview> {
+  const cached = cacheKey ? adminDashboardCache.get(cacheKey) : undefined;
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+  if (cached && cacheKey) adminDashboardCache.delete(cacheKey);
+
+  try {
+    const response = await fetcher<AdminDashboardOverview>(ADMIN_DASHBOARD_PATH, { signal });
+    const data = response.data;
+    const sections = ["users", "applications", "loans", "payouts", "repayments", "audit"] as const;
+    if (!data || typeof data !== "object" || !sections.every((key) => data[key] && typeof data[key] === "object" && "status" in data[key])) {
+      throw new ApiClientError(502, "INVALID_DASHBOARD_RESPONSE", "The server returned an unexpected administrator dashboard response.");
+    }
+    if (cacheKey && !signal?.aborted && sections.every((key) => data[key].status === "success")) {
+      adminDashboardCache.set(cacheKey, { expiresAt: Date.now() + ADMIN_DASHBOARD_CACHE_TTL_MS, data });
+    }
+    return data;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "The administrator dashboard could not be loaded. Retry or open the relevant section.";
+    const failed = { status: "error" as const, message };
+    return { users: failed, applications: failed, loans: failed, payouts: failed, repayments: failed, audit: failed };
+  }
+}
+
+export function invalidateAdminDashboardCache(cacheKey?: string): void {
+  if (cacheKey) adminDashboardCache.delete(cacheKey);
+  else adminDashboardCache.clear();
 }
 
 export function getAdminDashboardPath(

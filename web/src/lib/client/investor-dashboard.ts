@@ -4,6 +4,7 @@ import type { InvestorWalletResult } from "./investor-wallet";
 const RECENT_LIMIT = 5;
 
 export const INVESTOR_DASHBOARD_PATHS = {
+  overview: "/api/investor/dashboard/overview",
   portfolio: "/api/investor/portfolio",
   investments: `/api/investor/investments?page=1&limit=${RECENT_LIMIT}&sortBy=createdAt&sortOrder=desc`,
   payouts: `/api/investor/payouts?page=1&limit=${RECENT_LIMIT}&sortBy=createdAt&sortOrder=desc`,
@@ -42,10 +43,7 @@ export interface InvestorDashboardInvestment {
   id: string;
   status: string;
   createdAt: string;
-  totalContributedSatang: string;
-  loan: { id: string; status: string; principalSatang: string; annualInterestRate: string; termMonths: number };
-  contributions: Array<{ id: string; amountSatang: string; createdAt: string; ledgerTransaction: { status: string } }>;
-  payoutAllocation: Array<{ id: string; principalSatang: string; interestSatang: string }>;
+  loan: { id: string };
 }
 
 export interface InvestorDashboardPayout {
@@ -123,12 +121,25 @@ export async function loadInvestorDashboard(
   }
   if (cached && cacheKey) investorDashboardCache.delete(cacheKey);
 
-  const entries = await Promise.all(keys.map(async (key) => {
-    const resource = await loadInvestorDashboardResource(key, fetcher, signal);
-    onResource?.(key, resource);
-    return [key, resource] as const;
-  }));
-  const data = Object.assign(createInitialInvestorDashboardData(), Object.fromEntries(entries));
+  let data: InvestorDashboardData;
+  try {
+    const response = await fetcher<InvestorDashboardData>(INVESTOR_DASHBOARD_PATHS.overview, { signal });
+    const overview = response.data;
+    if (!overview || typeof overview !== "object" ||
+      !keys.every((key) => overview[key] && typeof overview[key] === "object" && "status" in overview[key])) {
+      throw new ApiClientError(502, "INVALID_DASHBOARD_RESPONSE", "The server returned an unexpected dashboard response.");
+    }
+    data = overview;
+  } catch (error) {
+    const message = errorMessage(error);
+    data = {
+      portfolio: { status: "error", message },
+      investments: { status: "error", message },
+      payouts: { status: "error", message },
+      wallet: { status: "error", message },
+    };
+  }
+  for (const key of keys) onResource?.(key, data[key]);
   if (cacheKey && !signal?.aborted && keys.every((key) => data[key].status === "success")) {
     investorDashboardCache.set(cacheKey, { expiresAt: Date.now() + DASHBOARD_CACHE_TTL_MS, data });
   }

@@ -1,6 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { afterEach, describe, expect, it } from "vitest";
 import { GET as listApplications } from "../../src/app/api/admin/applications/route";
+import { GET as getAdminDashboardOverview } from "../../src/app/api/admin/dashboard/overview/route";
 import { GET as getApplication } from "../../src/app/api/admin/applications/[applicationId]/route";
 import { POST as decideApplication } from "../../src/app/api/admin/applications/[applicationId]/decision/route";
 import { POST as issueLoanOffer } from "../../src/app/api/admin/applications/[applicationId]/offers/route";
@@ -191,6 +192,24 @@ afterEach(async () => {
 });
 
 describe("API-05 administrator APIs", () => {
+  it("API-05-30 returns independent admin dashboard sections from one authenticated request", async () => {
+    const admin = await createIdentity("ADMIN");
+    const result = await expectApiSuccess<{
+      users: { status: string; data?: { total: number } };
+      applications: { status: string; data?: { total: number } };
+      loans: { status: string; data?: { active: number } };
+      payouts: { status: string; data?: { pending: number } };
+      repayments: { status: string; data?: unknown[] };
+      audit: { status: string; data?: unknown[] };
+    }>(await getAdminDashboardOverview(apiRequest(admin, "http://localhost/api/admin/dashboard/overview")));
+    expect(result.users.status).toBe("success");
+    expect(result.applications.status).toBe("success");
+    expect(result.loans.status).toBe("success");
+    expect(result.payouts.status).toBe("success");
+    expect(result.repayments.status).toBe("success");
+    expect(result.audit.status).toBe("success");
+  });
+
   it("API-05-24 posts an audited opening balance through the admin financial API", async () => {
     const admin = await createIdentity("ADMIN");
     const source = await prisma.platformAccount.findUniqueOrThrow({ where: { accountCode: "1300" }, select: { id: true, status: true } });

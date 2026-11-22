@@ -53,7 +53,7 @@ async function createInvestorWithEligibleLoan() {
   const version = await prisma.applicationVersion.create({ data: { applicationId: application.id, versionNumber: 1, submittedData: { requested_loan: { purpose: "education" } }, requestedPrincipalSatang: 2_000_000n, requestedTermMonths: 12, createdByUserId: borrower.id }, select: { id: true } });
   await prisma.loanApplication.update({ where: { id: application.id }, data: { currentVersionId: version.id } });
   const offer = await prisma.loanOffer.create({ data: { applicationId: application.id, applicationVersionId: version.id, principalSatang: 2_000_000n, annualInterestRate: "0.12", termMonths: 12, expiresAt: new Date(Date.now() + 7 * 86_400_000), status: "ACCEPTED", acceptedAt: new Date(), createdByUserId: admin.id }, select: { id: true } });
-  const loan = await prisma.loan.create({ data: { borrowerProfileId: borrowerProfile.id, applicationId: application.id, acceptedOfferId: offer.id, principalSatang: 2_000_000n, annualInterestRate: "0.12", termMonths: 12, status: "FUNDING", fundingDeadline: new Date(Date.now() + 7 * 86_400_000) }, select: { id: true } });
+  const loan = await prisma.loan.create({ data: { borrowerProfileId: borrowerProfile.id, applicationId: application.id, acceptedOfferId: offer.id, principalSatang: 2_000_000n, annualInterestRate: "0.12", termMonths: 12, status: "FUNDING", fundingDeadline: new Date(Date.now() + 60 * 60_000) }, select: { id: true } });
   const escrowPlatformAccount = await prisma.platformAccount.upsert({
     where: { accountCode: "2200" },
     update: { status: "ACTIVE" },

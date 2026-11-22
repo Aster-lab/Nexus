@@ -1,59 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
-import { ArrowRight, ClipboardCheck, FileText, Landmark, Users, Wallet, ShieldCheck, type LucideIcon } from "lucide-react";
-import { ApiClientError } from "../../lib/client/api-client";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { ArrowRight, ClipboardCheck, FileText, Landmark, RefreshCw, Users, Wallet, ShieldCheck, type LucideIcon } from "lucide-react";
 import { formatSatang } from "../../lib/client/financial-format";
 import {
-  loadAdminDashboardApplications,
-  loadAdminDashboardLoans,
-  loadAdminDashboardPayouts,
-  loadAdminDashboardUsers,
-  loadAdminRecentAuditLogs,
-  loadAdminRecentRepayments,
+  type AdminDashboardOverview,
+  type AdminDashboardSection,
   type AdminDashboardAuditRow,
   type AdminDashboardRepaymentRow,
+  invalidateAdminDashboardCache,
+  loadAdminDashboardOverview,
 } from "../../lib/client/admin-dashboard";
-import { apiGet } from "../../lib/client/api-client";
 import { Badge } from "../ui/badge";
 import { buttonVariants } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { EmptyState, ErrorState, LoadingState } from "../ui/request-state";
 import { useAuth } from "../auth/auth-provider";
 import { RoleOnboardingTour } from "../shared/role-onboarding-tour";
+import { Button } from "../ui/button";
 
-type LoadState<T> = { status: "loading" } | { status: "error"; message: string } | { status: "success"; data: T };
-
-function useDashboardSection<T>(load: (signal?: AbortSignal) => Promise<T>): LoadState<T> {
-  const [state, setState] = useState<LoadState<T>>({ status: "loading" });
-  useEffect(() => {
-    const controller = new AbortController();
-    void load(controller.signal).then((data) => {
-      if (!controller.signal.aborted) setState({ status: "success", data });
-    }).catch((error: unknown) => {
-      if (controller.signal.aborted) return;
-      const message = error instanceof ApiClientError
-        ? error.message
-        : "This dashboard section could not be loaded. Retry or check its dedicated page.";
-      setState({ status: "error", message });
-    });
-    return () => controller.abort();
-  }, [load]);
-  return state;
+function initialDashboard(): AdminDashboardOverview {
+  return {
+    users: { status: "loading" }, applications: { status: "loading" }, loans: { status: "loading" },
+    payouts: { status: "loading" }, repayments: { status: "loading" }, audit: { status: "loading" },
+  };
 }
-
-const usersLoader = (signal?: AbortSignal) => loadAdminDashboardUsers(apiGet, signal);
-const applicationsLoader = (signal?: AbortSignal) => loadAdminDashboardApplications(apiGet, signal);
-const loansLoader = (signal?: AbortSignal) => loadAdminDashboardLoans(apiGet, signal);
-const payoutsLoader = (signal?: AbortSignal) => loadAdminDashboardPayouts(apiGet, signal);
-const repaymentsLoader = (signal?: AbortSignal) => loadAdminRecentRepayments(apiGet, signal);
-const auditLoader = (signal?: AbortSignal) => loadAdminRecentAuditLogs(apiGet, signal);
 
 function MetricCard({
   title,
   icon: Icon,
-  load,
+  state,
   value,
   href,
   description,
@@ -61,13 +38,12 @@ function MetricCard({
 }: {
   title: string;
   icon: LucideIcon;
-  load: () => Promise<Record<string, number>>;
+  state: AdminDashboardSection<Record<string, number>>;
   value: (summary: Record<string, number>) => string;
   href: string;
   description: (summary: Record<string, number>) => string;
   tourTarget: string;
 }) {
-  const state = useDashboardSection(load);
   return <Card className="admin-metric-card" data-tour-target={tourTarget}>
     <CardHeader className="admin-metric-card__header">
       <div className="admin-metric-card__icon" aria-hidden="true"><Icon size={19} /></div>
@@ -88,19 +64,18 @@ function MetricCard({
 function ActivityList<T extends { id: string }>({
   title,
   description,
-  load,
+  state,
   rows,
   emptyTitle,
   tourTarget,
 }: {
   title: string;
   description: string;
-  load: () => Promise<T[]>;
+  state: AdminDashboardSection<T[]>;
   rows: (data: T[]) => ReactNode;
   emptyTitle: string;
   tourTarget: string;
 }) {
-  const state = useDashboardSection(load);
   return <Card className="admin-activity-card" data-tour-target={tourTarget}>
     <CardHeader>
       <CardTitle>{title}</CardTitle>
@@ -136,22 +111,34 @@ function AuditActivity({ data }: { data: AdminDashboardAuditRow[] }) {
 export function AdminDashboardPage() {
   const { identity } = useAuth();
   const displayName = identity?.email ?? "Administrator";
+  const [data, setData] = useState<AdminDashboardOverview>(initialDashboard);
+  const loadDashboard = useCallback((force = false) => {
+    if (force) invalidateAdminDashboardCache(identity?.id);
+    const controller = new AbortController();
+    void loadAdminDashboardOverview(undefined, controller.signal, identity?.id).then((overview) => {
+      if (!controller.signal.aborted) setData(overview);
+    });
+    return () => controller.abort();
+  }, [identity?.id]);
+  useEffect(() => {
+    return loadDashboard();
+  }, [loadDashboard]);
   return <section className="admin-page">
     <header className="admin-page__header">
       <div><p className="admin-eyebrow">NEXUS operations</p><h1>Administrator dashboard</h1><p className="admin-muted">Welcome back, {displayName}. Here’s your overview of platform activity and items that may need attention.</p></div>
-      <div className="flex flex-wrap gap-2"><RoleOnboardingTour userId={identity?.id ?? null} role="ADMIN"/><Link data-tour-target="admin-nav-policies" className={buttonVariants({ variant: "outline" })} href="/admin/policies"><ShieldCheck size={16} />Policies</Link><Link data-tour-target="admin-nav-financial" className={buttonVariants({ variant: "outline" })} href="/admin/financial"><ClipboardCheck size={16} />Reconciliation</Link></div>
+      <div className="flex flex-wrap gap-2"><RoleOnboardingTour userId={identity?.id ?? null} role="ADMIN"/><Button variant="outline" onClick={() => loadDashboard(true)}><RefreshCw size={16} />Refresh</Button><Link data-tour-target="admin-nav-policies" className={buttonVariants({ variant: "outline" })} href="/admin/policies"><ShieldCheck size={16} />Policies</Link><Link data-tour-target="admin-nav-financial" className={buttonVariants({ variant: "outline" })} href="/admin/financial"><ClipboardCheck size={16} />Reconciliation</Link></div>
     </header>
 
     <div className="admin-metric-grid" data-tour-target="admin-summary">
-      <MetricCard title="Users" icon={Users} load={usersLoader} value={(summary) => String(summary.total)} description={(summary) => `${summary.borrowers} borrowers · ${summary.investors} investors`} href="/admin/users" tourTarget="admin-summary" />
-      <MetricCard title="Pending applications" icon={FileText} load={applicationsLoader} value={(summary) => String(summary.total)} description={() => "Submitted, under review, or awaiting information"} href="/admin/applications" tourTarget="admin-applications" />
-      <MetricCard title="Active loans" icon={Landmark} load={loansLoader} value={(summary) => String(summary.active)} description={() => "Loans currently in progress"} href="/admin/loans" tourTarget="admin-loans" />
-      <MetricCard title="Pending investor payouts" icon={Wallet} load={payoutsLoader} value={(summary) => String(summary.pending)} description={() => "Allocations awaiting payout review"} href="/admin/payouts" tourTarget="admin-payouts" />
+      <MetricCard title="Users" icon={Users} state={data.users} value={(summary) => String(summary.total)} description={(summary) => `${summary.borrowers} borrowers · ${summary.investors} investors`} href="/admin/users" tourTarget="admin-summary" />
+      <MetricCard title="Pending applications" icon={FileText} state={data.applications} value={(summary) => String(summary.total)} description={() => "Submitted, under review, or awaiting information"} href="/admin/applications" tourTarget="admin-applications" />
+      <MetricCard title="Active loans" icon={Landmark} state={data.loans} value={(summary) => String(summary.active)} description={() => "Loans currently in progress"} href="/admin/loans" tourTarget="admin-loans" />
+      <MetricCard title="Pending investor payouts" icon={Wallet} state={data.payouts} value={(summary) => String(summary.pending)} description={() => "Allocations awaiting payout review"} href="/admin/payouts" tourTarget="admin-payouts" />
     </div>
 
     <div className="admin-activity-grid">
-      <ActivityList title="Recent repayments" description="Latest repayments and their posting status." load={repaymentsLoader} rows={(data) => <RepaymentActivity data={data} />} emptyTitle="No repayment activity" tourTarget="admin-repayments" />
-      <ActivityList title="Recent administrative activity" description="Recent immutable audit events." load={auditLoader} rows={(data) => <AuditActivity data={data} />} emptyTitle="No recent administrative activity" tourTarget="admin-audit-logs" />
+      <ActivityList title="Recent repayments" description="Latest repayments and their posting status." state={data.repayments} rows={(rows) => <RepaymentActivity data={rows} />} emptyTitle="No repayment activity" tourTarget="admin-repayments" />
+      <ActivityList title="Recent administrative activity" description="Recent immutable audit events." state={data.audit} rows={(rows) => <AuditActivity data={rows} />} emptyTitle="No recent administrative activity" tourTarget="admin-audit-logs" />
     </div>
   </section>;
 }

@@ -6,6 +6,7 @@ import { GET as getMarketplaceLoan } from "../../src/app/api/investor/marketplac
 import { GET as listInvestments, POST as createInvestment } from "../../src/app/api/investor/investments/route";
 import { GET as getInvestment } from "../../src/app/api/investor/investments/[investmentId]/route";
 import { GET as getPortfolio } from "../../src/app/api/investor/portfolio/route";
+import { GET as getInvestorDashboardOverview } from "../../src/app/api/investor/dashboard/overview/route";
 import { GET as getPreferences, PUT as savePreferences } from "../../src/app/api/investor/preferences/route";
 import { GET as getInvestorWallet } from "../../src/app/api/investor/wallet/route";
 import { GET as listPayouts } from "../../src/app/api/investor/payouts/route";
@@ -65,6 +66,20 @@ afterEach(async () => {
 });
 
 describe("API-04 investor APIs", () => {
+  it("API-04-20 returns independently scoped dashboard sections in one authenticated request", async () => {
+    const investor = await createInvestor();
+    const result = await expectApiSuccess<{
+      portfolio: { status: string; data?: { investorProfileId: string } };
+      investments: { status: string; data?: Array<{ id: string; loan: { id: string } }> };
+      payouts: { status: string; data?: unknown[] };
+      wallet: { status: string; data?: { wallet: { balanceSatang: string } | null; transactions: unknown[] } };
+    }>(await getInvestorDashboardOverview(request(investor, "http://localhost/api/investor/dashboard/overview")));
+    expect(result.portfolio.data?.investorProfileId).toBe(investor.profileId);
+    expect(result.investments.status).toBe("success");
+    expect(result.payouts.status).toBe("success");
+    expect(result.wallet.status).toBe("success");
+  });
+
   it("API-04-01 returns only the authenticated investor profile", async () => {
     const investor = await createInvestor();
     const profile = await expectApiSuccess<{ id: string; displayName: string }>(await getProfile(request(investor, "http://localhost/api/investor/profile")));
