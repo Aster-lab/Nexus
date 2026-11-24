@@ -75,7 +75,6 @@ export async function postSimulatedWalletTopUp(input: PostWalletTopUpInput): Pro
 
   try {
     return await withSerializableTransactionRetry(async (tx) => {
-      // Lock the owner's wallet before reading its balance; all writes remain one transaction.
       const lockedWallets = await tx.$queryRaw<Array<{ id: string }>>`
         SELECT id FROM wallets WHERE owner_user_id = ${normalizedInput.userId}::uuid FOR UPDATE
       `;
@@ -101,7 +100,6 @@ export async function postSimulatedWalletTopUp(input: PostWalletTopUpInput): Pro
         if (!profile) fail("FORBIDDEN", "An active investor profile is required for simulated top-ups.", 403);
       }
 
-      // Global key uniqueness spans all financial operations, so check after determining owner scope.
       const foreignLedger = await tx.ledgerTransaction.findUnique({ where: { idempotencyKey: key }, select: { id: true } });
       if (foreignLedger) fail("IDEMPOTENCY_KEY_CONFLICT", "The idempotency key is already used by another financial request.", 409);
 

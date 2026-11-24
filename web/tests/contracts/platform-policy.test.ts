@@ -10,7 +10,6 @@ import {
     type PlatformPolicy,
 } from '../../src/lib/contracts/platform-policy';
 
-//test data
 const validNotificationPolicy = {
     schema_version: "essential_notification_policy.v1",
     categories : [
@@ -55,9 +54,6 @@ const validRepaymentPolicy = {
   currency: "THB",
 };
 
-// --------------------------------------------------
-// Essential Notification Policy
-// --------------------------------------------------
 
 describe("EssentialNotificationPolicyValuesSchema", () => {
   it("accepts a valid notification policy", () => {
@@ -139,9 +135,6 @@ describe("EssentialNotificationPolicyValuesSchema", () => {
   });
 });
 
-// --------------------------------------------------
-// Loan Offer Policy
-// --------------------------------------------------
 
 describe("LoanOfferPolicyValuesSchema", () => {
   it("accepts a valid loan offer policy", () => {
@@ -206,9 +199,6 @@ describe("LoanOfferPolicyValuesSchema", () => {
   });
 });
 
-// --------------------------------------------------
-// Loan Interest Policy
-// --------------------------------------------------
 
 describe("LoanInterestPolicyValuesSchema", () => {
   it("accepts the approved 12% reducing-balance policy", () => {
@@ -262,9 +252,6 @@ describe("LoanInterestPolicyValuesSchema", () => {
   });
 });
 
-// --------------------------------------------------
-// Platform Fee Policy
-// --------------------------------------------------
 
 describe("PlatformFeePolicyValuesSchema", () => {
   it("accepts the approved 2% fee policy", () => {
@@ -340,9 +327,6 @@ describe("PlatformFeePolicyValuesSchema", () => {
   });
 });
 
-// --------------------------------------------------
-// Repayment Policy
-// --------------------------------------------------
 
 describe("RepaymentPolicyValuesSchema", () => {
   it("accepts the approved repayment policy", () => {
@@ -440,9 +424,6 @@ describe("RepaymentPolicyValuesSchema", () => {
   });
 });
 
-// --------------------------------------------------
-// Overall Platform Policy Contract
-// --------------------------------------------------
 
 describe("PlatformPolicyContractSchema", () => {
   it("accepts a valid loan offer contract", () => {
@@ -523,9 +504,6 @@ describe("PlatformPolicyContractSchema", () => {
   });
 });
 
-// --------------------------------------------------
-// Cross-policy consistency
-// --------------------------------------------------
 
 describe("validateInterestRepaymentConsistency", () => {
   const interestContract = PlatformPolicyContractSchema.parse({
@@ -548,8 +526,6 @@ describe("validateInterestRepaymentConsistency", () => {
   });
 
   it("rejects mismatched annual interest rates", () => {
-    // Deliberately bypass schema validation to test the
-    // cross-policy function's defensive consistency check.
     const mismatchedRepayment = {
       policy_code: "REPAYMENT_POLICY",
       policy_values: {

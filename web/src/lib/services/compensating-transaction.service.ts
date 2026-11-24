@@ -90,8 +90,6 @@ async function compensateInTransaction(
   const existing = await findExistingCompensation(tx, input);
   if (existing) return existing;
 
-  // Lock and reread the immutable original before checking for another
-  // compensation, so concurrent requests cannot both reverse it.
   await tx.$queryRaw<Array<{ id: string }>>`
     SELECT id FROM ledger_transactions
     WHERE id = ${input.originalLedgerTransactionId}::uuid
@@ -198,8 +196,6 @@ async function compensateInTransaction(
     return {
       ledgerTransactionId: reversal.id,
       walletId: entry.walletId,
-      // Historical user-wallet entries predate account 2100. Tag their
-      // compensation so the post-migration control ledger follows the wallet.
       platformAccountId:
         entry.platformAccountId ??
         (wallet?.ownerUserId ? walletControlAccount?.id ?? null : null),

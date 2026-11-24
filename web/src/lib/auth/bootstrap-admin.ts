@@ -10,17 +10,11 @@ const bootstrapInputSchema = z.object({
 
 export interface BootstrappedAdmin { id: string; email: string }
 
-/**
- * Creates the first administrator only. The transaction-wide advisory lock
- * serializes simultaneous bootstrap attempts, including revoked admin grants.
- */
 export async function bootstrapFirstAdmin(input: { email: string; password: string }): Promise<BootstrappedAdmin> {
   const validated = bootstrapInputSchema.parse(input);
   const passwordHash = await hashPassword(validated.password);
 
   return prisma.$transaction(async (tx) => {
-    // Project a supported scalar instead of returning PostgreSQL's `void`
-    // advisory-lock result, which Prisma cannot deserialize via $queryRaw.
     await tx.$queryRaw<Array<{ locked: number }>>`
       SELECT 1::int AS locked
       FROM (SELECT pg_advisory_xact_lock(726531948201::bigint)) AS bootstrap_lock

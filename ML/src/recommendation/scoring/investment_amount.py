@@ -1,5 +1,4 @@
 from decimal import Decimal
-#investment amount
 def calculate_investment_amount_score(
         loan_amount,
         preferred_min,

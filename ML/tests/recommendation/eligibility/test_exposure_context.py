@@ -8,7 +8,6 @@ from recommendation.eligibility.exposure_context import (
 )
 from recommendation.eligibility.exposure_limits import check_exposure_limits
 
-#UNIT TESTS
 def test_calculates_all_exposure_categories(
     investor, loans, investments
 ):
@@ -193,7 +192,6 @@ def test_missing_target_loan_raises(investor, loans):
         )
 
 
-#USECASES
 def test_context_and_limit_checker_work_together(
     investor, loans, investments
 ):
@@ -232,7 +230,6 @@ def test_investment_is_ineligible_when_per_loan_limit_is_exceeded(
     assert result["checks"]["per_loan"]["passed"] is False
 
 
-#USECASE WITH REAL DATA
 def to_decimal(value):
     return Decimal(str(value))
 
@@ -261,7 +258,6 @@ def test_builds_context_from_real_investor_and_loan_json(
     loans = deepcopy(load_test_loan)
     target_loan = loans[0]
 
-    # Test records only; these do not come from the JSON files.
     investments = [
         {
             "investor_id": investor["investor_id"],

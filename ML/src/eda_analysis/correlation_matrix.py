@@ -14,7 +14,6 @@ output_dir.mkdir(exist_ok=True)
 
 df = pd.read_csv(data_path)
 
-#correlation matrix
 corr = df.corr(method='pearson')
 print("---Pearson Correlation Matrix---")
 print(corr.round(3))

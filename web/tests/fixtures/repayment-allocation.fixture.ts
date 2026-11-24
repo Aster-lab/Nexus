@@ -28,10 +28,6 @@ export interface RepaymentAllocationLifecycleContext {
   cleanup: () => Promise<void>;
 }
 
-/**
- * Creates a due repayment fixture through the real funding and disbursement
- * workflows. `investorCount` is one or two for the allocation test cases.
- */
 export async function createRepaymentAllocationLifecycleContext(
   investorCount: 1 | 2,
 ): Promise<RepaymentAllocationLifecycleContext> {

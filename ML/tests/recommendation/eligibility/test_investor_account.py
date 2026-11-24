@@ -15,7 +15,6 @@ def make_investor(status='ACTIVE',verified=True,onboarding = True):
         }
     }
 
-#Account status
 @pytest.mark.parametrize(
     "status,expected",
     [
@@ -31,7 +30,6 @@ def test_check_account_status(status,expected):
     investor = make_investor(status=status)
     assert check_account_status(investor) is expected
 
-#verified
 @pytest.mark.parametrize(
     "verified,expected",
     [
@@ -43,7 +41,6 @@ def test_check_verification(verified,expected):
     investor = make_investor(verified=verified)
     assert check_verification(investor) is expected
 
-#onboarding
 @pytest.mark.parametrize(
     "onboarding_completed, expected",
     [
@@ -55,7 +52,6 @@ def test_check_onboarding(onboarding_completed,expected):
     investor = make_investor(onboarding=onboarding_completed)
     assert check_onboarding(investor) is expected
 
-#account eligibility
 @pytest.mark.parametrize(
     "status, verified, onboarding_completed, expected",
     [
@@ -71,7 +67,6 @@ def test_check_investor_account(status,verified,onboarding_completed,expected):
     assert check_investor_account(investor) is expected
 
 
-#usecase
 def test_check_investor_account_usecase(load_test_investor):
     investor = load_test_investor
 

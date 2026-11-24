@@ -1,4 +1,3 @@
-#ranking
 def rank_loans(scored_loans):
     return sorted(
         scored_loans,

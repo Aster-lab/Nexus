@@ -69,7 +69,7 @@ function assertSameRequest(
     existing: ContributionRecord,
     input: PostInvestorContributionInputs
 ): void {
-    const matches = 
+    const matches =
       existing.investment.investorProfile.userId === input.userId &&
       existing.investment.loanId === input.loanId &&
       existing.amountSatang === input.amountSatang;
@@ -135,6 +135,10 @@ async function postWithinTransaction(
 
     if (!loan || loan.status !== "FUNDING"){
         reject("The loan is not availabe for funding","INVALID_LOAN");
+    }
+
+    if (loan.borrowerProfile.userId === user.id) {
+        reject("You cannot invest in your own loan.", "OWN_LOAN_INVESTMENT_FORBIDDEN");
     }
 
     if (loan.fundingDeadline <= now) {
@@ -209,7 +213,6 @@ async function postWithinTransaction(
         },
     });
 
-    // Create draft ledger transaction
     const ledger = await tx.ledgerTransaction.create({
         data: {
         transactionType: "INVESTOR_CONTRIBUTION",
@@ -221,10 +224,8 @@ async function postWithinTransaction(
         },
     });
 
-    // Reflect user-owned wallet activity in the shared 2100 control account.
     const walletControlAccount = await requireUserWalletControlAccount(tx);
 
-    // Balanced ledger entries
     await tx.ledgerEntry.createMany({
         data: [
         {
@@ -245,7 +246,6 @@ async function postWithinTransaction(
         ],
     });
 
-    // Conditional wallet updates protect against stale balances
     const debit = await tx.wallet.updateMany({
         where: {
         id: investorWallet.id,
@@ -277,7 +277,6 @@ async function postWithinTransaction(
         reject("Shared escrow wallet could not be credited.", "ESCROW_CREDIT_FAILED");
     }
 
-    // Post only after every related write succeeds
     await tx.ledgerTransaction.update({
         where: { id: ledger.id },
         data: { status: "POSTED", postedAt: now },
@@ -299,7 +298,7 @@ async function postWithinTransaction(
         content: "Your contribution has been posted to the loan's funding escrow. Track it in your portfolio.",
         actionPath: "/investor/portfolio",
     });
-    
+
     await tx.escrowTransaction.create({
         data: {
         escrowAccountId: escrow.id,
@@ -309,7 +308,6 @@ async function postWithinTransaction(
         },
     });
 
-    // Update loan funding with a conditional capacity check
     const fundingUpdate = await tx.loan.updateMany({
         where: {
         id: loan.id,
@@ -324,7 +322,6 @@ async function postWithinTransaction(
         reject("Loan funding capacity changed.", "FUNDING_UPDATE_FAILED");
     }
 
-    // Update loan-specific escrow balance
     const escrowUpdate = await tx.escrowAccount.updateMany({
         where: {
         id: escrow.id,
@@ -339,7 +336,6 @@ async function postWithinTransaction(
     }
 
 
-    // Complete funding without automatically disbursing the loan
     const updatedLoan = await tx.loan.findUniqueOrThrow({
         where: { id: loan.id },
         select: { fundedSatang: true, principalSatang: true },
@@ -399,7 +395,7 @@ async function postWithinTransaction(
                 maxWait: 10_000,
                 timeout: 30_000,
              },
-            
+
         );
         } catch (error) {
         if (!(error instanceof Prisma.PrismaClientKnownRequestError)) {

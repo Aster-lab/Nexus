@@ -102,7 +102,6 @@ export function saveBorrowerApplicationFormDraft(
   try {
     storage.setItem(borrowerApplicationFormStorageKey(userId), JSON.stringify({ version: APPLICATION_FORM_STORAGE_VERSION, values }));
   } catch {
-    // Storage can be disabled or full; the form remains usable in memory.
   }
 }
 
@@ -114,7 +113,6 @@ export function clearBorrowerApplicationFormDraft(
   try {
     storage.removeItem(borrowerApplicationFormStorageKey(userId));
   } catch {
-    // Storage can be unavailable in privacy-restricted browsers.
   }
 }
 

@@ -50,7 +50,6 @@ describe("Opening Balance + Investor Contribution integration", () => {
   });
 
   afterAll(async () => {
-    // Keep any existing administrator cleanup from your previous test setup here.
   });
 
   async function getInvestorWallet() {
@@ -682,7 +681,6 @@ describe("Opening Balance + Investor Contribution integration", () => {
       idempotencyKey: fixture.idempotencyKey,
     };
 
-    // Submit both requests at nearly the same time.
     const results = await Promise.all([
       postInvestorContribution(contributionInput),
       postInvestorContribution(contributionInput),
@@ -693,7 +691,6 @@ describe("Opening Balance + Investor Contribution integration", () => {
     const investorWalletAfter = await getInvestorWallet();
     const escrowWalletAfter = await getEscrowWallet();
 
-    // Only one financial debit and credit should occur.
     expect(investorWalletAfter.balanceSatang).toBe(
       investorWalletBefore.balanceSatang - fixture.amountSatang,
     );
@@ -702,7 +699,6 @@ describe("Opening Balance + Investor Contribution integration", () => {
       escrowWalletBefore.balanceSatang + fixture.amountSatang,
     );
 
-    // Only one contribution record should exist.
     const contributions = await prisma.investmentContribution.findMany({
       where: {
         idempotencyKey: fixture.idempotencyKey,
@@ -711,7 +707,6 @@ describe("Opening Balance + Investor Contribution integration", () => {
 
     expect(contributions).toHaveLength(1);
 
-    // The loan and escrow should also reflect only one contribution.
     const loan = await prisma.loan.findUniqueOrThrow({
       where: { id: fixture.loan.id },
     });
@@ -732,15 +727,12 @@ describe("Opening Balance + Investor Contribution integration", () => {
     const remainingSatang =
       loanBefore.principalSatang - loanBefore.fundedSatang;
 
-    // Each request is individually valid, but together they exceed
-    // the loan's remaining funding capacity.
     const contributionAmount = remainingSatang / 2n + 1n;
 
     expect(contributionAmount).toBeGreaterThan(0n);
     expect(contributionAmount).toBeLessThanOrEqual(remainingSatang);
     expect(contributionAmount * 2n).toBeGreaterThan(remainingSatang);
 
-    // Ensure the investor can afford BOTH requests.
     await fundInvestorWallet(contributionAmount * 2n);
 
     const investorWalletBefore = await getInvestorWallet();
@@ -818,8 +810,6 @@ describe("Opening Balance + Investor Contribution integration", () => {
 
     expect(contributionAmount).toBeGreaterThan(0n);
 
-    // The loan can accept both contributions, but the wallet
-    // will only have enough funds for one.
     await fundInvestorWallet(contributionAmount);
 
     const investorWalletBefore = await getInvestorWallet();
@@ -897,14 +887,12 @@ describe("Opening Balance + Investor Contribution integration", () => {
 
       expect(investorWalletBefore.balanceSatang).toBe(0n);
 
-      // Step 1: Administrator posts the investor's opening balance.
       await fundInvestorWallet();
 
       const fundedWallet = await getInvestorWallet();
 
       expect(fundedWallet.balanceSatang).toBe(fixture.amountSatang);
 
-      // Step 2: Investor contributes the funded amount to the loan.
       await postInvestorContribution({
         userId: fixture.investorUser.id,
         loanId: fixture.loan.id,
@@ -912,7 +900,6 @@ describe("Opening Balance + Investor Contribution integration", () => {
         idempotencyKey: fixture.idempotencyKey,
       });
 
-      // Step 3: Verify the final wallet balances.
       const finalInvestorWallet = await getInvestorWallet();
       const finalEscrowWallet = await getEscrowWallet();
 
@@ -922,7 +909,6 @@ describe("Opening Balance + Investor Contribution integration", () => {
         escrowWalletBefore.balanceSatang + fixture.amountSatang,
       );
 
-      // Step 4: Verify both operations were persisted.
       const openingBalance = await prisma.openingBalance.findFirstOrThrow({
         where: {
           walletId: investorWalletBefore.id,
@@ -939,7 +925,6 @@ describe("Opening Balance + Investor Contribution integration", () => {
       expect(openingBalance.amountSatang).toBe(fixture.amountSatang);
       expect(contribution.amountSatang).toBe(fixture.amountSatang);
 
-      // Step 5: Verify both ledger transactions are balanced.
       const openingEntries = await getLedgerEntries(
         openingBalance.ledgerTransactionId,
       );

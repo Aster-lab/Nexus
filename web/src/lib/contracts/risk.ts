@@ -5,8 +5,6 @@ export const NEXUS_RISK_FEATURE_SCHEMA_VERSION = "nexus_risk_features.v2" as con
 export const RISK_RESPONSE_SCHEMA_VERSION = "nexus_prediction_batch.v1" as const;
 export const PERSISTED_PREDICTION_OUTPUT_SCHEMA_VERSION = "nexus_prediction_output.v1" as const;
 
-// Keep this tuple aligned with ML/feature_contract.py. Its position is the
-// vector order expected by the trained model; JSON object key order is ignored.
 export const RISK_FEATURE_NAMES = [
   "annual_income",
   "dti",
@@ -26,15 +24,15 @@ const finiteNumber = z.number().finite();
 export const RiskFeaturesSchema = z
   .object({
     annual_income: finiteNumber.positive(),
-    dti: finiteNumber.nonnegative(), // percentage points
+    dti: finiteNumber.nonnegative(),
     loan_amount: finiteNumber.positive(),
     acc_open_past_24mths: finiteNumber.nonnegative(),
-    bc_util: finiteNumber.min(0).max(1), // proportion
-    lti: finiteNumber.nonnegative(), // ratio
-    interest_burden: finiteNumber.nonnegative(), // derived ratio
+    bc_util: finiteNumber.min(0).max(1),
+    lti: finiteNumber.nonnegative(),
+    interest_burden: finiteNumber.nonnegative(),
     sub_grade_num: z.number().int().min(1).max(35),
-    int_rate: finiteNumber.min(0).max(1), // proportion
-    revol_util: finiteNumber.min(0).max(1), // proportion
+    int_rate: finiteNumber.min(0).max(1),
+    revol_util: finiteNumber.min(0).max(1),
     term_months: z.number().int().positive(),
   })
   .strict();
@@ -67,9 +65,6 @@ export const FeatureSnapshotContractSchema = z
   })
   .strict();
 
-// NEXUS-native contract for retraining against THB amounts and application-
-// time bureau inputs. Kept separate from v1 so old LendingClub artifacts and
-// historical snapshots can never be mistaken for this model's input schema.
 export const NEXUS_RISK_FEATURE_NAMES = [
   "annual_income", "dti", "loan_amount", "acc_open_past_24mths", "bc_util",
   "lti", "interest_burden", "credit_score", "int_rate", "revol_util", "term_months",
@@ -77,15 +72,15 @@ export const NEXUS_RISK_FEATURE_NAMES = [
 
 export const NexusRiskFeaturesSchema = z.object({
   annual_income: finiteNumber.positive(),
-  dti: finiteNumber.nonnegative(), // percentage points
-  loan_amount: finiteNumber.positive(), // THB
+  dti: finiteNumber.nonnegative(),
+  loan_amount: finiteNumber.positive(),
   acc_open_past_24mths: finiteNumber.nonnegative(),
-  bc_util: finiteNumber.nonnegative(), // ratio; may exceed 1 for over-limit accounts
+  bc_util: finiteNumber.nonnegative(),
   lti: finiteNumber.nonnegative(),
   interest_burden: finiteNumber.nonnegative(),
-  credit_score: finiteNumber.nonnegative(), // bureau-native score; no unapproved scale conversion
+  credit_score: finiteNumber.nonnegative(),
   int_rate: finiteNumber.min(0).max(1),
-  revol_util: finiteNumber.nonnegative(), // ratio; may exceed 1 for over-limit accounts
+  revol_util: finiteNumber.nonnegative(),
   term_months: z.number().int().positive(),
 }).strict();
 export type NexusRiskFeatures = z.infer<typeof NexusRiskFeaturesSchema>;
@@ -134,7 +129,6 @@ export const PredictionPersistenceRequestSchema = z
   })
   .strict();
 
-// Raw feature objects are temporarily accepted as v1 for existing callers.
 export const RiskRequestSchema = z.union([
   VersionedRiskRequestSchema,
   RiskFeaturesSchema,
@@ -164,13 +158,10 @@ const PredictionSchema = z
   })
   .strict();
 
-// JSON stored in PredictionRecord.predictionOutput. The prediction fields
-// match the item output in the API response, with a persisted-document version.
 export const PersistedPredictionOutputSchema = PredictionSchema.extend({
   schema_version: z.literal(PERSISTED_PREDICTION_OUTPUT_SCHEMA_VERSION),
 }).strict();
 
-// No producer or approved non-null field catalog exists yet.
 export const PredictionRecordExplanationSchema = z.null();
 
 export const PredictionBatchResponseSchema = z
@@ -247,7 +238,6 @@ export const InvestorPreferenceContractSchema = z
   })
   .strict();
 
-/** Normalize persisted v1 preferences while dropping model-dependent risk tiers. */
 export function normalizeInvestorPreference(value: unknown): z.infer<typeof InvestorPreferenceContractSchema> | null {
   const current = InvestorPreferenceContractSchema.safeParse(value);
   if (current.success) return current.data;
@@ -262,9 +252,6 @@ export function normalizeInvestorPreference(value: unknown): z.infer<typeof Inve
   };
 }
 
-// Legacy Python recommendation contract retained for deployments that still
-// expose that service. The investor-facing preference matcher uses the local
-// deterministic contract below and does not require these risk fields.
 export const DynamicRecommendationCandidateSchema = z.object({
   loan_id: z.uuid(),
   principal_satang: z.number().int().positive().safe(),
@@ -368,8 +355,8 @@ const RecommendationCandidateSchema = z
       .strict(),
     terms: z
       .object({
-        interest_rate: z.number().finite().nonnegative(), // percentage points
-        loan_duration: z.number().int().positive(), // months
+        interest_rate: z.number().finite().nonnegative(),
+        loan_duration: z.number().int().positive(),
         loan_purpose: z.enum(["business", "education", "medical", "personal", "home", "other"]),
       })
       .strict(),

@@ -46,8 +46,6 @@ function isSerializationConflict(error: unknown): boolean {
     return true;
   }
 
-  // Support the narrowly identified PostgreSQL serialization
-  // conflict exposed by Prisma's driver adapter.
   if (code !== "P2010" || typeof error !== "object" || error === null) {
     return false;
   }
@@ -161,7 +159,6 @@ export async function generateRepaymentSchedule({
     try {
       return await prisma.$transaction(
         async (tx) => {
-          // Idempotency check inside the transaction.
           const existingSchedule =
             await tx.repaymentSchedule.findUnique({
               where: { loanId },
@@ -258,7 +255,6 @@ export async function generateRepaymentSchedule({
             throw new Error("Loan principal must be greater than zero.");
           }
 
-          // All financial calculations come from the tested pure module.
           const calculation = calculateSchedule({
             principalSatang: loan.principalSatang,
             annualInterestRate: Number(loan.annualInterestRate),
@@ -300,8 +296,6 @@ export async function generateRepaymentSchedule({
             );
           }
 
-          // Create the schedule first. currentVersionId is linked after
-          // the version and its installments have been created.
           const schedule = await tx.repaymentSchedule.create({
             data: {
               loanId: loan.id,
@@ -407,7 +401,6 @@ export async function generateRepaymentSchedule({
         SCHEDULE_TRANSACTION_OPTIONS,
       );
     } catch (error) {
-      // A concurrent request may have created the unique schedule first.
       if (isUniqueConstraintConflict(error)) {
         const existing = await findExistingSchedule(loanId);
 
@@ -488,7 +481,6 @@ export async function validateRepaymentEligibility({
     throw new Error("Borrower is not authorized to repay this loan.");
   }
 
-  // Delinquent loans remain repayable.
   if (
     loan.status !== "ACTIVE" &&
     loan.status !== "DELINQUENT"

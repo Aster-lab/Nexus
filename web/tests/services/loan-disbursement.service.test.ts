@@ -84,7 +84,7 @@ describe("Loan Disbursement integration", () => {
         data: { status: "ACTIVE" },
         });
   });
-  
+
 
   afterEach(async () => {
     await prisma.platformAccount.update({
@@ -104,7 +104,6 @@ describe("Loan Disbursement integration", () => {
   });
 
   afterAll(async () => {
-    // Preserve the project's existing administrator cleanup convention.
   });
 
   async function createBorrowerWallet() {
@@ -231,7 +230,7 @@ describe("Loan Disbursement integration", () => {
       expect(result.referenceType).toBe("LOAN");
       expect(result.status).toBe("POSTED");
       expect(result.postedAt).not.toBeNull();
-      
+
       expect(escrowAfter.balanceSatang).toBe(
         escrowBefore.balanceSatang - fixture.loan.principalSatang,
       );

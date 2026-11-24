@@ -96,7 +96,6 @@ def test_build_feature_rows_supports_multiple_loans():
         [2] * len(FEATURE_NAMES),
     ]
 
-#prediction test
 def test_predict_and_attach_calls_engine_with_feature_rows(
     loans, predictions
 ):

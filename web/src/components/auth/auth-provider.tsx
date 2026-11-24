@@ -38,7 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const establishSession = useCallback((nextIdentity: AuthIdentity) => {
-    // Ignore any in-flight session check that started before the login completed.
     requestSequence.current += 1;
     setIdentity(nextIdentity);
     setError(null);
@@ -71,8 +70,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [signOut]);
 
   useEffect(() => {
-    // The credentials login response already carries the authoritative identity.
-    // Avoid an unauthenticated /api/auth/me request on the login page.
     if (window.location.pathname === "/login") return;
     queueMicrotask(() => { void refresh(); });
   }, [refresh]);

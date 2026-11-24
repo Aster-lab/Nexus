@@ -5,19 +5,16 @@ from pathlib import Path
 import numpy as np
 from sklearn.decomposition import PCA
 
-#structure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s -%(levelname)s -%(message)s"
 )
 logger = logging.getLogger(__name__)
 
-#Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_INPUT_PATH = BASE_DIR / 'data' /'processed'/'som_features_scaled.npy'
 DEFAULT_CONFIG_PATH = BASE_DIR /'config'/'grid_config.json'
 VESANTO_COEFF = 5.0
 
-#class
 @dataclass(frozen=True)
 class SOMGridConfig:
     rows: int
@@ -30,7 +27,6 @@ class SOMGridConfig:
 def compute_grid_dimensions(
         X: np.ndarray, vesanto_coeff: float = VESANTO_COEFF
 ) -> SOMGridConfig :
-    #Input validation 
     if X.ndim !=2:
         raise ValueError(f"Expected 2D array, got shape {X.shape}")
     if np.isnan(X).any() or np.isinf(X).any():
@@ -38,21 +34,17 @@ def compute_grid_dimensions(
 
     n_samples = X.shape[0]
 
-    #target market capacity
     total_neurons = vesanto_coeff * np.sqrt(n_samples)
 
     X_std = (X - np.mean(X, axis=0)) / (np.std(X, axis=0) + 1e-8)
-    #PCA
     pca = PCA(n_components = 2, svd_solver = 'randomized', random_state=42)
     pca.fit(X_std)
     lambda_1, lambda_2 = pca.explained_variance_
 
     if lambda_2 <=0:
         raise ValueError("Secondary eigenvalue is non-positive")
-    #Aspect raito
     aspect_ratio = np.sqrt(lambda_1/lambda_2)
 
-    #Grid
     M = int(np.round(np.sqrt(total_neurons*aspect_ratio)))
     N = int(np.round(np.sqrt(total_neurons/aspect_ratio)))
 

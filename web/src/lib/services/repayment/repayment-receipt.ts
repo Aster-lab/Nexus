@@ -30,11 +30,6 @@ export interface RepaymentReceipt {
   repayments: RepaymentReceiptItem[];
 }
 
-/**
- * Builds a receipt from committed repayment and ledger records. This should
- * be called after the posting transaction resolves, so a receipt is never
- * returned for an uncommitted or incomplete posting.
- */
 export async function generateRepaymentReceipt(
   ledgerTransactionId: string,
 ): Promise<RepaymentReceipt> {

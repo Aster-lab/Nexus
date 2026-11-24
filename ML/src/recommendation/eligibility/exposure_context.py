@@ -127,11 +127,9 @@ def _get_qualifying_investments(investor_id, investments, loan_lookup):
         if status not in COMMITTED_STATUSES | IGNORED_STATUSES:
             raise ValueError(f"Unsupported investment status: {status!r}.")
 
-        # Investments belonging to other investors do not contribute.
         if record_investor_id != investor_id:
             continue
 
-        # Cancelled and rejected investments do not contribute.
         if status in IGNORED_STATUSES:
             continue
 

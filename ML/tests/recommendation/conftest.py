@@ -23,7 +23,6 @@ INVESTMENT_PATH = (
     BASE_DIR / "fixtures" / "recommendation" / "investment.json"
 )
 
-#loading real data
 @pytest.fixture
 def load_test_investor():
     with open(INVESTOR_PATH, "r", encoding="utf-8") as file:
@@ -39,7 +38,6 @@ def load_test_loan():
 def load_test_investment():
     with open(INVESTMENT_PATH,"r", encoding= "utf-8") as file:
         return json.load(file,parse_float = Decimal)
-#test data
 @pytest.fixture
 def investor():
     return {
@@ -52,7 +50,6 @@ def investor():
                 "per_borrower": Decimal("10000"),
                 "per_purpose": Decimal("20000"),
             },
-    #not used by builder
             "current": {
                 "total": Decimal("99999"),
                 "per_loan": Decimal("99999"),

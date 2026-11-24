@@ -9,15 +9,9 @@ export interface PersistRepaymentAllocationsInput {
   loanId: string;
   principalSatang: bigint;
   interestSatang: bigint;
-  /** Override is intended for database rollback integration coverage. */
   allocationMethod?: string;
 }
 
-/**
- * Persists the auditable investor allocation for one repayment. This helper
- * must run on the caller's transaction so allocation failure rolls back the
- * repayment, ledger posting, wallet projections, and installment updates.
- */
 export async function persistRepaymentAllocations(
   tx: Prisma.TransactionClient,
   input: PersistRepaymentAllocationsInput,

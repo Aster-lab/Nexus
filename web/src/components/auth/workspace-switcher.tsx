@@ -18,8 +18,6 @@ function isNexusRole(role: string): role is NexusRole {
 export function WorkspaceSwitcher({ roles }: { roles: readonly string[] }) {
   const pathname = usePathname();
   const workspaces = [...new Set(roles.filter(isNexusRole))];
-  // Borrower/investor switching is available only when both self-service roles
-  // were selected or subsequently enabled. Administrator alone is not a switch.
   if (!roles.includes("BORROWER") || !roles.includes("INVESTOR")) return null;
 
   const activeRole = workspaces.find((role) => {

@@ -338,7 +338,7 @@ describe("Investor refund integration", () => {
     ).not.toBeNull();
   });
 
-  
+
   it("rejects refund approval by a non-administrator", async () => {
     await fundAndContribute();
     await cancelLoan();
@@ -399,7 +399,7 @@ describe("Investor refund integration", () => {
 
     expect(refunds).toHaveLength(1);
     });
-  
+
     it("rejects a refund when the investor wallet is inactive", async () => {
         const investment = await fundAndContribute();
         await cancelLoan();
@@ -467,7 +467,7 @@ describe("Investor refund integration", () => {
             }),
         ).toBe(0);
         });
-    
+
     it("rejects a refund request made by a non-administrator", async () => {
         await expect(
             requestLoanRefund({
@@ -489,7 +489,6 @@ describe("Investor refund integration", () => {
         });
 
     it("refunds two investors separately for the same cancelled loan", async () => {
-        // 1. Create contributions from two investors for the same loan.
         const firstInvestment = await fundAndContribute();
 
         const secondInvestor = await createAdditionalInvestorForLoan({
@@ -518,12 +517,10 @@ describe("Investor refund integration", () => {
         expect(firstInvestment.id).toBeDefined();
         expect(secondInvestment.id).toBeDefined();
 
-        // 2. Cancel the loan and approve its refund request.
         await cancelLoan();
 
         const approval = await approveRefund();
 
-        // 3. Refund each investor separately.
         const firstRefund = await postInvestorRefund({
             investmentId: firstInvestment.id,
             approvalAuditLogId: approval.id,
@@ -539,7 +536,6 @@ describe("Investor refund integration", () => {
         expect(firstRefund).toBeDefined();
         expect(secondRefund).toBeDefined();
 
-        // 4. Load both investor wallets and the loan's escrow account.
         const firstWallet = await prisma.wallet.findUniqueOrThrow({
             where: { ownerUserId: fixture.investorUser.id },
         });
@@ -556,13 +552,10 @@ describe("Investor refund integration", () => {
             where: { id: escrowAccount.platformWalletId },
         });
 
-        // 5. Verify the refund amounts and wallet projections.
         expect(firstWallet.balanceSatang).toBe(fixture.amountSatang);
         expect(secondWallet.balanceSatang).toBe(secondInvestor.amountSatang);
         expect(escrowAccount.heldSatang).toBe(0n);
 
-        // The shared escrow wallet can hold funds for other loans.
-        // Its balance must equal all escrow subledger balances attached to it.
         const totalEscrowHeld = await prisma.escrowAccount.aggregate({
             where: {
                 platformWalletId: escrowWallet.id,
@@ -576,7 +569,6 @@ describe("Investor refund integration", () => {
             totalEscrowHeld._sum.heldSatang ?? 0n,
         );
 
-        // 6. Verify that exactly two refund movements were recorded.
         const refundMovements = await prisma.escrowTransaction.findMany({
             where: {
                 escrowAccountId: escrowAccount.id,
@@ -593,7 +585,6 @@ describe("Investor refund integration", () => {
             ),
         ).toBe(fixture.amountSatang + secondInvestor.amountSatang);
 
-        // 7. Verify each refund's posted ledger transaction and both entries.
         const investorWalletIds = new Set([
             firstWallet.id,
             secondWallet.id,
@@ -627,7 +618,6 @@ describe("Investor refund integration", () => {
             expect(debit).toBeDefined();
             expect(credit).toBeDefined();
 
-            // Refund accounting: debit escrow, credit the investor.
             expect(debit!.walletId).toBe(escrowAccount.platformWalletId);
 
             expect(credit!.walletId).not.toBeNull();
@@ -642,10 +632,8 @@ describe("Investor refund integration", () => {
             creditedWalletIds.add(credit!.walletId!);
         }
 
-        // Each investor must receive exactly one refund credit.
         expect(creditedWalletIds).toEqual(investorWalletIds);
 
-        // 8. Reconcile each wallet against its posted ledger entries.
         async function expectWalletReconciled(walletId: string) {
             const wallet = await prisma.wallet.findUniqueOrThrow({
                 where: { id: walletId },

@@ -280,12 +280,10 @@ describe("Repayment fixture account setup", () => {
       "Failed to restore one or more repayment fixture account states",
     );
 
-    // Each resource must have received both activation and restoration calls.
     expect(walletUpdates).toBe(2);
     expect(clearingUpdates).toBe(2);
     expect(sourceUpdates).toBe(2);
-    
-    // Retry cleanup so the shared database is not left modified.
+
     await state.cleanup();
     cleanup = undefined;
     expect(walletUpdates).toBe(3);

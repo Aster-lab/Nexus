@@ -15,8 +15,6 @@ export async function administerPolicyVersion(input: {
   action: PolicyAdministrationAction;
 }) {
   return prisma.$transaction(async (tx) => {
-    // Lock policy definitions in one stable order so concurrent activation of the
-    // interest and repayment policies cannot each validate against stale peers.
     await tx.$queryRaw<Array<{ id: string }>>`
       SELECT id FROM platform_policies ORDER BY policy_code FOR UPDATE
     `;
@@ -94,7 +92,6 @@ async function ensureInterestAndRepaymentConsistency(
     select: { policyValues: true },
   });
   if (!counterpart) {
-    // The MVP repayment contract is fixed at 12%; do not activate a loan rate it cannot honor.
     const candidateRate = "annual_interest_rate_basis_points" in candidate.policy_values
       ? candidate.policy_values.annual_interest_rate_basis_points
       : null;

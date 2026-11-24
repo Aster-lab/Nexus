@@ -38,11 +38,6 @@ function subjectReference(subject: AuthRateLimitSubject, value: string): string 
     .digest("hex");
 }
 
-/**
- * Atomically record an authentication attempt and determine whether its
- * account/network subjects have exceeded their shared database-backed limits.
- * Values are HMACed before persistence so email addresses and IPs are not logged.
- */
 export async function consumeAuthRateLimit(
   eventType: "AUTH_LOGIN_ATTEMPT" | "AUTH_REGISTER_ATTEMPT",
   subjects: AuthRateLimitSubject[],

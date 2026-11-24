@@ -23,7 +23,6 @@ export async function hashPassword(password: string): Promise<string> {
   return `scrypt$v1$${salt.toString("base64url")}$${derivedKey.toString("base64url")}`;
 }
 
-/** Performs a derivation even for malformed/missing hashes to reduce account enumeration timing differences. */
 export async function verifyPassword(
   password: string,
   encodedHash: string | null | undefined,
@@ -41,7 +40,6 @@ export async function verifyPassword(
         expected = parsedKey;
       }
     } catch {
-      // Keep the fallback values and finish the same derivation path.
     }
   }
   const actual = await deriveKey(password, salt);

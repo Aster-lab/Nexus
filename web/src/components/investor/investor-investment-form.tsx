@@ -28,7 +28,7 @@ interface PendingContributionRequest {
 function pendingStorageKey(loanId: string): string { return `nexus:investment-pending:${loanId}`; }
 
 function clearPendingContribution(loanId: string): void {
-  try { window.sessionStorage.removeItem(pendingStorageKey(loanId)); } catch { /* Browser storage may be unavailable. */ }
+  try { window.sessionStorage.removeItem(pendingStorageKey(loanId)); } catch {  }
 }
 
 function amountErrorMessage(code: ReturnType<typeof validateInvestorContributionAmount>["code"]): string | null {
@@ -122,7 +122,7 @@ export function InvestorInvestmentFormPage({ loanId }: { loanId: string }) {
     setError(null);
     setConfirming(false);
     setPendingRequest(request);
-    try { window.sessionStorage.setItem(pendingStorageKey(loanId), JSON.stringify(request)); } catch { /* In-memory retry remains available. */ }
+    try { window.sessionStorage.setItem(pendingStorageKey(loanId), JSON.stringify(request)); } catch {  }
     const timeoutController = new AbortController();
     const timeoutId = window.setTimeout(() => timeoutController.abort(), 30_000);
     try {

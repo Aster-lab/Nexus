@@ -1,4 +1,3 @@
-/** Coalesces duplicate in-flight UI submits; backend idempotency remains authoritative. */
 export class SubmissionGuard {
   private active: Promise<unknown> | null = null;
 

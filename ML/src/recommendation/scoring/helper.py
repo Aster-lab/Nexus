@@ -1,4 +1,3 @@
-#range score helper for 0-1 distance from range
 def calculate_range_score(
         value,
         preferred_min,
@@ -15,7 +14,7 @@ def calculate_range_score(
         raise ValueError(
             "Global min must be less than global max"
         )
-    
+
     if value < global_min or value > global_max:
         raise ValueError(
             "Value is outside of global bounds"
@@ -25,7 +24,7 @@ def calculate_range_score(
         raise ValueError(
             "Preferred range is outside of global bounds"
         )
-    
+
     if preferred_min <= value <= preferred_max:
         return 1.0
 
@@ -34,4 +33,3 @@ def calculate_range_score(
 
     if value > preferred_max:
         return 1.0 - (value - preferred_max) / (global_max - preferred_max)
-#interest rate

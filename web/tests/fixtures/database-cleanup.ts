@@ -24,7 +24,6 @@ export async function cleanupInvestorContributionFixture(
       select: { id: true },
     });
 
-  // Preserve posted financial history and all its references.
   if (postedContribution) return;
 
   await prisma.escrowAccount.deleteMany({
@@ -39,7 +38,6 @@ export async function cleanupInvestorContributionFixture(
     where: { id: fixture.offer.id },
   });
 
-  // Remove the current-version reference before deleting its version.
   await prisma.loanApplication.update({
     where: { id: fixture.application.id },
     data: { currentVersionId: null },

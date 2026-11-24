@@ -282,7 +282,6 @@ export async function approveLoanDisbursement(input: {
         await assertEligibleLoan(tx, loanId);
         await assertBorrowerConsent(tx, loanId);
 
-        // The requester must still be an active administrator.
         if (!request.actorUserId) {
             fail(
                 "Disbursement request has no requesting administrator.",

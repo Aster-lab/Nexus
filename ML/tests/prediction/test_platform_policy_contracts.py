@@ -16,7 +16,6 @@ def _valid_loan_offer_policy():
             "offer_validity_days": 7,
         },
     }
-# essiential notification policy
 def test_essential_notification_policy_contract_and_zod_alignment():
     policy = PlatformPolicyContract.model_validate({
         "policy_code": "ESSENTIAL_NOTIFICATION_POLICY",
@@ -66,7 +65,6 @@ def test_notification_policy_rejects_duplicated_channels():
             ]},
         })
 
-#loan offer policy
 def test_loan_offer_policy_bounds_and_policy_code_pairing():
     policy = PlatformPolicyContract.model_validate({
         "policy_code": "LOAN_OFFER_POLICY",
@@ -154,7 +152,6 @@ def test_loan_offer_rejects_unapproved_validity_period():
             },
         })
 
-#laon interst policy
 def test_loan_interest_policy_accepts_approved_configuration():
     policy = PlatformPolicyContract.model_validate({
         "policy_code": "LOAN_INTEREST_POLICY",
@@ -199,7 +196,6 @@ def test_loan_interest_policy_rejects_invalid_values(field, value):
             "policy_values": values,
         })
 
-#platform fee policy
 def test_platform_fee_policy_accepts_approved_configuration():
     policy = PlatformPolicyContract.model_validate({
         "policy_code": "PLATFORM_FEE_POLICY",
@@ -249,7 +245,6 @@ def test_platform_fee_policy_rejects_invalid_values(field, value):
             "policy_values": values,
         })
 
-#repayment policy
 def test_repayment_policy_accepts_approved_configuration():
     policy = PlatformPolicyContract.model_validate({
         "policy_code": "REPAYMENT_POLICY",
@@ -329,7 +324,6 @@ def test_repayment_policy_rejects_wrong_schedule_or_currency():
             f"Repayment policy incorrectly accepted "
             f"{field}={value!r}"
         )
-#cross validation
 def _valid_interest_policy(rate=1200):
     return PlatformPolicyContract.model_validate({
         "policy_code": "LOAN_INTEREST_POLICY",
@@ -392,7 +386,6 @@ def test_interest_and_repayment_policies_reject_mismatched_rates():
             interest_policy,
             repayment_policy,
         )
-#strict validation
 def test_policy_contract_rejects_unknown_fields():
     with pytest.raises(ValidationError):
         PlatformPolicyContract.model_validate({

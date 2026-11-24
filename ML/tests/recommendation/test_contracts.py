@@ -17,8 +17,8 @@ from recommendation.contracts import (
 VALID_PREFERENCE = {
     "schema_version": "nexus_investor_preference.v1",
     "risk_tier": ["TIER_B", "TIER_C"],
-    "interest_rate": {"min": 8, "max": 12},  # percentage points, not model proportions
-    "loan_duration": {"min": 6, "max": 36},  # months
+    "interest_rate": {"min": 8, "max": 12},
+    "loan_duration": {"min": 6, "max": 36},
     "investment_amount": {"min": 500, "max": 5000},
     "loan_purpose": ["business", "education"],
 }

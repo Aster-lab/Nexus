@@ -9,7 +9,6 @@ export class FinancialAuthorizationError extends Error {
   }
 }
 
-/** Requires a live account with an unrevoked ADMIN role. */
 export async function requireFinancialAdministrator(
   tx: Prisma.TransactionClient,
   actorUserId: string,

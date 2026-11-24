@@ -37,17 +37,16 @@ def remove_loan_field(loan,field):
     del loan['restrictions'][field]
 
 
-#check age
 @pytest.mark.parametrize(
     ("age","minimum_age","expected"),
      [
-        (18, 18, True),       # Exact boundary
+        (18, 18, True),
         (19, 18, True),
-        (100, 18, True),      # High but valid age
-        (17, 18, False),      # One year below
-        (0, 0, True),         # Boundary at zero
+        (100, 18, True),
+        (17, 18, False),
+        (0, 0, True),
         (0, 1, False),
-        (30, None, True),     # Restriction disabled
+        (30, None, True),
     ],
 )
 def test_check_minimum_age_valid(age,minimum_age,expected):
@@ -71,7 +70,7 @@ def test_check_minimum_age_missing_when_restricted(age):
         remove_investor_field(investor,"age")
     else:
         investor['eligibility']['age'] = age
-    
+
     with pytest.raises(ValueError):
         assert check_minimum_age(investor,make_loan(age=18))
 
@@ -116,7 +115,6 @@ def test_minimum_age_invalid_loan(minimum_age):
         assert check_minimum_age(make_investor(),make_loan(age=minimum_age))
 
 
-#check country
 @pytest.mark.parametrize(
     ("country", "allowed", "expected"),
     [
@@ -124,8 +122,8 @@ def test_minimum_age_invalid_loan(minimum_age):
         ("SG", ["TH"], False),
         ("SG", ["TH", "SG"], True),
         ("TH", ["TH", "SG"], True),
-        ("TH", None, True),        # No restriction
-        ("th", ["TH"], False),     # Exact, case-sensitive match
+        ("TH", None, True),
+        ("th", ["TH"], False),
     ],
 )
 def test_country_valid(country, allowed, expected):
@@ -217,7 +215,6 @@ def test_country_allows_duplicate_allowed_values():
         make_loan(countries=["TH", "TH"]),
     ) is True
 
-# Investor type 
 
 
 @pytest.mark.parametrize(
@@ -227,7 +224,7 @@ def test_country_allows_duplicate_allowed_values():
         ("INSTITUTIONAL", ["INSTITUTIONAL"], True),
         ("COMPANY", ["INDIVIDUAL"], False),
         ("INSTITUTIONAL", ["INDIVIDUAL", "INSTITUTIONAL"], True),
-        ("INDIVIDUAL", None, True),  # No restriction
+        ("INDIVIDUAL", None, True),
         ("individual", ["INDIVIDUAL"], False),
     ],
 )
@@ -323,7 +320,6 @@ def test_investor_type_allows_duplicate_values():
     ) is True
 
 
-# Qualified
 @pytest.mark.parametrize(
     ("required", "qualified", "expected"),
     [
@@ -412,7 +408,6 @@ def test_qualified_requirement_boolean_loan(required):
             make_loan(required=required),
         )
 
-# Missing and malformed data structures
 @pytest.mark.parametrize(
     "restriction",
     [
@@ -494,7 +489,6 @@ def test_missing_top_level_restrictions_raises():
         check_investor_qualification(make_investor(), loan)
 
 
-#combined check
 
 def test_combined_check_passes_all_restrictions():
     investor = make_investor(
@@ -602,7 +596,6 @@ def test_checks_do_not_mutate_input_data():
     assert investor == investor_before
     assert loan == loan_before
 
-#usecase
 def test_investor_qualification_usecase(load_test_investor,load_test_loan):
     investor = load_test_investor
     loans = load_test_loan

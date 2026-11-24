@@ -30,12 +30,10 @@ function isRetryableTransactionError(error: unknown): boolean {
     cause?: unknown;
   };
 
-  // Prisma transaction conflict
   if (candidate.code === "P2034") {
     return true;
   }
 
-  // Prisma 7 PostgreSQL driver-adapter transaction conflict
   if (candidate.cause && typeof candidate.cause === "object") {
     const cause = candidate.cause as {
       kind?: unknown;

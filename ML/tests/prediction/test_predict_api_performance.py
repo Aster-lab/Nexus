@@ -47,7 +47,6 @@ def run_benchmark(client, payload, iterations=100):
     latencies = []
     failures = []
 
-    # Warm-up: allow initial model/runtime overhead to settle.
     for _ in range(5):
         response = client.post("/predict", json=payload)
         assert response.status_code == 200

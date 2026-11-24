@@ -226,8 +226,6 @@ async function expectPostedLedgerTransaction(
   expect(transaction.postedAt).toBeInstanceOf(Date);
   expect(transaction.idempotencyKey).toBe(idempotencyKey);
 
-  // Repayments that include principal also post the 1300/1200 receivable
-  // movement alongside the borrower-to-clearing wallet transfer.
   const principalSatang = transaction.repayments.reduce(
     (total, repayment) => total + repayment.principalSatang,
     0n,

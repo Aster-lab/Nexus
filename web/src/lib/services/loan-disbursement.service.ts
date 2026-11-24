@@ -262,7 +262,6 @@ async function postDisbursement(
     idempotencyKey: string;
   },
 ) {
-  // Validate approval before any idempotent return.
   const approval = await assertApproval(
     tx,
     input.approvalAuditLogId,
@@ -380,7 +379,6 @@ async function postDisbursement(
   await lockEscrowAccount(tx, escrowAccount.id);
   await lockWallets(tx, [escrowWallet.id, borrowerWallet.id]);
 
-  // Re-read all mutable balances and ownership after acquiring locks.
   const [lockedLoan, lockedEscrow, lockedEscrowWallet, lockedBorrowerWallet] =
     await Promise.all([
       tx.loan.findUnique({
@@ -431,7 +429,7 @@ async function postDisbursement(
   ) {
     fail("Loan eligibility changed.", "LOAN_NOT_ELIGIBLE");
   }
-  
+
   if (
     !lockedEscrow ||
     lockedEscrow.status !== "FULLY_FUNDED" ||
@@ -650,9 +648,6 @@ export async function postLoanDisbursement(input: {
       }
 
       if (isUniqueConstraintError(error)) {
-        // A concurrent request may have committed the same idempotency key.
-        // Re-run through the normal validation path; never return a record
-        // merely because the key exists.
         return prisma.$transaction(
           (tx) =>
             postDisbursement(tx, {

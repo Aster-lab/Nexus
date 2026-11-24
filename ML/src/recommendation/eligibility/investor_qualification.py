@@ -44,10 +44,10 @@ def _get_investor_field(eligibility, field):
 def _validate_integer(value,field_name):
     if isinstance(value,bool) or not isinstance(value,int):
         raise ValueError(f"{field_name}must be a non-negative number")
-    
+
     if value < 0:
         raise ValueError(f"{field_name}cannot be negative")
-    
+
 def _validate_minimum_age(minimum_age):
     if minimum_age is None:
         return
@@ -192,7 +192,6 @@ def check_qualified(investor, loan):
         is_eligible=lambda qualified, required: qualified or not required,
         is_inactive=lambda required: required is False,
     )
-#combined check
 def check_investor_qualification(investor, loan):
     restrictions = _get_required_restrictions(loan)
     _validate_all_restrictions(restrictions)

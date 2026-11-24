@@ -261,7 +261,6 @@ describe("Repayment allocation persistence", () => {
         interestAllocations.reduce((a, b) => a + b, 0n),
       ).toBe(repayment.interestSatang);
 
-      // The two components must be persisted separately.
       expect(
         repayment.payoutAllocations.every(
           (row) =>
@@ -281,7 +280,6 @@ describe("Repayment allocation persistence", () => {
     const investmentToDeactivate = activeBefore[1];
     const additionalInvestmentId = investmentToDeactivate.id;
 
-    // Verify that contribution weights come from persisted records.
     const contributionTotals = new Map<string, bigint>();
 
     for (const investment of activeBefore) {
@@ -298,7 +296,6 @@ describe("Repayment allocation persistence", () => {
       [...contributionTotals.values()].every((amount) => amount > 0n),
     ).toBe(true);
 
-    // An inactive investment must not participate in allocation.
     await prisma.investment.update({
       where: { id: additionalInvestmentId },
       data: { status: "CANCELLED" },
@@ -368,7 +365,6 @@ describe("Repayment allocation persistence", () => {
         allocations.every((row) => row.recoverySatang === 0n),
       ).toBe(true);
 
-      // Stable result ordering makes equal-remainder behavior reproducible.
       expect(
         allocations.map((row) => row.investmentId),
       ).toEqual(
@@ -452,8 +448,6 @@ describe("Repayment allocation persistence", () => {
       select: { id: true, balanceSatang: true },
     });
 
-    // Trigger a genuine PostgreSQL VARCHAR(50) error inside the same
-    // transaction after ledger, repayment, and installment writes begin.
     await expect(
       submitFullDueRepayment(context, {
         allocationMethod: "X".repeat(51),

@@ -8,9 +8,7 @@ import {
 
 export interface ReconcileFinancialStateInput {
   actorUserId: string;
-  /** Omit to inspect every loan and loan-referenced ledger transaction. */
   loanIds?: string[];
-  /** Omit to reconcile every wallet projection. */
   walletIds?: string[];
 }
 
@@ -59,11 +57,6 @@ function walletEntrySign(
     : -1n;
 }
 
-/**
- * Reconciles posted ledger transactions, wallet projections, repayments,
- * installment paid totals, and payout allocations. A report is returned for
- * both healthy and inconsistent state so callers can inspect every issue.
- */
 export async function reconcileFinancialState(
   input: ReconcileFinancialStateInput,
 ): Promise<FinancialReconciliationReport> {
@@ -275,8 +268,6 @@ export async function reconcileFinancialState(
     transactionTotals.set(
       transaction.id,
       transaction.entries
-        // Domain repayment totals are the wallet transfer amount. Principal
-        // receivable reclassification adds its own balanced asset pair.
         .filter((entry) => entry.entryType === "DEBIT" && entry.walletId !== null)
         .reduce((total, entry) => total + entry.amountSatang, 0n),
     );

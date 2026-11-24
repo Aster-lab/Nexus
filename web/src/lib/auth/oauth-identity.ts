@@ -8,7 +8,6 @@ export interface VerifiedOAuthIdentityInput {
   emailVerified: boolean;
 }
 
-/** Links a verified OIDC identity to one pre-existing active Nexus user. */
 export async function linkVerifiedOAuthIdentity(
   input: VerifiedOAuthIdentityInput,
 ): Promise<string | null> {

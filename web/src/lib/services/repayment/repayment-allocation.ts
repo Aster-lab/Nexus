@@ -23,10 +23,6 @@ interface ComponentAllocation {
   remainder: bigint;
 }
 
-/**
- * Compares IDs using deterministic code-point ordering.
- * Avoids locale-dependent ordering for financial tie-breaks.
- */
 function compareInvestmentIds(a: string, b: string): number {
   if (a < b) return -1;
   if (a > b) return 1;
@@ -94,15 +90,6 @@ function validateInput(input: AllocationInput): void {
  }
 }
 
-/**
- * Allocates one repayment component proportionally.
- *
- * Uses the largest-remainder method:
- * 1. Calculate each investment's integer quotient.
- * 2. Retain each fractional remainder.
- * 3. Distribute remaining satang by descending remainder.
- * 4. Resolve equal remainders by ascending investmentId.
- */
 function allocateComponent(
   amountSatang: bigint,
   investments: AllocationInvestmentInput[],
@@ -146,7 +133,6 @@ function allocateComponent(
 
   let remainingSatang = amountSatang - allocatedTotal;
 
-  // Largest remainder first; investment ID resolves exact ties.
   const rankedAllocations = [...componentAllocations].sort((a, b) => {
     if (a.remainder > b.remainder) return -1;
     if (a.remainder < b.remainder) return 1;
@@ -154,7 +140,6 @@ function allocateComponent(
     return compareInvestmentIds(a.investmentId, b.investmentId);
   });
 
-  // The leftover is always less than the number of investments.
   for (const allocation of rankedAllocations) {
     if (remainingSatang === 0n) break;
 
@@ -185,12 +170,6 @@ function allocateComponent(
   return allocations;
 }
 
-/**
- * Allocates repayment principal and interest independently
- * according to each investment's total contribution weight.
- *
- * This function performs no database operations.
- */
 export function allocateRepaymentProportionally(
   input: AllocationInput,
 ): AllocationResult[] {

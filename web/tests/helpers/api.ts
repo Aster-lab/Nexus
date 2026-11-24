@@ -2,7 +2,6 @@ import { expect } from "vitest";
 
 export type ApiTestRole = "BORROWER" | "INVESTOR" | "ADMIN";
 
-/** Opaque test session token; identity metadata is never sent as trusted request headers. */
 export interface ApiTestIdentity {
   userId: string;
   role: ApiTestRole;

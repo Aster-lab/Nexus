@@ -61,8 +61,6 @@ afterEach(async () => {
   sessionUsers.clear();
   for (const context of lifecycleContexts.splice(0).reverse()) await context.cleanup();
   for (const activation of accountActivations.splice(0).reverse()) await activation.cleanup();
-  // Wallet funding and investments post immutable ledger history. This suite relies on
-  // the integration database reset between runs and only revokes its temporary sessions.
 });
 
 describe("API-04 investor APIs", () => {

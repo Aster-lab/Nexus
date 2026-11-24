@@ -26,7 +26,6 @@ def recommend_loans(
 
     features = config["features"]
 
-    # Only the five weighted features contribute to the score.
     scoring_features = {
         name: features[name]
         for name in (

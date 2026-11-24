@@ -114,8 +114,6 @@ describe("Repayment fixture context integration", () => {
         where: { id: context.borrowerWalletId },
       });
 
-      // The genuine disbursement in this fixture also credits the borrower's
-      // wallet with the loan principal before the opening balance is posted.
       expect(wallet.balanceSatang).toBe(
         context.openingBalanceSatang + context.loan.principalSatang,
       );

@@ -290,8 +290,6 @@ export async function reconcileInvestorPayouts(
   }, {
     isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
     maxWait: 10_000,
-    // Reconciliation intentionally reads the complete financial history in a
-    // single snapshot; full test and demo datasets can exceed Prisma's 5s default.
     timeout: 60_000,
   });
 }

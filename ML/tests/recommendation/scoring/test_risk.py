@@ -2,13 +2,11 @@ import pytest
 from recommendation.scoring.risk import calculate_risk_score
 from recommendation.validation.load_config import load_config
 
-#RISK SCORE
-#risk score tests
 def test_risk_score():
-    mapping = { 
-        "TIER_A": 1.0, 
-        "TIER_B": 0.67, 
-        "TIER_C": 0.33, 
+    mapping = {
+        "TIER_A": 1.0,
+        "TIER_B": 0.67,
+        "TIER_C": 0.33,
         "TIER_D": 0.0 }
 
     investor_preferences = ["TIER_B","TIER_C"]
@@ -37,7 +35,6 @@ def test_risk_score():
         mapping
     ) == pytest.approx(0.67)
 
-#usecase testing
 def test_risk_usecase_multiple(load_test_investor,load_test_loan):
     config = load_config()
     investor = load_test_investor
@@ -53,7 +50,6 @@ def test_risk_usecase_multiple(load_test_investor,load_test_loan):
         )
         assert score >= 0.0 and score <= 1.0
 
-#usecase - every loan gets a score
 def test_all_loans_scored(load_test_investor,load_test_loan):
     config = load_config()
     investor = load_test_investor

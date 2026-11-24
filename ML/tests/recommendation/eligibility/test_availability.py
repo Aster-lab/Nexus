@@ -27,7 +27,6 @@ def create_loan():
         },
     }
 
-#loan status
 def test_check_loan_status():
     loan = create_loan()
     assert check_loan_status(loan) is True
@@ -47,7 +46,6 @@ def test_check_loan_status():
     loan['status'] = 'INVALID'
     assert check_loan_status(loan) is False
 
-#funding
 def test_check_funding():
     loan= create_loan()
     assert check_funding(loan) is True
@@ -79,25 +77,25 @@ def test_check_funding():
 def test_check_investment_time():
     loan = create_loan()
 
-    current_time = datetime.fromisoformat("2026-10-08T12:00:00+07:00")       
+    current_time = datetime.fromisoformat("2026-10-08T12:00:00+07:00")
     assert check_investment_time(loan,current_time) is True
 
-    current_time = datetime.fromisoformat("2026-09-08T12:00:00+07:00")       
+    current_time = datetime.fromisoformat("2026-09-08T12:00:00+07:00")
     assert check_investment_time(loan,current_time) is False
 
-    current_time = datetime.fromisoformat("2026-10-01T00:00:00+07:00")       
+    current_time = datetime.fromisoformat("2026-10-01T00:00:00+07:00")
     assert check_investment_time(loan,current_time) is True
 
-    current_time = datetime.fromisoformat("2026-10-01T00:00:01+07:00")       
+    current_time = datetime.fromisoformat("2026-10-01T00:00:01+07:00")
     assert check_investment_time(loan,current_time) is True
 
-    current_time = datetime.fromisoformat("2026-10-31T23:59:58+07:00")       
+    current_time = datetime.fromisoformat("2026-10-31T23:59:58+07:00")
     assert check_investment_time(loan,current_time) is True
 
-    current_time = datetime.fromisoformat("2026-10-31T23:59:59+07:00")       
+    current_time = datetime.fromisoformat("2026-10-31T23:59:59+07:00")
     assert check_investment_time(loan,current_time) is True
 
-    current_time = datetime.fromisoformat("2026-11-01T23:59:58+07:00")       
+    current_time = datetime.fromisoformat("2026-11-01T23:59:58+07:00")
     assert check_investment_time(loan,current_time) is False
 
     loan["timing"]["opens_at"] = "2026-10-31T00:00:00+07:00"
@@ -107,7 +105,6 @@ def test_check_investment_time():
 
     assert check_investment_time(loan,current_time) is False
 
-#loan_availability
 def test_check_availability():
     loan = create_loan()
 
@@ -137,7 +134,6 @@ def test_check_availability():
     )
     assert check_loan_availability(loan,current_time) is False
 
-#use case
 def test_check_availability_usecase(load_test_loan):
     loans = load_test_loan
     results = []

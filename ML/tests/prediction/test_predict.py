@@ -61,9 +61,6 @@ def valid_sample():
     ]
 
 
-# --------------------------------------------------
-# Valid input tests
-# --------------------------------------------------
 
 def test_single_prediction_returns_one_result(
     predictor, valid_sample
@@ -108,9 +105,6 @@ def test_batch_prediction_returns_correct_number_of_results(
     assert len(result) == 3
 
 
-# --------------------------------------------------
-# Input validation tests
-# --------------------------------------------------
 
 def test_wrong_feature_count_raises_error(predictor):
     with pytest.raises(ValueError):
@@ -148,9 +142,6 @@ def test_three_dimensional_input_raises_error(predictor):
         predictor.predict_risk(np.zeros((1, 1, 11)))
 
 
-# --------------------------------------------------
-# DataFrame validation
-# --------------------------------------------------
 
 def test_dataframe_with_correct_columns_is_accepted(
     predictor, valid_sample
@@ -179,9 +170,6 @@ def test_dataframe_with_wrong_column_order_is_rejected(
         predictor.predict_risk(df)
 
 
-# --------------------------------------------------
-# Preprocessing consistency
-# --------------------------------------------------
 
 def test_preprocessing_steps_are_called_in_order(
     predictor, valid_sample
@@ -221,9 +209,6 @@ def test_classifier_receives_thirteen_features(
     assert classifier_input.shape == (1, 13)
 
 
-# --------------------------------------------------
-# Probability and risk classification
-# --------------------------------------------------
 
 def test_default_probability_uses_class_one(
     predictor, valid_sample
@@ -252,9 +237,6 @@ def test_prediction_probability_is_rounded_to_four_decimals(
     assert result[0]["default_probability"] == 0.1235
 
 
-# --------------------------------------------------
-# Spatial metrics
-# --------------------------------------------------
 
 def test_spatial_metrics_are_returned(
     predictor, valid_sample

@@ -1,10 +1,8 @@
 import { z } from "zod";
 
-//helpers
 const categoryCode = z.string().trim().max(60).regex(/^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$/);
 const positiveSafeInteger = z.number().int().positive().safe();
 
-// Essential Notification Policy
 export const EssentialNotificationPolicyValuesSchema = z.object({
   schema_version: z.literal("essential_notification_policy.v1"),
   categories: z.array(z.object({
@@ -22,7 +20,6 @@ export const EssentialNotificationPolicyValuesSchema = z.object({
   }
 });
 
-// Loan Offer Policy
 export const LoanOfferPolicyValuesSchema = z.object({
   schema_version: z.literal("loan_offer_policy.v1"),
   min_principal_satang: positiveSafeInteger,
@@ -54,7 +51,6 @@ export const LoanOfferPolicyValuesSchema = z.object({
   }
 });
 
-//loan interest policy
 export const LoanInterestPolicyValuesSchema = z.object({
   schema_version: z.literal("loan_interest_policy.v1"),
   annual_interest_rate_basis_points: positiveSafeInteger,
@@ -63,7 +59,6 @@ export const LoanInterestPolicyValuesSchema = z.object({
   currency: z.literal("THB"),
 }).strict();
 
-//platform fee
 export const PlatformFeePolicyValuesSchema = z.object({
   schema_version: z.literal("platform_fee_policy.v1"),
   fee_rate_basis_points: positiveSafeInteger,
@@ -74,7 +69,6 @@ export const PlatformFeePolicyValuesSchema = z.object({
   currency: z.literal("THB"),
 }).strict();
 
-//repayment policy
 export const RepaymentPolicyValuesSchema = z.object({
   schema_version: z.literal("repayment_policy.v1"),
   repayment_frequency: z.literal("MONTHLY"),
@@ -90,7 +84,6 @@ export const RepaymentPolicyValuesSchema = z.object({
   }
 });
 
-//policy values
 const PolicyValuesSchema = z.union([
   EssentialNotificationPolicyValuesSchema,
   LoanOfferPolicyValuesSchema,
@@ -101,10 +94,10 @@ const PolicyValuesSchema = z.union([
 
 export const PlatformPolicyContractSchema = z.object({
   policy_code: z.enum([
-    "ESSENTIAL_NOTIFICATION_POLICY", 
+    "ESSENTIAL_NOTIFICATION_POLICY",
     "LOAN_OFFER_POLICY",
-    "LOAN_INTEREST_POLICY", 
-    "PLATFORM_FEE_POLICY", 
+    "LOAN_INTEREST_POLICY",
+    "PLATFORM_FEE_POLICY",
     "REPAYMENT_POLICY"]),
   policy_values: PolicyValuesSchema,
 }).strict().superRefine((policy, ctx) => {
@@ -123,7 +116,6 @@ export const PlatformPolicyContractSchema = z.object({
   }
 });
 
-//cross validation
 export type PlatformPolicy = z.infer<typeof PlatformPolicyContractSchema>;
 
 export function validateInterestRepaymentConsistency(

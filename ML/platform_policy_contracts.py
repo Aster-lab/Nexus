@@ -8,7 +8,6 @@ from pydantic import BaseModel, ConfigDict, Field, StrictInt, StringConstraints,
 MAX_SAFE_INTEGER = 9_007_199_254_740_991
 PositiveSafeInt = Annotated[StrictInt, Field(gt=0, le=MAX_SAFE_INTEGER)]
 
-#notification codes are uppercase
 CategoryCode = Annotated[
     str,
     StringConstraints(pattern=r"^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$", max_length=60, strip_whitespace=True),
@@ -18,7 +17,6 @@ CategoryCode = Annotated[
 class StrictDocument(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, str_strip_whitespace=True)
 
-#essiental notification policy
 class EssentialNotificationCategory(StrictDocument):
     category_code: CategoryCode
     required_channels: list[Literal["IN_APP", "EMAIL"]] = Field(min_length=1)
@@ -41,7 +39,6 @@ class EssentialNotificationPolicyValues(StrictDocument):
             raise ValueError("category_code values must be unique")
         return self
 
-#loan offer policy
 class LoanOfferPolicyValues(StrictDocument):
     schema_version: Literal["loan_offer_policy.v1"]
     min_principal_satang: PositiveSafeInt
@@ -69,7 +66,6 @@ class LoanOfferPolicyValues(StrictDocument):
 
 
 
-#loan interest policy
 class LoanInterestPolicyValues(StrictDocument):
     schema_version: Literal["loan_interest_policy.v1"]
     annual_interest_rate_basis_points: PositiveSafeInt
@@ -77,7 +73,6 @@ class LoanInterestPolicyValues(StrictDocument):
     calculation_frequency: Literal["MONTHLY"]
     currency: Literal["THB"]
 
-#platform fee policy
 class PlatformFeePolicyValues(StrictDocument):
     schema_version: Literal["platform_fee_policy.v1"]
     fee_rate_basis_points: PositiveSafeInt
@@ -87,7 +82,6 @@ class PlatformFeePolicyValues(StrictDocument):
     treatment : Literal["CALCULATE_AND_DISPLAY_ONLY"]
     currency: Literal["THB"]
 
-#repayment policy
 class RepaymentPolicyValues(StrictDocument):
     schema_version: Literal["repayment_policy.v1"]
     repayment_frequency: Literal["MONTHLY"]
@@ -104,7 +98,6 @@ class RepaymentPolicyValues(StrictDocument):
             raise ValueError("repayment_components must contain exactly 'PRINCIPAL' and 'INTEREST'")
         return self
 
-#combined policy values
 PolicyValues = Union[
     EssentialNotificationPolicyValues,
     LoanOfferPolicyValues,
@@ -140,7 +133,6 @@ class PlatformPolicyContract(BaseModel):
             raise ValueError("policy_values schema does not match policy_code")
         return self
 
-#cross policy validation
 def validate_interest_repayment_consistency(
         interest_policy: PlatformPolicyContract,
         repayment_policy: PlatformPolicyContract
@@ -149,7 +141,7 @@ def validate_interest_repayment_consistency(
         raise ValueError("interest_policy must have policy_code 'LOAN_INTEREST_POLICY'")
     if repayment_policy.policy_code != "REPAYMENT_POLICY":
         raise ValueError("repayment_policy must have policy_code 'REPAYMENT_POLICY'")
-    
+
     interest_values = interest_policy.policy_values
     repayment_values = repayment_policy.policy_values
 

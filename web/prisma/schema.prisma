@@ -7,9 +7,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// ==========================================
-// ENUMS
-// ==========================================
 
 enum AccountStatus {
   ACTIVE
@@ -411,9 +408,6 @@ enum BackupStatus {
   @@map("backup_status")
 }
 
-// ==========================================
-// 1. USER
-// ==========================================
 
 model User {
   id              String        @id @default(uuid()) @db.Uuid
@@ -469,9 +463,6 @@ model User {
   @@map("users")
 }
 
-// ==========================================
-// 2. ROLE
-// ==========================================
 
 model Role {
   id          String  @id @default(uuid()) @db.Uuid
@@ -484,9 +475,6 @@ model Role {
   @@map("roles")
 }
 
-// ==========================================
-// 3. USER ROLE
-// ==========================================
 
 model UserRole {
   id              String    @id @default(uuid()) @db.Uuid
@@ -501,15 +489,11 @@ model UserRole {
   role      Role  @relation(fields: [roleId], references: [id], onDelete: Restrict)
   grantedBy User? @relation("RoleGrantor", fields: [grantedByUserId], references: [id], onDelete: Restrict)
 
-  // Active assignment uniqueness is enforced by a partial index in SQL migration.
   @@index([userId])
   @@index([roleId])
   @@map("user_roles")
 }
 
-// ==========================================
-// 4. BORROWER PROFILE
-// ==========================================
 
 model BorrowerProfile {
   id               String   @id @default(uuid()) @db.Uuid
@@ -528,9 +512,6 @@ model BorrowerProfile {
   @@map("borrower_profiles")
 }
 
-// ==========================================
-// 5. INVESTOR PROFILE
-// ==========================================
 
 model InvestorProfile {
   id             String         @id @default(uuid()) @db.Uuid
@@ -552,9 +533,6 @@ model InvestorProfile {
   @@map("investor_profiles")
 }
 
-// ==========================================
-// 6. SESSION
-// ==========================================
 
 model Session {
   id               String    @id @default(uuid()) @db.Uuid
@@ -573,9 +551,6 @@ model Session {
   @@map("sessions")
 }
 
-// ==========================================
-// 7. OAUTH ACCOUNT
-// ==========================================
 
 model OAuthAccount {
   id                String   @id @default(uuid()) @db.Uuid
@@ -591,9 +566,6 @@ model OAuthAccount {
   @@map("oauth_accounts")
 }
 
-// ==========================================
-// 8. SECURITY EVENT
-// ==========================================
 
 model SecurityEvent {
   id              String           @id @default(uuid()) @db.Uuid
@@ -613,9 +585,6 @@ model SecurityEvent {
   @@map("security_events")
 }
 
-// ==========================================
-// 9. ACCOUNT RESTRICTION
-// ==========================================
 
 model AccountRestriction {
   id              String    @id @default(uuid()) @db.Uuid
@@ -638,7 +607,6 @@ model AccountRestriction {
   @@map("account_restrictions")
 }
 
-// Borrower domain
 model LoanApplication {
   id                String                @id @default(uuid()) @db.Uuid
   borrowerProfileId String                @map("borrower_profile_id") @db.Uuid
@@ -660,7 +628,6 @@ model LoanApplication {
   riskAssessments     RiskAssessment[]
   documents           ApplicationDocument[]
 
-  // Multiple active applications per borrower are allowed; each application keeps its own lifecycle.
   @@unique([id, currentVersionId], map: "loan_applications_id_current_version_id_key")
   @@unique([id, borrowerProfileId], map: "loan_applications_id_borrower_profile_id_key")
   @@index([borrowerProfileId, status])
@@ -693,7 +660,6 @@ model ApplicationVersion {
 
   @@unique([applicationId, versionNumber])
   @@unique([applicationId, id], map: "application_versions_application_id_id_key")
-  // Positive values and submitted-version immutability are enforced by SQL migration.
   @@index([applicationId, createdAt])
   @@map("application_versions")
 }
@@ -771,14 +737,12 @@ model LoanOffer {
   createdBy          User               @relation("LoanOfferCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
   loan               Loan?
 
-  // Positive-value checks and accepted-offer uniqueness are enforced by SQL migration.
   @@unique([applicationId, id], map: "loan_offers_application_id_id_key")
   @@index([applicationId, status])
   @@index([status, expiresAt])
   @@map("loan_offers")
 }
 
-// Loan Lifecycle
 model Loan {
   id                String @id @default(uuid()) @db.Uuid
   borrowerProfileId String @map("borrower_profile_id") @db.Uuid
@@ -833,7 +797,6 @@ model LoanStatusHistory {
   @@map("loan_status_history")
 }
 
-// wallet and financial Ledger
 model Wallet {
   id                     String       @id @default(uuid()) @db.Uuid
   ownerUserId            String?      @map("owner_user_id") @db.Uuid
@@ -852,7 +815,6 @@ model Wallet {
   withdrawalRequests   WithdrawalRequest[]
   OpeningBalance       OpeningBalance?
 
-  // Exactly-one ownership and posted-ledger balance reconciliation are enforced by SQL constraints/triggers.
   @@unique([ownerUserId], map: "wallets_owner_user_id_key")
   @@unique([ownerPlatformAccountId], map: "wallets_owner_platform_account_id_key")
   @@index([status])
@@ -899,7 +861,6 @@ model LedgerTransaction {
   openingBalance          OpeningBalance?
   investmentRefunds       InvestmentRefund[]
 
-  // Posted headers are immutable; reversals use a separate compensating transaction linked here.
   @@index([status, createdAt])
   @@index([status, postedAt])
   @@index([referenceType, referenceId])
@@ -921,8 +882,6 @@ model LedgerEntry {
   platformAccount   PlatformAccount?  @relation(fields: [platformAccountId], references: [id], onDelete: Restrict)
   accountMappings   LedgerEntryAccountMapping[]
 
-  // Wallet entries may also carry account 2100 as a control-ledger dimension.
-  // Positive amounts, posting balance, and posted-entry immutability are SQL-enforced.
   @@index([ledgerTransactionId])
   @@index([walletId, createdAt])
   @@index([platformAccountId, createdAt])
@@ -967,7 +926,6 @@ model OpeningBalance {
   @@map("opening_balances")
 }
 
-// Investment and Escrow
 
 model Investment {
   id                String           @id @default(uuid()) @db.Uuid
@@ -999,7 +957,6 @@ model InvestmentContribution {
   investment        Investment        @relation(fields: [investmentId], references: [id], onDelete: Restrict)
   ledgerTransaction LedgerTransaction @relation(fields: [ledgerTransactionId], references: [id], onDelete: Restrict)
 
-  // Positive amount, funding cap, and immutable history are enforced by SQL migration.
   @@index([investmentId, createdAt])
   @@index([ledgerTransactionId])
   @@map("investment_contributions")
@@ -1034,7 +991,6 @@ model EscrowAccount {
   platformWallet Wallet              @relation("EscrowPlatformWallet", fields: [platformWalletId], references: [id], onDelete: Restrict)
   transactions   EscrowTransaction[]
 
-  // Held balance, loan cap, and platform-wallet ownership are enforced by SQL migration.
   @@index([platformWalletId])
   @@index([status])
   @@map("escrow_accounts")
@@ -1051,13 +1007,11 @@ model EscrowTransaction {
   escrowAccount     EscrowAccount     @relation(fields: [escrowAccountId], references: [id], onDelete: Restrict)
   ledgerTransaction LedgerTransaction @relation(fields: [ledgerTransactionId], references: [id], onDelete: Restrict)
 
-  // Positive amounts and held-balance reconciliation are enforced by SQL migration.
   @@index([escrowAccountId, createdAt])
   @@index([ledgerTransactionId])
   @@map("escrow_transactions")
 }
 
-//Repayment and Investor Payouts
 model RepaymentSchedule {
   id               String   @id @default(uuid()) @db.Uuid
   loanId           String   @unique @map("loan_id") @db.Uuid
@@ -1113,7 +1067,6 @@ model Installment {
   repayments      Repayment[]
 
   @@unique([scheduleVersionId, installmentNumber])
-  // Schedule amounts and payment bounds are enforced by SQL constraints/triggers.
   @@index([dueDate, status])
   @@map("installments")
 }
@@ -1144,7 +1097,6 @@ model Repayment {
   @@index([ledgerTransactionId])
   @@index([reversalOfRepaymentId])
   @@index([status, receivedAt])
-  // Component totals and immutable repayment history are enforced by SQL migration.
   @@map("repayments")
 }
 
@@ -1163,7 +1115,6 @@ model PayoutAllocation {
   investorPayout InvestorPayout?
 
   @@unique([repaymentId, investmentId])
-  // Principal/interest allocation totals and investment-loan consistency are enforced by SQL.
   @@index([investmentId])
   @@index([repaymentId, createdAt])
   @@map("payout_allocations")
@@ -1192,11 +1143,9 @@ model InvestorPayout {
 
   @@index([status, nextRetryAt])
   @@index([investorProfileId, createdAt])
-  // Payout amounts, wallet ownership, allocation consistency, and completion linkage are enforced by SQL.
   @@map("investor_payouts")
 }
 
-// ML and model
 
 model ModelVersion {
   id                   String             @id @default(uuid()) @db.Uuid
@@ -1231,7 +1180,6 @@ model ModelActivationHistory {
 
   @@index([modelVersionId, createdAt])
   @@index([performedByUserId])
-  // Activation history is append-only; activation policy is left for the approved governance rule.
   @@map("model_activation_history")
 }
 
@@ -1249,7 +1197,6 @@ model FeatureSnapshot {
   predictionRecords  PredictionRecord[]
 
   @@index([applicationVersionId, createdAt])
-  // Feature snapshots are immutable records of the exact model inputs.
   @@map("feature_snapshots")
 }
 
@@ -1269,7 +1216,6 @@ model PredictionRecord {
   @@index([featureSnapshotId, createdAt])
   @@index([modelVersionId, createdAt])
   @@index([predictionType, createdAt])
-  // Prediction history is immutable.
   @@map("prediction_records")
 }
 
@@ -1289,11 +1235,9 @@ model RiskAssessment {
 
   @@index([applicationId, createdAt])
   @@index([applicationVersionId, assessmentStatus])
-  // Current-official uniqueness, prediction linkage, and probability bounds are enforced by SQL.
   @@map("risk_assessments")
 }
 
-// Administration and Governance
 model AuditLog {
   id            String   @id @default(uuid()) @db.Uuid
   actorUserId   String?  @map("actor_user_id") @db.Uuid
@@ -1309,7 +1253,6 @@ model AuditLog {
 
   actor User? @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
 
-  // Append-only; database trigger also protects audit history from mutation.
   @@index([actorUserId, createdAt])
   @@index([targetType, targetId])
   @@index([createdAt])
@@ -1341,7 +1284,6 @@ model PolicyVersion {
   policy     PlatformPolicy @relation(fields: [policyId], references: [id], onDelete: Restrict)
   approvedBy User?          @relation(fields: [approvedByUserId], references: [id], onDelete: Restrict)
 
-  // Positive version numbers and one ACTIVE row per policy are enforced in SQL.
   @@unique([policyId, versionNumber])
   @@index([policyId, status])
   @@index([status, effectiveAt])
@@ -1382,13 +1324,11 @@ model AlertHistory {
   alert Alert @relation(fields: [alertId], references: [id], onDelete: Restrict)
   actor User? @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
 
-  // Append-only status/action history is enforced in SQL.
   @@index([alertId, createdAt])
   @@index([actorUserId])
   @@map("alert_history")
 }
 
-// communciatons and support
 model Notification {
   id        String             @id @default(uuid()) @db.Uuid
   userId    String             @map("user_id") @db.Uuid
@@ -1489,7 +1429,6 @@ model Feedback {
   @@map("feedback")
 }
 
-//finanical operations
 model WithdrawalRequest {
   id                            String                  @id @default(uuid()) @db.Uuid
   userId                        String                  @map("user_id") @db.Uuid
@@ -1509,7 +1448,6 @@ model WithdrawalRequest {
   @@index([userId, createdAt])
   @@index([walletId, status])
   @@index([status, createdAt])
-  // Positive amount, owner consistency, and completed-ledger requirements are enforced in SQL.
   @@map("withdrawal_requests")
 }
 
@@ -1528,7 +1466,6 @@ model IdempotencyRecord {
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
-  // Completion timestamp consistency is enforced in SQL; request-hash semantics belong to the command handler.
   @@map("idempotency_records")
 }
 
@@ -1547,7 +1484,6 @@ model OutboxEvent {
   @@index([status, nextAttemptAt])
   @@index([aggregateType, aggregateId])
   @@index([createdAt])
-  // Nonnegative attempts and completion timestamp consistency are enforced in SQL.
   @@map("outbox_events")
 }
 
@@ -1565,7 +1501,6 @@ model SystemEvent {
   @@map("system_events")
 }
 
-//Document
 model ApplicationDocument {
   id                   String                  @id @default(uuid()) @db.Uuid
   applicationId        String                  @map("application_id") @db.Uuid
@@ -1685,7 +1620,6 @@ model LegalHold {
   @@map("legal_holds")
 }
 
-// recommedation & marketplace
 model InvestorPreference {
   id                String   @id @default(uuid()) @db.Uuid
   investorProfileId String   @unique @map("investor_profile_id") @db.Uuid
@@ -1730,7 +1664,6 @@ model RecommendationRun {
 
   @@index([investorProfileId, createdAt])
   @@index([modelVersionId, createdAt])
-  // Nonnegative latency is enforced in SQL.
   @@map("recommendation_runs")
 }
 
@@ -1748,7 +1681,6 @@ model RecommendationResult {
   @@unique([recommendationRunId, rankingPosition])
   @@unique([recommendationRunId, loanId])
   @@index([loanId])
-  // Positive ranking positions are enforced in SQL.
   @@map("recommendation_results")
 }
 
@@ -1765,7 +1697,6 @@ model SavedLoan {
 
   @@index([investorProfileId, savedAt])
   @@index([loanId])
-  // One currently saved row per investor/loan pair is enforced by a partial SQL index.
   @@map("saved_loans")
 }
 
@@ -1781,7 +1712,6 @@ model SavedLoanHistory {
   @@map("saved_loan_history")
 }
 
-//retention and backup
 model RetentionPolicy {
   id                String                  @id @default(uuid()) @db.Uuid
   policyCode        String                  @map("policy_code") @db.VarChar(80)
@@ -1800,7 +1730,6 @@ model RetentionPolicy {
 
   @@unique([policyCode, versionNumber])
   @@index([status, effectiveAt])
-  // Positive version numbers and approval prerequisites are enforced in SQL.
   @@map("retention_policies")
 }
 
@@ -1819,7 +1748,6 @@ model RetentionExecution {
 
   @@index([status, createdAt])
   @@index([targetType, targetId])
-  // A completed execution must carry its execution timestamp; enforced in SQL.
   @@map("retention_executions")
 }
 
@@ -1834,6 +1762,5 @@ model BackupRecord {
   verifiedAt             DateTime?    @map("verified_at") @db.Timestamptz(6)
 
   @@index([status, createdAt])
-  // Verified backups require verifiedAt; enforced in SQL. Store only a key reference, never key material.
   @@map("backup_records")
 }

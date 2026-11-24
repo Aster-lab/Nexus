@@ -20,7 +20,6 @@ export interface PostWalletTransferInput {
   creditWalletId: string;
 
   amountSatang: bigint;
-  /** Optional principal-only asset reclassification: DR 1300, CR 1200. */
   principalReceivableMovement?: { amountSatang: bigint };
 }
 
@@ -135,22 +134,6 @@ async function findExistingPosting(
   };
 }
 
-/**
- * Posts a balanced transfer between two existing wallets and, when requested,
- * its principal-only receivable reclassification in the same transaction.
- *
- * MUST be called inside the caller's Prisma transaction.
- *
- * Caller responsibilities:
- * - Acquire locks in the established global lock order.
- * - Resolve and validate the business-specific wallet ownership.
- * - Re-read wallet balances after locking.
- * - Use Serializable isolation.
- * - Retry the entire transaction on recognized serialization conflicts.
- *
- * Wallet balance projections are service-owned.
- * Database triggers validate reconciliation; they do not mutate balances.
- */
 export async function postWalletTransfer(
   tx: Prisma.TransactionClient,
   input: PostWalletTransferInput,
@@ -199,7 +182,6 @@ export async function postWalletTransfer(
     throw new Error("Principal receivable movement must be greater than zero.");
   }
 
-  // Return the original successful posting for an identical retry.
   const existing = await findExistingPosting(
     tx,
     input,
@@ -235,7 +217,6 @@ export async function postWalletTransfer(
     throw new Error("Insufficient debit wallet balance.");
   }
 
-  // 1. Create DRAFT transaction header.
   const transaction = await tx.ledgerTransaction.create({
     data: {
       transactionType: input.transactionType,
@@ -250,8 +231,6 @@ export async function postWalletTransfer(
     },
   });
 
-  // 2. Create wallet entries. User wallet lines also point at the 2100
-  // control account as a subledger dimension; amounts are counted once.
   const entries: Prisma.LedgerEntryCreateManyInput[] = [
       {
         ledgerTransactionId: transaction.id,
@@ -290,7 +269,6 @@ export async function postWalletTransfer(
   }
   await tx.ledgerEntry.createMany({ data: entries });
 
-  // 3. Update the debit wallet exactly once.
   const debitUpdate = await tx.wallet.updateMany({
     where: {
       id: input.debitWalletId,
@@ -313,7 +291,6 @@ export async function postWalletTransfer(
     );
   }
 
-  // 4. Update the credit wallet exactly once.
   const creditUpdate = await tx.wallet.updateMany({
     where: {
       id: input.creditWalletId,
@@ -331,7 +308,6 @@ export async function postWalletTransfer(
     throw new Error("Could not update credit wallet.");
   }
 
-  // 5. Perform the only DRAFT -> POSTED transition.
   const posted = await tx.ledgerTransaction.updateMany({
     where: {
       id: transaction.id,
@@ -384,10 +360,6 @@ export async function withSerializableTransactionRetry<T>(
       const errorMessage =
         typeof knownError?.message === "string" ? knownError.message : "";
 
-      // Prisma's PostgreSQL adapter may surface SQLSTATE 40001 directly for
-      // raw FOR UPDATE statements, while model operations wrap it as P2034 or
-      // P2010. Handle all documented shapes without relying on instanceof,
-      // which can differ across generated Prisma runtimes.
       const isSerializationConflict =
         prismaCode === "P2034" ||
         prismaCode === "40001" ||
@@ -404,8 +376,6 @@ export async function withSerializableTransactionRetry<T>(
         throw error;
       }
 
-      // A short exponential backoff with jitter prevents two transactions
-      // that collided once from retrying in lockstep and colliding again.
       const backoffWindowMs = 50 * 2 ** (attempt - 1);
       const jitterMs = Math.floor(Math.random() * backoffWindowMs);
       await new Promise((resolve) =>

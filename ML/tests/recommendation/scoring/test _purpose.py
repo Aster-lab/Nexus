@@ -2,7 +2,6 @@ import pytest
 from recommendation.scoring.purpose import calculate_purpose_score
 from recommendation.validation.load_config import load_config
 
-#loan purpose
 def test_purpose_score():
     investor_purposes = ["home_improvement", "debt_consolidation"]
 
@@ -17,7 +16,6 @@ def test_purpose_score():
         score = calculate_purpose_score(loan_purpose, investor_purposes)
         assert score == pytest.approx(expected)
 
-#usecase
 def test_purpose_usecase(load_test_investor,load_test_loan):
     investor = load_test_investor
     loans = load_test_loan

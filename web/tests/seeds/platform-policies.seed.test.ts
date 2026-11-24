@@ -1,7 +1,6 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// In-memory Prisma mock shared by the seed function and tests.
 const { mockPrisma, policies, versions } = vi.hoisted(() => {
   type MockPolicy = {
     id: string;
@@ -143,7 +142,7 @@ describe("seedPlatformPolicies", () => {
 
   it("rejects an existing version with conflicting policy values", async () => {
     await seedPlatformPolicies();
-    
+
     const existingVersion = versions.find(
       (version) => version.policyId === policies.find(
         (policy) => policy.policyCode === "LOAN_INTEREST_POLICY"
@@ -157,7 +156,6 @@ describe("seedPlatformPolicies", () => {
 
     expect(existingVersion).toBeDefined();
 
-    // Simulate an unexpected change to the existing immutable version.
     existingVersion.policyValues.annual_interest_rate_basis_points = 1300;
 
     await expect(seedPlatformPolicies()).rejects.toThrow();

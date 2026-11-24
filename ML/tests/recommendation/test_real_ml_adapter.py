@@ -1,9 +1,8 @@
 
 import pytest
 
-from recommendation.prediction.ml_adapter import predict_and_attach,FEATURE_NAMES   
+from recommendation.prediction.ml_adapter import predict_and_attach,FEATURE_NAMES
 
-# Import your actual RiskEngine class.
 from predict import RiskEngine
 
 

@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 import numpy as np
-from typing import Optional,Dict 
+from typing import Optional,Dict
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from sklearn.model_selection import train_test_split
@@ -58,7 +58,7 @@ class Preporcessor:
      }
 
     def __init__(
-          self, 
+          self,
           raw_path:Path,
           output_path:Path,
           chunksize:int = 50000,
@@ -71,7 +71,6 @@ class Preporcessor:
         self.sample_size = sample_size
         self.random_state = random_state
 
-        #grade mapping
         grades = [f'{g}{i}' for g in 'ABCDEFG' for i in range(1,6)]
         self.grade_map = {grade:idx +1 for idx,grade in enumerate(grades)}
 
@@ -105,7 +104,7 @@ class Preporcessor:
           )
 
         return chunk[(chunk["annual_inc"] > 0) & (chunk["loan_amnt"] >= 500)]
-    
+
     def impute_domain_specification(self,df:pd.DataFrame) -> pd.DataFrame:
         df.copy()
 
@@ -126,7 +125,7 @@ class Preporcessor:
                 df[col] = df[col].fillna(median).fillna(df[col].median())
 
         return df
-    
+
     def cap_outliers(self,df:pd.DataFrame) -> pd.DataFrame:
         df = df.copy()
         for col, quantile in self.outlier_cap.items():
@@ -197,4 +196,4 @@ if __name__ == '__main__':
     pipeline.run()
 
 
-        
+

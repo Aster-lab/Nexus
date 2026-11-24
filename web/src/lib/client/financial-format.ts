@@ -1,6 +1,5 @@
 const SATANG_INTEGER = /^-?\d+$/;
 
-/** Formats integer satang without converting the amount through floating point. */
 export function formatSatang(value: string, currency = "THB"): string {
   if (!SATANG_INTEGER.test(value)) return "—";
   try {

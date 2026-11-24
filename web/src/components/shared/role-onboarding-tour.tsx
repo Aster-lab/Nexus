@@ -190,7 +190,6 @@ function saveProgress(userId: string, role: TourRole, progress: TourProgress) {
   try {
     window.localStorage.setItem(storageKey(userId, role), JSON.stringify(progress));
   } catch {
-    // The guide remains usable for this session when storage is unavailable.
   }
 }
 

@@ -16,10 +16,8 @@ from recommendation.data.path import RECOMMENDATION_CONFIG_PATH
 from recommendation.recommend import score_dynamic_candidates
 
 logger = logging.getLogger(__name__)
-#singleton reference
 engine: Optional[RiskEngine] = None
 
-#lifecycle - loads models into memory and pauses when api is active
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global engine
@@ -34,14 +32,12 @@ async def lifespan(app: FastAPI):
     finally:
         engine = None
 
-#setup
 app = FastAPI(
     title = "Nexus Credit Risk scoring engine",
     version = '1.0.0',
     description = 'Product REST API for hybrid SOM-GBDT laon risk tiering algorithm',
     lifespan = lifespan,
 )
-#Validation
 class LoanApplicationSchema(BaseModel):
     model_config = ConfigDict(extra="forbid",allow_inf_nan = False, strict = True,)
 
@@ -75,7 +71,7 @@ class LoanApplicationSchema(BaseModel):
         if not value.is_integer():
             raise ValueError("Input must be a whole number")
         return value
-    
+
     def to_feature_list(self) -> List[float]:
         return [getattr(self,feature) for feature in FEATURE_NAMES]
 
@@ -239,10 +235,8 @@ def parse_prediction_item(item: Any) -> LoanApplicationSchema:
     if "schema_version" in item or "features" in item:
         request = PredictionRequestSchema.model_validate(item)
         return request.features
-    # Compatibility path: existing raw v1 feature objects are interpreted as v1.
     return LoanApplicationSchema.model_validate(item)
 
-#health check
 @app.get('/health',status_code = status.HTTP_200_OK)
 def health_check() -> Dict[str,str]:
     if engine is None:
@@ -252,7 +246,6 @@ def health_check() -> Dict[str,str]:
         )
     return {'status':'healthy','model_engine': 'online'}
 
-#algorithm
 def require_ml_service_token(x_ml_service_token: Optional[str] = Header(default=None)) -> None:
     configured_token = os.getenv("ML_SERVICE_TOKEN", "")
     if len(configured_token) < 32:
@@ -336,7 +329,6 @@ def predict_credit_risk(
             },
         )
 
-    # Predict all valid items in one call. If inference fails, fail the whole request.
     try:
         predictions = engine.predict_risk(
             [item["features"] for item in valid_items]
@@ -372,7 +364,6 @@ def predict_credit_risk(
     }
     return PredictionBatchResponseSchema.model_validate(response).model_dump(mode="json")
 
-#Recommendation
 @app.get('/recommendations', status_code=status.HTTP_200_OK)
 def recommend_credit_loans(current_time: str) -> Dict[str, Any]:
     """Return ranked loan recommendations for a timezone-aware ISO 8601 time."""

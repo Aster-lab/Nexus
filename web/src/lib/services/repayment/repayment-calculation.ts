@@ -41,10 +41,6 @@ interface RateFraction {
   denominator: bigint;
 }
 
-/**
- * Converts a decimal interest rate into an exact rational number.
- * This avoids floating-point arithmetic during monetary calculations.
- */
 function toRateFraction(rate: number): RateFraction {
   if (!Number.isFinite(rate) || rate < 0 || rate > 1) {
     throw new RangeError("Annual interest rate must be between 0 and 1.");
@@ -69,10 +65,6 @@ function toRateFraction(rate: number): RateFraction {
   };
 }
 
-/**
- * Rounds a positive rational number to the nearest integer,
- * using half-up rounding.
- */
 function divideHalfUp(numerator: bigint, denominator: bigint): bigint {
   if (denominator <= 0n || numerator < 0n) {
     throw new RangeError("Invalid values for monetary rounding.");
@@ -104,14 +96,6 @@ function validateDate(date: Date): void {
   }
 }
 
-/**
- * Calculates interest for one repayment period.
- *
- * Formula:
- * opening principal × annual rate × actual days / 365
- *
- * The result is rounded to the nearest satang using half-up rounding.
- */
 export function calculatePeriodInterest({
   openingPrincipalSatang,
   annualInterestRate,
@@ -142,9 +126,6 @@ export function calculatePeriodInterest({
   return divideHalfUp(numerator, denominator);
 }
 
-/**
- * Returns the number of days in a UTC calendar month.
- */
 function daysInUtcMonth(year: number, month: number): number {
   const firstDay = new Date(0);
   firstDay.setUTCHours(0, 0, 0, 0);
@@ -153,15 +134,6 @@ function daysInUtcMonth(year: number, month: number): number {
   return firstDay.getUTCDate();
 }
 
-/**
- * Adds calendar months while preserving the original day of month.
- *
- * If the target month does not contain that day, the date is
- * clamped to the target month's final day.
- *
- * Every due date is calculated from the original disbursement date,
- * preventing month-end date drift.
- */
 function addAnchoredUtcMonths(
   originalDate: Date,
   monthsToAdd: number,
@@ -186,9 +158,6 @@ function addAnchoredUtcMonths(
   return result;
 }
 
-/**
- * Generates monthly due dates anchored to the disbursement date.
- */
 export function calculateDueDates({
   disbursedAt,
   termMonths,
@@ -208,12 +177,6 @@ interface SimulatedInstallment {
   closingPrincipalSatang: bigint;
 }
 
-/**
- * Simulates a fixed regular payment across the repayment term.
- *
- * Interest is paid first. The remaining payment reduces principal.
- * The final installment may be smaller than the regular payment.
- */
 function simulatePayments(
   principalSatang: bigint,
   annualInterestRate: number,
@@ -230,7 +193,6 @@ function simulatePayments(
       actualDays,
     });
 
-    // A payment must cover the interest due and reduce principal.
     if (regularPaymentSatang <= interestSatang) {
       return null;
     }
@@ -265,13 +227,6 @@ function simulatePayments(
   return outstandingPrincipal === 0n ? installments : null;
 }
 
-/**
- * Finds the smallest whole-satang regular payment that fully
- * amortizes the principal within the selected repayment term.
- *
- * Binary search is used because the payment is monotonic:
- * a larger regular payment cannot increase the remaining balance.
- */
 function findRegularPayment(
   principalSatang: bigint,
   annualInterestRate: number,
@@ -311,16 +266,6 @@ function findRegularPayment(
   return lowerBound;
 }
 
-/**
- * Generates a reducing-balance repayment schedule.
- *
- * Rules:
- * - ACTUAL/365 interest calculation.
- * - Interest calculated on opening principal.
- * - Interest rounded half-up to the nearest satang.
- * - Equal regular payments, except for the final adjustment.
- * - Final installment clears the remaining principal exactly.
- */
 export function generateRepaymentSchedule({
   principalSatang,
   annualInterestRate,
@@ -331,7 +276,6 @@ export function generateRepaymentSchedule({
   validateTerm(termMonths);
   validateDate(disbursedAt);
 
-  // Validate the rate even before the first period is calculated.
   toRateFraction(annualInterestRate);
 
   const dueDates = calculateDueDates({

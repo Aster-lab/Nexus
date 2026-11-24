@@ -30,7 +30,6 @@ export interface PostedInvestorPayout {
 }
 
 export interface PostInvestorPayoutTestOptions {
-  /** Transaction-scoped failure injection; production callers omit this. */
   afterLedgerPosted?: (
     tx: TransactionClient,
     ledgerTransactionId: string,

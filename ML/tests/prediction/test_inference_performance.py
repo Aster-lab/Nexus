@@ -26,7 +26,6 @@ def test_inference_latency(predictor):
         36,
     ]
 
-    # Warm-up to exclude initial execution overhead.
     for _ in range(10):
         predictor.predict_risk(sample)
 

@@ -140,7 +140,6 @@ export async function submitBorrowerRepayment(
 export function isRepaymentOutcomeUncertain(error: unknown): boolean {
   if (error instanceof ApiClientError) return error.status === 0 || error.status >= 500;
   if (error instanceof Error && error.name === "AbortError") return true;
-  // An unexpected response or client-side failure after posting began cannot prove rollback.
   return true;
 }
 

@@ -2,10 +2,8 @@ import pytest
 from recommendation.scoring.investment_amount import calculate_investment_amount_score
 from recommendation.validation.load_config import load_config
 
-#investment amount
-#unit test
 def test_investment_amount_score():
-    preferred_min = 500 
+    preferred_min = 500
     preferred_max = 5000
     global_max = 50000
     minimum_score = 0.1
@@ -33,7 +31,6 @@ def test_investment_amount_score():
         )
         assert score == pytest.approx(expected)
 
-#usecase
 def test_investment_amount_usecase(load_test_investor,load_test_loan):
     investor = load_test_investor
     loans = load_test_loan

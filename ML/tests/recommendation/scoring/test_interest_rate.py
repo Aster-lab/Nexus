@@ -2,11 +2,7 @@ import pytest
 from recommendation.scoring.interest_rate import calculate_interest_rate_score
 from recommendation.validation.load_config import load_config
 
-#INTEREST RATE SCORE
-#unit test
 def test_interest_rate_score():
-    #global - 0.30
-    #preferred = 8 - 12
 
     assert calculate_interest_rate_score(
         0,8,12,0,30) == pytest.approx(0.0)
@@ -31,8 +27,7 @@ def test_interest_rate_score():
 
     assert calculate_interest_rate_score(
         30,8,12,0,30) == pytest.approx(0.0)
-    
-#usecase - test the score
+
 def test_interest_rate_usecase(load_test_investor,load_test_loan):
 
     config = load_config()

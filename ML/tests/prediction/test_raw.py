@@ -49,7 +49,7 @@ def evaluate_baseline_metrics():
     )
     print(summary_df.to_string(index=False))
     print("\n" + "=" * 50 + "\n")
-    
+
     X = df.drop(columns=["target"])
     y = df["target"]
 
@@ -57,18 +57,15 @@ def evaluate_baseline_metrics():
         X, y, test_size=0.20, stratify=y, random_state=42
     )
 
-    # Fast baseline Gradient Boosting Classifier
     clf = HistGradientBoostingClassifier(class_weight = 'balanced',random_state=42)
     clf.fit(X_train, y_train)
 
     y_probs = clf.predict_proba(X_test)[:, 1]
     auc_score = roc_auc_score(y_test, y_probs)
 
-    # Standard 0.50 threshold evaluation
     y_pred_default = (y_probs >= 0.50).astype(int)
     f1_default = f1_score(y_test, y_pred_default, zero_division=0)
 
-    # Threshold Optimization Sweep to maximize F1 score
     thresholds = np.linspace(0.10, 0.90, 81)
     best_threshold = 0.50
     best_f1 = 0.0

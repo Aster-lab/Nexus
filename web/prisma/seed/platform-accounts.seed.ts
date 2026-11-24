@@ -39,13 +39,7 @@ const PLATFORM_ACCOUNTS = [
     }
 ] satisfies Prisma.PlatformAccountCreateManyInput[];
 
-// These accounts hold simulated transfers in shared platform-owned wallets.
-// Account 1300 is a ledger funding source and is posted to by platformAccountId,
-// so it intentionally has no wallet. Account 1200 tracks the principal asset;
-// account 2100 controls user-owned wallet liabilities without owning a wallet.
 const PLATFORM_WALLET_ACCOUNT_CODES = new Set(["2200", "2300"]);
-// These chart accounts are required by every financial write path. A stale
-// inactive status must not leave a freshly migrated environment unusable.
 const REQUIRED_ACTIVE_ACCOUNT_CODES = new Set(["1200", "2100", "1300"]);
 
 export async function seedPlatformAccounts() {
@@ -62,7 +56,7 @@ export async function seedPlatformAccounts() {
                     existing.accountName == account.accountName &&
                     existing.accountType == account.accountType &&
                     existing.currency == account.currency;
-                
+
                 if  (!matches) {
                     throw new Error(
                         `PlatformAccount conflict for code ${account.accountCode}.` +

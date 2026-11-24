@@ -67,8 +67,8 @@ class CandidateAmount(BaseModel):
 
 class RecommendationCandidateTerms(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
-    interest_rate: AmountValue = Field(ge=0)  # percentage points in recommendation data
-    loan_duration: StrictInt = Field(gt=0)  # months
+    interest_rate: AmountValue = Field(ge=0)
+    loan_duration: StrictInt = Field(gt=0)
     loan_purpose: Literal["business", "education", "medical", "personal", "home", "other"]
 
 

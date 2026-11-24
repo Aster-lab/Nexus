@@ -12,9 +12,9 @@ const safeSelect = { id: true, status: true, principalSatang: true, fundedSatang
 
 export async function GET(request: Request, context: { params: Promise<{ loanId: string }> }): Promise<Response> {
   try {
-    await requireInvestor(request);
+    const identity = await requireInvestor(request);
     const { loanId } = validateRouteParams(await context.params, z.object({ loanId: z.string().uuid() }).strict());
-    const loan = await prisma.loan.findFirst({ where: { id: loanId, status: "FUNDING", fundingDeadline: { gt: new Date() }, escrowAccount: { is: { status: "OPEN" } } }, select: safeSelect });
+    const loan = await prisma.loan.findFirst({ where: { id: loanId, status: "FUNDING", fundingDeadline: { gt: new Date() }, escrowAccount: { is: { status: "OPEN" } }, borrowerProfile: { is: { userId: { not: identity.userId } } } }, select: safeSelect });
     if (!loan) throw new ApiError("NOT_FOUND", "The requested marketplace loan was not found.", 404);
     if (loan.fundedSatang >= loan.principalSatang) throw new ApiError("NOT_FOUND", "The requested marketplace loan was not found.", 404);
     const { application, ...publicLoan } = loan;

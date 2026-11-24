@@ -178,7 +178,6 @@ def test_inputs_are_not_mutated(
     assert eligibility_investments == investments_before
     assert eligibility_loans == loans_before
 
-#USECASE REAL DATA
 def _normalize_money(investor, loans, investments):
     """Normalize monetary values without mutating fixture data."""
     investor = deepcopy(investor)
@@ -248,7 +247,6 @@ def test_check_eligibility_with_real_json_data(
         if loan["loan_id"] == 1
     )
 
-    # Use an explicit, deterministic time within the loan's availability window.
     current_time = datetime.fromisoformat(
         target_loan["timing"]["opens_at"]
     )
@@ -274,7 +272,6 @@ def test_check_eligibility_with_real_json_data(
         "exposure_limits",
     ]
 
-    # All earlier checks should pass before exposure is evaluated.
     for check_name in (
         "investor_account",
         "loan_availability",
@@ -291,10 +288,8 @@ def test_check_eligibility_with_real_json_data(
     assert details["eligible"] is True
     assert details["checks"]["per_loan"]["passed"] is True
 
-    # The target loan has a 1,000 confirmed investment in the sample history.
     assert details["checks"]["per_loan"]["current"] == Decimal("1000")
     assert details["checks"]["per_loan"]["proposed"] == Decimal("2000")
     assert details["checks"]["per_loan"]["projected"] == Decimal("3000")
 
-    # The source fixtures must not be mutated by normalization or eligibility.
     assert load_test_investor["exposure"]["proposed_amount"] == 2000

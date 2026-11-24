@@ -74,8 +74,6 @@ export async function registerUser(input: RegistrationRequest): Promise<Register
           })
         : null;
 
-      // Registration is limited to borrower/investor roles; one user wallet is shared
-      // when the account selects both roles. It starts empty and is never funded here.
       await ensureUserWallet(tx, user.id);
 
       return {

@@ -5,7 +5,6 @@ from recommendation.eligibility.investment_compatibility import (
     check_investment_compatibility
 )
 
-#test investor and loan
 def make_investor(
         min = 500,
         max = 5000,
@@ -31,15 +30,14 @@ def make_loan(min=1000,max = 8000):
         }
     }
 
-#check_investemnt_capacity
 @pytest.mark.parametrize(
     "investor_min,investor_max,loan_min,loan_max,expected",
     [
-        (500, 5000, 1000, 8000, True),   # Overlapping ranges
-        (500, 5000, 5000, 10000, True),  # Touching at one boundary
-        (500, 5000, 6000, 10000, False), # Loan minimum exceeds capacity
-        (10000, 20000, 500, 5000, False),# Investor capacity too high
-        (500, 5000, 500, 5000, True),    # Identical ranges
+        (500, 5000, 1000, 8000, True),
+        (500, 5000, 5000, 10000, True),
+        (500, 5000, 6000, 10000, False),
+        (10000, 20000, 500, 5000, False),
+        (500, 5000, 500, 5000, True),
     ],
 )
 def test_check_investment_capacity(
@@ -67,14 +65,13 @@ def test_check_investment_capacity_invalid_loan():
     with pytest.raises(ValueError):
         check_investment_capacity(investor,loan)
 
-#check_balance_availability
 @pytest.mark.parametrize(
     "balance,loan_min,expected",
     [
         (10000, 500, True),
-        (500, 500, True),   # Exact minimum
-        (499, 500, False),  # One unit short
-        (3000, 500, True),  # Need only the minimum, not the maximum
+        (500, 500, True),
+        (499, 500, False),
+        (3000, 500, True),
     ]
 )
 def test_check_balance_availability(balance, loan_min, expected):
@@ -83,7 +80,6 @@ def test_check_balance_availability(balance, loan_min, expected):
 
     assert check_available_balance(investor,loan) is expected
 
-#check investment capacity
 @pytest.mark.parametrize(
     "capacity_min, capacity_max, balance, loan_min, loan_max, expected",
     [
@@ -110,7 +106,6 @@ def test_check_investment_compatibility(
 
     assert check_investment_compatibility(investor, loan) is expected
 
-#usecase
 def test_investment_compatibility_usecase(load_test_investor,load_test_loan):
     investor = load_test_investor
     loans = load_test_loan

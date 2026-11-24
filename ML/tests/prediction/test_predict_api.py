@@ -288,7 +288,6 @@ def test_inference_failure_returns_500(client):
 def test_prediction_count_mismatch_returns_500(client):
     test_client, mock_engine = client
 
-    # Clear the fixture's side_effect; it takes precedence over return_value.
     mock_engine.predict_risk.side_effect = None
     mock_engine.predict_risk.return_value = []
 
@@ -317,7 +316,6 @@ def test_non_object_application_returns_validation_error(client):
 
     mock_engine.predict_risk.assert_not_called()
 
-#model initialization
 def test_lifespan_initializes_engine(monkeypatch):
     fake_engine = Mock()
 
@@ -394,7 +392,6 @@ def test_lifespan_initialization_failure(monkeypatch):
 
     assert main.engine is None
 
-# health check
 def test_health_check_when_engine_is_online(client):
     test_client, mock_engine = client
 

@@ -61,15 +61,9 @@ export interface SubmitRepaymentResult extends SubmitRepaymentPostingResult {
   receipt: RepaymentReceipt;
 }
 
-/**
- * Optional transaction-scoped persistence override used by integration tests
- * to prove a database failure rolls the complete posting back. API handlers
- * should call submitRepayment with only the business input.
- */
 export interface SubmitRepaymentTestOptions {
   allocationMethod?: string;
   persistAllocations?: boolean;
-  /** Transaction-scoped fault injection for atomicity integration coverage. */
   postTransfer?: typeof postWalletTransfer;
   afterRepaymentCreated?: (
     tx: TransactionClient,
@@ -139,12 +133,6 @@ function sumOutstanding(installments: PayableInstallment[]): bigint {
   );
 }
 
-/**
- * Allocates the submitted amount:
- * 1. Oldest payable installment first.
- * 2. Interest before principal within each installment.
- * 3. No advance credit or overpayment.
- */
 function allocateRepayment(
   installments: PayableInstallment[],
   amountSatang: bigint,
@@ -220,11 +208,6 @@ function getUpdatedInstallmentStatus(
 }
 
 
-/**
- * Validates and returns an already-posted repayment for an idempotent retry.
- * A matching key alone is not sufficient: the original transaction and
- * repayment records must match the requested operation.
- */
 async function findExistingRepayment(
   tx: TransactionClient,
   input: SubmitRepaymentInput,
@@ -327,7 +310,7 @@ async function findExistingRepayment(
     (entry) => entry.walletId === null && entry.platformAccountId === receivableAccount?.id && entry.entryType === "CREDIT" && entry.amountSatang === principalSatang,
   );
   const principalPostingValid = transaction.entries.length === 2
-    ? true // Legacy repayments predate the principal-control entries.
+    ? true
     : principalSatang > 0n && fundingDebit.length === 1 && receivableCredit.length === 1;
 
   if (
@@ -362,13 +345,6 @@ async function findExistingRepayment(
   };
 }
 
-/**
- * Locks resources in a deterministic order:
- * loan -> wallets (ascending ID) -> payable installments.
- *
- * Schedule versions are immutable calculation snapshots. The loan row lock
- * serializes submission against other operations that follow this lock order.
- */
 async function lockRepaymentResources(
   tx: TransactionClient,
   loanId: string,
@@ -435,7 +411,6 @@ async function getPayableInstallments(
   return installments;
 }
 
-/** Read-only payable breakdown using the same UTC due-date and status rules as submission. */
 export async function getBorrowerPayableSummary(input: {
   loanId: string;
   borrowerUserId: string;
@@ -618,7 +593,6 @@ async function submitRepaymentInTransaction(
   const { borrowerWallet, clearingWallet } =
     await resolveRepaymentWallets(tx, input.borrowerUserId);
 
-  // Check for a completed retry before current eligibility checks.
   const existingBeforeLock = await findExistingRepayment(
     tx,
     input,
@@ -649,7 +623,6 @@ async function submitRepaymentInTransaction(
     scheduleVersionId,
   );
 
-  // Re-check idempotency after locks to handle a concurrent completed request.
   const existingAfterLock = await findExistingRepayment(
     tx,
     input,
@@ -659,7 +632,6 @@ async function submitRepaymentInTransaction(
 
   if (existingAfterLock) return existingAfterLock;
 
-  // Re-read mutable records after acquiring locks.
   const lockedLoan = await tx.loan.findUnique({
     where: { id: input.loanId },
     select: {
@@ -765,8 +737,6 @@ async function submitRepaymentInTransaction(
       : {}),
   });
 
-  // If the shared posting helper found an existing posting, validate and
-  // return its business records rather than creating duplicate Repayment rows.
   if (transfer.reused) {
     const existing = await findExistingRepayment(
       tx,
@@ -871,9 +841,6 @@ async function submitRepaymentInTransaction(
     }
   }
 
-  // Completing the schedule is part of the same posting transaction. Keep
-  // the loan's lifecycle projection and audit history in sync with the final
-  // installment payment; any failure rolls back the ledger and wallet writes.
   const remainingInstallments = await tx.installment.count({
     where: {
       scheduleVersionId,
@@ -948,12 +915,6 @@ async function submitRepaymentInTransaction(
   };
 }
 
-/**
- * Public repayment submission operation.
- *
- * The retry helper must retry the complete transaction for serialization
- * conflicts and the specific idempotency-key unique-conflict race.
- */
 export async function submitRepayment(
   input: SubmitRepaymentInput,
   options: SubmitRepaymentTestOptions = {},

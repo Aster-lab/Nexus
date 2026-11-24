@@ -1,7 +1,3 @@
-/**
- * Repayments may cover installments due up to one calendar month ahead.
- * The cutoff is a UTC calendar date, matching the schedule's date semantics.
- */
 export function getRepaymentPayableThroughDate(now = new Date()): Date {
   const year = now.getUTCFullYear();
   const month = now.getUTCMonth() + 1;

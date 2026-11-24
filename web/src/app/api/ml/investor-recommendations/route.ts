@@ -120,11 +120,11 @@ export async function GET(request: Request): Promise<Response> {
     const run = await prisma.recommendationRun.findFirst({
       where: { investorProfileId: identity.investorProfile.id, ...(runId ? { id: runId } : {}) },
       orderBy: { createdAt: "desc" },
-      select: { id: true, modelVersionId: true, inputVersion: true, createdAt: true, latencyMs: true, results: { orderBy: { rankingPosition: "asc" }, select: { id: true, loanId: true, matchScore: true, rankingPosition: true, explanation: true, loan: { select: { id: true, status: true, principalSatang: true, fundedSatang: true, annualInterestRate: true, termMonths: true, fundingDeadline: true, escrowAccount: { select: { status: true } } } } } } },
+      select: { id: true, modelVersionId: true, inputVersion: true, createdAt: true, latencyMs: true, results: { orderBy: { rankingPosition: "asc" }, select: { id: true, loanId: true, matchScore: true, rankingPosition: true, explanation: true, loan: { select: { id: true, status: true, principalSatang: true, fundedSatang: true, annualInterestRate: true, termMonths: true, fundingDeadline: true, borrowerProfile: { select: { userId: true } }, escrowAccount: { select: { status: true } } } } } } },
     });
     if (!run) throw new ApiError("NOT_FOUND", "Recommendation run not found.", 404);
     const now = new Date();
-    const eligible = run.results.filter((item) => safeEligibleLoan(item.loan, now));
+    const eligible = run.results.filter((item) => safeEligibleLoan(item.loan, now) && item.loan.borrowerProfile.userId !== identity.userId);
     return apiSuccessResponse({
       recommendationRunId: run.id,
       modelVersionId: run.modelVersionId,
@@ -155,7 +155,7 @@ export async function POST(request: Request): Promise<Response> {
     const startedAt = Date.now();
     const now = new Date();
     const loans = await prisma.loan.findMany({
-      where: { status: "FUNDING", fundingDeadline: { gt: now }, escrowAccount: { is: { status: "OPEN" } } },
+      where: { status: "FUNDING", fundingDeadline: { gt: now }, escrowAccount: { is: { status: "OPEN" } }, borrowerProfile: { is: { userId: { not: identity.userId } } } },
       orderBy: [{ fundingDeadline: "asc" }, { id: "asc" }],
       take: 200,
       select: {
@@ -179,7 +179,7 @@ export async function POST(request: Request): Promise<Response> {
 
     const persisted = await prisma.$transaction(async (tx) => {
       const currentRows = ranked.length ? await tx.loan.findMany({
-        where: { id: { in: ranked.map(({ loanId }) => loanId) }, status: "FUNDING", fundingDeadline: { gt: new Date() }, escrowAccount: { is: { status: "OPEN" } } },
+        where: { id: { in: ranked.map(({ loanId }) => loanId) }, status: "FUNDING", fundingDeadline: { gt: new Date() }, escrowAccount: { is: { status: "OPEN" } }, borrowerProfile: { is: { userId: { not: identity.userId } } } },
         select: {
           id: true, principalSatang: true, fundedSatang: true, annualInterestRate: true, termMonths: true, status: true, fundingDeadline: true,
           escrowAccount: { select: { status: true } },

@@ -1,4 +1,3 @@
-#risk preference - oridinal distance
 def calculate_risk_score(investor_tiers,loan_tiers,mapping):
     if not investor_tiers:
         raise ValueError("Investor has no risk tiers")
@@ -10,7 +9,7 @@ def calculate_risk_score(investor_tiers,loan_tiers,mapping):
         if tier not in mapping:
             raise ValueError(
                 f"Investor has invalid risk tier: {tier}"
-            ) 
+            )
     loan_value = mapping[loan_tiers]
     selected_values = [mapping[tier] for tier in investor_tiers]
     highest_value = max(selected_values)

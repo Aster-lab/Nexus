@@ -57,7 +57,6 @@ export async function fundInvestorWallet({
   });
 }
 
-/** Temporarily enables the shared escrow account for integration journeys. */
 export async function activateEscrowAccountForTests() {
   const account = await prisma.platformAccount.findUniqueOrThrow({
     where: { accountCode: ESCROW_ACCOUNT_CODE },
@@ -90,7 +89,7 @@ export async function createInvestorContributionFixture({
 }:{
   administratorUserId: string;
 }) {
-  
+
   const suffix = randomUUID();
 
   const idempotencyKey = `test-contribution-${suffix}`;
@@ -222,7 +221,7 @@ export async function createInvestorContributionFixture({
     },
   });
 
-  
+
 
   return {
     idempotencyKey,

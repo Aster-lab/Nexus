@@ -103,7 +103,6 @@ async function expectNoTransaction(idempotencyKey: string) {
 
 describe("postWalletTransfer integration", () => {
   beforeAll(async () => {
-    // Fail early if the test database is not reachable.
     await prisma.$queryRaw`SELECT 1`;
   });
 
@@ -455,7 +454,6 @@ describe("postWalletTransfer integration", () => {
           async (tx) => {
             await postWalletTransfer(tx, input);
 
-            // Simulate a later business-record failure in the caller.
             throw new Error("Simulated business-record failure");
           },
           {
@@ -482,7 +480,6 @@ describe("postWalletTransfer integration", () => {
     });
   });
 
-  // LED-12–LED-16: idempotency key conflict validation
 
   it("LED-12 rejects reuse of an idempotency key with a different reference ID", async () => {
     await withContext(async (context) => {
@@ -544,7 +541,6 @@ describe("postWalletTransfer integration", () => {
         throw new Error("Expected the alternate investor wallet to exist.");
       }
 
-      // The fixture's investor wallet is distinct from the funded borrower wallet.
       expect(alternateDebitWallet.id).not.toBe(debitWallet.id);
 
       const input = makeInput(context, debitWallet.id, creditWallet.id);
@@ -565,7 +561,7 @@ describe("postWalletTransfer integration", () => {
     });
   });
 
-  
+
   it("LED-15 rejects reuse of an idempotency key with a different credit wallet", async () => {
     await withContext(async (context) => {
       const { debitWallet, creditWallet } =
@@ -678,7 +674,6 @@ describe("postWalletTransfer integration", () => {
     });
   });
 
-  // LED-17: concurrent transfers competing for the same funds
 
   it("LED-17 prevents concurrent transfers from overdrawing the debit wallet", async () => {
     await withContext(async (context) => {
@@ -690,7 +685,6 @@ describe("postWalletTransfer integration", () => {
 
       expect(initialDebitBalance).toBeGreaterThan(0n);
 
-      // Each transfer requests more than half the available balance.
       const amountSatang = initialDebitBalance / 2n + 1n;
 
       const firstInput = makeInput(
@@ -716,7 +710,6 @@ describe("postWalletTransfer integration", () => {
         (result) => result.status === "fulfilled",
       );
 
-      // At most one transfer can be funded.
       expect(successful).toHaveLength(1);
 
       const [debitAfter, creditAfter] = await Promise.all([
@@ -751,7 +744,6 @@ describe("postWalletTransfer integration", () => {
     });
   });
 
-  // LED-18: concurrent calls using the same idempotency key
 
   it("LED-18 returns the same posting for concurrent requests with the same idempotency key", async () => {
     await withContext(async (context) => {

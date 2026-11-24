@@ -13,7 +13,6 @@ export type InvestorPreferencesDraft = Omit<InvestorPreferences, "schema_version
   investment_amount: { min: string; max: string };
 };
 
-/** Converts form strings to the strict API contract, excluding UI-only state. */
 export function buildInvestorPreferencesPayload(draft: InvestorPreferencesDraft): InvestorPreferences {
   return {
     schema_version: "nexus_investor_preference.v2",

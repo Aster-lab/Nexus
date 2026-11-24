@@ -13,7 +13,8 @@ const inputSchema = z.object({ loanId: z.string().uuid(), amountSatang: z.string
 function contributionError(error: unknown): never {
   if (error instanceof InvestorContributionError) {
     const conflict = error.code === "IDEMPOTENCY_KEY_CONFLICT";
-    throw new ApiError(conflict ? "IDEMPOTENCY_KEY_CONFLICT" : "INVESTMENT_REJECTED", error.message, conflict ? 409 : 422);
+    const forbidden = error.code === "OWN_LOAN_INVESTMENT_FORBIDDEN";
+    throw new ApiError(forbidden ? error.code : conflict ? "IDEMPOTENCY_KEY_CONFLICT" : "INVESTMENT_REJECTED", error.message, forbidden ? 403 : conflict ? 409 : 422);
   }
   throw error;
 }

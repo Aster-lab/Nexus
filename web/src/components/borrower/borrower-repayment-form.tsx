@@ -32,7 +32,7 @@ interface PendingRepaymentRequest {
 }
 
 function clearSavedRepaymentRequest(loanId: string): void {
-  try { window.sessionStorage.removeItem(`nexus:repayment-pending:${loanId}`); } catch { /* Session storage can be unavailable in privacy-restricted browsers. */ }
+  try { window.sessionStorage.removeItem(`nexus:repayment-pending:${loanId}`); } catch {  }
 }
 
 function validationMessage(code: ReturnType<typeof validateRepaymentAmount>["code"]): string | null {
@@ -227,7 +227,7 @@ export function BorrowerRepaymentForm({ loanId }: { loanId: string }) {
     if (!payable || validation.code || busy || postingRef.current) return;
     const request = pendingRequest ?? createPendingRequest(validation.amountSatang!);
     setPendingRequest(request);
-    try { window.sessionStorage.setItem(`nexus:repayment-pending:${loanId}`, JSON.stringify(request)); } catch { /* Keep the in-memory retry key if storage is unavailable. */ }
+    try { window.sessionStorage.setItem(`nexus:repayment-pending:${loanId}`, JSON.stringify(request)); } catch {  }
     await postRequest(request);
   }
 

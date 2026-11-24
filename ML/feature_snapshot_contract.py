@@ -14,8 +14,6 @@ NonEmpty = Annotated[str, Field(min_length=1)]
 
 
 class FeatureSnapshotContract(BaseModel):
-    # Parse JSON timestamp/UUID strings while keeping feature_values strict
-    # through its own LoanApplicationSchema validator.
     model_config = ConfigDict(extra="forbid", strict=False)
 
     schema_version: str

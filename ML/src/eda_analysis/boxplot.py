@@ -36,10 +36,9 @@ for idx, col in enumerate(features):
         axes[idx].set_xlabel("")
         axes[idx].set_ylabel("")
 
-    # Remove empty axes grid cells
 for j in range(idx + 1, len(axes)):
     fig.delaxes(axes[j])
-    
+
 plt.tight_layout()
 plt.savefig(output_dir/'boxplot.png',dpi=300)
 plt.close()

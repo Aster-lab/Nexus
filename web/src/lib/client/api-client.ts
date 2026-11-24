@@ -122,7 +122,6 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
       try {
         onUnauthorized?.(apiError);
       } catch {
-        // Preserve the API failure even if a page-level expiry handler fails.
       }
     }
     throw apiError;
@@ -149,7 +148,6 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
 }
 
 export interface ApiGetOptions extends Omit<ApiRequestOptions, "method" | "body"> {
-  /** Set to 0 to bypass the short in-memory cache for especially time-sensitive reads. */
   revalidateMs?: number;
 }
 
@@ -162,7 +160,6 @@ export function apiGet<T>(path: string, options: ApiGetOptions = {}): Promise<Ap
   const cacheKey = path;
   const cached = apiReadCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
-    // Refresh insertion order so frequently revisited pages stay in the small cache.
     apiReadCache.delete(cacheKey);
     apiReadCache.set(cacheKey, cached);
     return Promise.resolve(cached.value as ApiSuccessEnvelope<T>);

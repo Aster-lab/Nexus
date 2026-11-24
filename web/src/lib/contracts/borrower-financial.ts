@@ -60,9 +60,6 @@ export const CreditDataV1Schema = z.object({
   delinquency_count_12_months: z.number().int().nonnegative().safe(),
 }).strict();
 
-// Bureau fields needed to derive the application-time risk features. Monetary
-// values remain integer satang in storage; feature generation converts them
-// to THB only at the model boundary.
 export const CreditDataV2Schema = z.object({
   schema_version: z.literal("borrower_credit.v2"),
   entry_id: nonEmptyText,

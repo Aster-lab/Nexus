@@ -2,8 +2,6 @@ import pytest
 from recommendation.scoring.duration import calculate_loan_duration_score
 from recommendation.validation.load_config import load_config
 
-#DURATION SCORE
-#unit test
 def test_duration_score():
     preferred_min = 6
     preferred_max = 24

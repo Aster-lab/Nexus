@@ -77,7 +77,6 @@ function calculateExpectedInterest(
     actualDays /
     365;
 
-  // Positive monetary amounts use nearest-satang, half-up rounding.
   return BigInt(Math.floor(unrounded + 0.5));
 }
 

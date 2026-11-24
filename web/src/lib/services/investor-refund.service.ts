@@ -51,7 +51,6 @@ async function lockRefundResources(
   escrowAccountId: string,
   walletIds: string[],
 ): Promise<void> {
-  // Global lock order: loan -> escrow -> wallets sorted by UUID.
   await tx.$queryRaw`
     SELECT id FROM loans
     WHERE id = ${loanId}::uuid
@@ -235,7 +234,6 @@ async function postWithinTransaction(
     [investorWallet.id, escrowWallet.id],
   );
 
-  // Recheck authoritative state after acquiring locks.
   const lockedLoan = await tx.loan.findUniqueOrThrow({
     where: { id: loan.id },
     select: { status: true, disbursedAt: true },
@@ -292,7 +290,6 @@ async function postWithinTransaction(
     reject("Insufficient escrow funds for refund.", "INSUFFICIENT_ESCROW");
   }
 
-  // 1. Create draft transaction.
   const ledger = await tx.ledgerTransaction.create({
     data: {
       transactionType: "INVESTOR_REFUND",
@@ -304,8 +301,6 @@ async function postWithinTransaction(
     },
   });
 
-  // 2. Balanced ledger: escrow debit, investor credit. The investor-wallet
-  // line also updates account 2100's user-wallet control subledger.
   const walletControlAccount = await requireUserWalletControlAccount(tx);
   await tx.ledgerEntry.createMany({
     data: [
@@ -327,7 +322,6 @@ async function postWithinTransaction(
     ],
   });
 
-  // 3. Conditional wallet projection updates.
   const escrowDebit = await tx.wallet.updateMany({
     where: {
       id: escrowWallet.id,
@@ -363,7 +357,6 @@ async function postWithinTransaction(
     reject("Investor wallet credit failed.", "INVESTOR_CREDIT_FAILED");
   }
 
-  // 4. Post ledger before creating dependent business records.
   await tx.ledgerTransaction.update({
     where: { id: ledger.id },
     data: {
@@ -372,7 +365,6 @@ async function postWithinTransaction(
     },
   });
 
-  // 5. Persist investor-level refund.
   const refund = await tx.investmentRefund.create({
     data: {
       investmentId: investment.id,
@@ -383,7 +375,6 @@ async function postWithinTransaction(
     include: { ledgerTransaction: true },
   });
 
-  // 6. Persist escrow movement.
   await tx.escrowTransaction.create({
     data: {
       escrowAccountId: escrow.id,
@@ -393,7 +384,6 @@ async function postWithinTransaction(
     },
   });
 
-  // 7. Reduce the loan-specific escrow subledger.
   const escrowUpdate = await tx.escrowAccount.updateMany({
     where: {
       id: escrow.id,

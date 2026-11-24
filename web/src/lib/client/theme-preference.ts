@@ -58,6 +58,4 @@ export function applyThemePreference(root: ThemeRootElement, preference: ThemePr
   root.style.colorScheme = preference;
 }
 
-// This small allowlisted bootstrap runs before hydration so a saved theme is
-// applied before the browser paints the page. No user or financial data is read.
 export const THEME_BOOTSTRAP_SCRIPT = `(()=>{try{const t=localStorage.getItem("${THEME_PREFERENCE_STORAGE_KEY}");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}}catch{}})();`;

@@ -213,16 +213,12 @@ export async function createRepaymentTestContext(
   vi.setSystemTime(new Date("2026-01-15T00:00:00.000Z"));
 
   try {
-    // Ensure the configured opening-balance source is enabled for this
-    // fixture, then restore its prior state during context cleanup.
     await fundInvestorWallet({
       walletId: fixture.investorWallet.id,
       administratorUserId,
       amountSatang: fixture.loan.principalSatang,
     });
 
-    // Create a genuine investment and contribution while the loan
-    // is still in FUNDING status.
     await postInvestorContribution({
       userId: fixture.investorUser.id,
       loanId: fixture.loan.id,
@@ -273,10 +269,6 @@ export async function createRepaymentTestContext(
     });
 
     async function cleanup() {
-      // Some eligibility and schedule tests temporarily mutate these fields to
-      // simulate an undistributed or non-active loan. Restore the persisted
-      // state that matches the already-posted disbursement before the context
-      // is reused by platform-wide reconciliation tests.
       await prisma.loan.update({
         where: { id: loan.id },
         data: { status: loan.status, disbursedAt: loan.disbursedAt },
@@ -360,4 +352,4 @@ export type RepaymentTestContext =
 export type RepaymentScheduleTestContext =
   Awaited<ReturnType<typeof createRepaymentScheduleTestContext>>;
 
-  
+

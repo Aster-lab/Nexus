@@ -184,9 +184,6 @@ async function findExistingByKey(
     : null;
 }
 
-/**
- * Resolve unique-constraint races after the failed transaction has rolled back.
- */
 async function resolveUniqueConflict(
   input: NormalizedInput,
 ): Promise<ExistingOpeningBalance | null> {
@@ -222,11 +219,6 @@ export async function postOpeningBalance(
 ): Promise<ExistingOpeningBalance> {
   return prisma.$transaction(
     async (tx) => {
-      /*
-       * Check idempotency inside every transaction attempt.
-       * This is important when a concurrent identical request
-       * succeeds while this request is being retried.
-       */
       const existing = await tx.openingBalance.findUnique({
         where: { idempotencyKey: input.idempotencyKey },
         include: {
@@ -239,9 +231,6 @@ export async function postOpeningBalance(
         return validateExistingResult(existing, input);
       }
 
-      /*
-       * Lock the recipient wallet before reading its balance.
-       */
       const lockedWallets = await tx.$queryRaw<Array<{ id: string }>>`
         SELECT id
         FROM wallets
@@ -271,9 +260,6 @@ export async function postOpeningBalance(
         reject("SELF_FUNDING_NOT_ALLOWED", "An administrator cannot fund their own wallet.");
       }
 
-      /*
-       * Validate the administrator account and active ADMIN role.
-       */
       const administrator = await tx.user.findUnique({
         where: { id: input.administratorUserId },
         select: {
@@ -306,9 +292,6 @@ export async function postOpeningBalance(
         reject("UNAUTHORIZED", "The user does not have an active ADMIN role.");
       }
 
-      /*
-       * Validate the recipient user account.
-       */
       const recipient = await tx.user.findUnique({
         where: { id: wallet.ownerUserId },
         select: {
@@ -326,14 +309,6 @@ export async function postOpeningBalance(
         reject("WALLET_NOT_ELIGIBLE", "The wallet owner account is not active.");
       }
 
-      /*
-       * A recipient must have an active investor profile
-       * or an existing borrower profile.
-       *
-       * BorrowerProfile status is not checked here because
-       * its exact status field was not present in the
-       * previously shared schema excerpt.
-       */
       const investorProfile = await tx.investorProfile.findFirst({
         where: {
           userId: recipient.id,
@@ -353,9 +328,6 @@ export async function postOpeningBalance(
         reject("WALLET_NOT_ELIGIBLE", "The recipient must have an active investor profile or an existing borrower profile.");
       }
 
-      /*
-       * Enforce one opening balance per wallet.
-       */
       const existingByWallet = await tx.openingBalance.findUnique({
         where: { walletId: wallet.id },
         select: { id: true },
@@ -365,10 +337,6 @@ export async function postOpeningBalance(
         reject("OPENING_BALANCE_ALREADY_EXISTS", "This wallet already has an opening balance.");
       }
 
-      /*
-       * Lock the source account and validate its configuration.
-       * Account 1300 is enabled only by its explicit seed/migration configuration.
-       */
       const lockedAccounts = await tx.$queryRaw<Array<{ id: string }>>`
         SELECT id
         FROM platform_accounts
@@ -393,9 +361,6 @@ export async function postOpeningBalance(
         reject("SOURCE_ACCOUNT_UNAVAILABLE", "Opening-balance source account 1300 must be an active THB ASSET account.");
       }
 
-      /*
-       * Protect PostgreSQL signed BIGINT range.
-       */
       if (wallet.balanceSatang > MAX_BIGINT - input.amountSatang) {
         reject(
           "INVALID_INPUT",
@@ -411,12 +376,6 @@ export async function postOpeningBalance(
       const openingBalanceId = randomUUID();
       const correlationId = randomUUID();
 
-      /*
-       * Create the ledger header and its balanced entries.
-       *
-       * Debit: Simulated Opening Balance Asset (1300)
-       * Credit: Recipient's user-owned wallet
-       */
       const ledgerTransaction = await tx.ledgerTransaction.create({
         data: {
           transactionType: "OPENING_BALANCE",
@@ -448,10 +407,6 @@ export async function postOpeningBalance(
         ],
       });
 
-      /*
-       * Update the wallet cache conditionally.
-       * The row lock and Serializable isolation protect concurrent writes.
-       */
       const walletUpdate = await tx.wallet.updateMany({
         where: {
           id: wallet.id,
@@ -470,10 +425,6 @@ export async function postOpeningBalance(
         );
       }
 
-      /*
-       * Post before creating the included relation.
-       * Deferred ledger constraints are evaluated at transaction commit.
-       */
       await tx.ledgerTransaction.update({
         where: { id: ledgerTransaction.id },
         data: {
@@ -501,10 +452,6 @@ export async function postOpeningBalance(
         },
       });
 
-      /*
-       * Record the administrative action in the audit log.
-       * Verify the AuditLog outcome type against the generated client.
-       */
       await tx.auditLog.create({
         data: {
           actorUserId: administrator.id,
@@ -568,10 +515,6 @@ export async function createOpeningBalance(
           continue;
         }
 
-        /*
-         * A concurrent identical request may have committed
-         * while this request was retrying.
-         */
         const resolved = await findExistingByKey(input);
 
         if (resolved) {
@@ -592,10 +535,6 @@ export async function createOpeningBalance(
         }
       }
 
-      /*
-       * Keep database details in server-side logs.
-       * Do not expose SQL or database internals to callers.
-       */
       console.error("Opening balance posting failed:", error);
 
       reject(

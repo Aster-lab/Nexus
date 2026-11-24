@@ -9,7 +9,6 @@ export interface LoanPrincipalAccounts {
   fundingAsset: { id: string };
 }
 
-/** Resolve the active liability control account used by every user-owned wallet posting. */
 export async function requireUserWalletControlAccount(
   tx: Prisma.TransactionClient,
 ): Promise<{ id: string }> {
@@ -31,7 +30,6 @@ export async function requireUserWalletControlAccount(
   return { id: account.id };
 }
 
-/** Resolve the active asset accounts used for principal receivable movements. */
 export async function requireLoanPrincipalAccounts(
   tx: Prisma.TransactionClient,
 ): Promise<LoanPrincipalAccounts> {

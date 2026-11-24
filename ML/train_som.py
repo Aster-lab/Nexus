@@ -14,7 +14,6 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import QuantileTransformer
 from minisom import MiniSom
 
-#configure
 logging.basicConfig(
     level = logging.INFO,
     format = '%(asctime)s [%(levelname)s] %(name)s -%(message)s'
@@ -77,10 +76,9 @@ class SOMPipeline:
 
     def train_som(self,som:MiniSom, X_train: np.ndarray) ->MiniSom:
         total_iterations = len(X_train) * 75
-        #batch training
         som.train_random(
-            X_train, 
-            num_iteration=total_iterations, 
+            X_train,
+            num_iteration=total_iterations,
             verbose =False
         )
         return som
@@ -111,7 +109,7 @@ class SOMPipeline:
 
     def extract_spatial_features(
         self,
-        som:MiniSom, 
+        som:MiniSom,
         kmeans: KMeans,
         risk_map : np.ndarray,
         X_scaled:np.ndarray,
@@ -119,7 +117,6 @@ class SOMPipeline:
         weights = som.get_weights()
         rows,cols, n_features = weights.shape
 
-        #pre assign macro clusters
         weights_flat = weights.reshape(-1,n_features)
         node_clusters = kmeans.predict(weights_flat)
 
@@ -129,20 +126,17 @@ class SOMPipeline:
             bmu_x,bmu_y = som.winner(sample)
             bmu_vector = weights[bmu_x,bmu_y]
 
-            #Quantization Distance
             q_dist = np.linalg.norm(sample - bmu_vector)
 
-            #risk score
             r_score = risk_map[bmu_x,bmu_y]
-            #cluster
             flat_node_idx = bmu_x * cols + bmu_y
             cluster_id = node_clusters[flat_node_idx]
 
             spatial_rows.append([ q_dist,cluster_id])
 
         return np.column_stack([X_scaled,np.array(spatial_rows)])
-    
-    
+
+
     def cross_validation(self) -> List[Dict[str,float]]:
         kf = StratifiedKFold(
             n_splits= self.cfg.n_splits,
@@ -151,7 +145,7 @@ class SOMPipeline:
         )
         metrics_history = []
         oof_probs = np.zeros(len(self.data))
-        
+
 
         logger.info(f"Starting {self.cfg.n_splits}-Fold CV on {len(self.data)} samples...")
 
@@ -160,8 +154,7 @@ class SOMPipeline:
         ):
             X_train, X_val = self.data[train_idx],self.data[val_idx]
             Y_train , Y_val = self.labels[train_idx],self.labels[val_idx]
-            
-            #transformer
+
             scaler = QuantileTransformer(
                 output_distribution="uniform",
                 n_quantiles=min(1000, len(X_train)),
@@ -169,15 +162,12 @@ class SOMPipeline:
             )
             X_train_scaled = scaler.fit_transform(X_train)
             X_val_scaled = scaler.transform(X_val)
-            #initialize PCA & train
             som = self.create_som(X_train_scaled)
             som = self.train_som(som,X_train_scaled)
 
-            #Evaluate
             qe = som.quantization_error(X_val_scaled)
             te = som.topographic_error(X_val_scaled)
 
-            #macro-clustering
             codebook = som.get_weights().reshape(-1,X_train_scaled.shape[1])
             kmeans = KMeans(
                 n_clusters = self.cfg.n_clusters,
@@ -185,10 +175,8 @@ class SOMPipeline:
                 n_init=10,
                 ).fit(codebook)
 
-            #risk map
             risk_map = self.build_risk_map(som,X_train_scaled,Y_train)
 
-            #augmented features
             X_train_augmented = self.extract_spatial_features(som,kmeans,risk_map,X_train_scaled)
             X_val_augmented = self.extract_spatial_features(som,kmeans,risk_map,X_val_scaled)
 
@@ -196,7 +184,6 @@ class SOMPipeline:
             cat_features_indices = [
                 n_raw_features -1
             ]
-            #Downstream classifier
             clf = HistGradientBoostingClassifier(
                 categorical_features = cat_features_indices,
                 class_weight = 'balanced',
@@ -204,7 +191,6 @@ class SOMPipeline:
                 max_iter = 150)
             clf.fit(X_train_augmented,Y_train)
 
-            #Predict Out-of-fold Default Probabilites
             val_probs = clf.predict_proba(X_val_augmented)[:, 1]
             oof_probs[val_idx] = val_probs
             fold_auc = roc_auc_score(Y_val, val_probs)
@@ -214,17 +200,15 @@ class SOMPipeline:
             )
             logger.info(f'Fold {fold} -QE {qe:.4f} -TE {te:.4f} | Downstream AUC: {fold_auc}')
 
-        #find average
         avg_qe = np.mean([m["qe"] for m in metrics_history])
         avg_te = np.mean([m["te"] for m in metrics_history])
         auc = roc_auc_score(self.labels,oof_probs)
 
-        #F! score
         precisions, recalls, thresholds = precision_recall_curve(self.labels,oof_probs)
         f1_score = 2* (precisions*recalls) /(precisions+recalls+1e-10)
         best_idx = int(np.argmax(f1_score))
         best_threshold = float(thresholds[best_idx])
-        best_f1 = float(f1_score[best_idx]) 
+        best_f1 = float(f1_score[best_idx])
 
         metrics_history.append({'Mean QE': avg_qe,'Mean TE': avg_te,'roc_auc':auc,'f1_score': best_f1,'threshold': best_threshold})
 
@@ -241,37 +225,30 @@ class SOMPipeline:
         logger.info(
             "Fitting Final SOM on complete 50,000 samples"
         )
-        #SimpleImputer
         imputer = SimpleImputer(strategy='median')
         data_imputed = imputer.fit_transform(self.data)
-        #Quantile Scaler
         prod_scaler = QuantileTransformer(
                 output_distribution="uniform",
                 random_state=self.cfg.seed,
             )
         data_scaled = prod_scaler.fit_transform(data_imputed)
 
-        #Production model
         som = self.create_som(data_scaled)
         som = self.train_som(som, data_scaled)
 
-        #node risk map for visualization 
         risk_map=self.build_risk_map(som,data_scaled,self.labels)
 
-        #K-Means
         codebook = som.get_weights().reshape(-1,data_scaled.shape[1])
         kmeans = KMeans(
             n_clusters=self.cfg.n_clusters,
             random_state=self.cfg.seed,
             n_init=10).fit(codebook)
 
-        #augmented
         data_augmented = self.extract_spatial_features(som,kmeans,risk_map,data_scaled)
 
-        #classifier
         clf = HistGradientBoostingClassifier(
             class_weight = 'balanced',
-            random_state = self.cfg.seed, 
+            random_state = self.cfg.seed,
             max_iter = 150)
         clf.fit(data_augmented,self.labels)
 
@@ -291,14 +268,13 @@ class SOMPipeline:
         logger.info(f"Kmeans Model  saved to: {self.cfg.kmeans_path}")
         logger.info(f"Classifier Model  saved to: {self.cfg.classifier_path}")
         return som
-    
+
 if __name__ == "__main__":
     BASE_DIR= Path(__file__).resolve().parent
     data_path = BASE_DIR/'data'/'processed'/'cleaned_data.csv'
     df= pd.read_csv(data_path)
     y_labels = df['target'].values
     pipeline = SOMPipeline(labels=y_labels)
-    #cv_metrics = pipeline.cross_validation()
     pipeline.train_fullModel()
 
 

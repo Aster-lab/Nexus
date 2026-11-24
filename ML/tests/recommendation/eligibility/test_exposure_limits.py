@@ -13,7 +13,6 @@ from recommendation.eligibility.exposure_limits import(
     check_exposure_limits
 )
 
-#individual checks
 @pytest.mark.parametrize(
     "check,current,proposed,limit",
     [
@@ -65,22 +64,21 @@ def test_exposure_above_limit(check):
 def test_zero_current_exposure_is_valid(check):
     assert check(Decimal("0"), Decimal("100"), Decimal("100")) is True
 
-#individual values
 @pytest.mark.parametrize(
     "current,proposed,limit",
     [
-    (Decimal("0"), Decimal("0"), Decimal("100")),  # zero proposed amount
-    (Decimal("0"), Decimal("-1"), Decimal("100")),  # negative proposed amount
-    (Decimal("-1"), Decimal("10"), Decimal("100")),  # negative current exposure
-    (Decimal("0"), Decimal("10"), Decimal("0")),  # zero limit
-    (Decimal("0"), Decimal("10"), Decimal("-1")),  # negative limit
-    (None, Decimal("10"), Decimal("100")),  # missing current value
-    (Decimal("0"), None, Decimal("100")),  # missing proposed amount
-    (Decimal("0"), Decimal("10"), None),  # missing limit
-    ("10", Decimal("10"), Decimal("100")),  # numeric string
+    (Decimal("0"), Decimal("0"), Decimal("100")),
+    (Decimal("0"), Decimal("-1"), Decimal("100")),
+    (Decimal("-1"), Decimal("10"), Decimal("100")),
+    (Decimal("0"), Decimal("10"), Decimal("0")),
+    (Decimal("0"), Decimal("10"), Decimal("-1")),
+    (None, Decimal("10"), Decimal("100")),
+    (Decimal("0"), None, Decimal("100")),
+    (Decimal("0"), Decimal("10"), None),
+    ("10", Decimal("10"), Decimal("100")),
     (Decimal("0"), "10", Decimal("100")),
     (Decimal("0"), Decimal("10"), "100"),
-    (True, Decimal("10"), Decimal("100")),  # bool is not acceptable
+    (True, Decimal("10"), Decimal("100")),
     (Decimal("0"), False, Decimal("100")),
     (Decimal("0"), Decimal("10"), True),
     (Decimal("NaN"), Decimal("10"), Decimal("100")),
@@ -108,7 +106,6 @@ def test_invalid_values_raise_value_error(check, current, proposed, limit):
 def test_extremely_large_finite_values_are_handled():
     assert check_total_exposure(Decimal("1e308"), Decimal("1e308"), Decimal("1e308")) is False
 
-#combined check
 def test_all_exposure_checks_pass(exposure_data):
     result = check_exposure_limits(exposure_data)
 
@@ -231,7 +228,6 @@ def test_checker_does_not_modify_input(exposure_data):
 
     assert exposure_data == original
 
-#usecase
 def test_exposure_limits_usecase(load_test_investor,load_test_loan):
     investor = load_test_investor
     loans = load_test_loan
@@ -250,7 +246,7 @@ def test_exposure_limits_usecase(load_test_investor,load_test_loan):
         exposure["current"][key] = to_decimal(
             value, f"Exposure current: {key}"
        )
-    
+
     for loan in loans:
         result = check_exposure_limits(exposure)
         assert "eligible" in result
@@ -269,4 +265,3 @@ def test_exposure_limits_usecase(load_test_investor,load_test_loan):
             check ['passed']
             for check in result['checks'].values()
         )
-            

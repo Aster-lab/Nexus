@@ -88,7 +88,6 @@ policyValues: Record<string, unknown>;
 
 const INITIAL_VERSION_NUMBER = 1;
 
-// Stable Json
 function canonicalJson(value: unknown): string {
   if (Array.isArray(value)) {
     return `[${value.map(canonicalJson).join(",")}]`;
@@ -107,7 +106,6 @@ function canonicalJson(value: unknown): string {
   return JSON.stringify(value) ?? String(value);
 }
 
-//validate policy contract and cross validation rule
 function validateInitialPolicies(): PlatformPolicy[] {
   const validatedPolicies = policyDefinitions.map((definition) =>
     PlatformPolicyContractSchema.parse({
@@ -142,7 +140,6 @@ function validateInitialPolicies(): PlatformPolicy[] {
 export async function seedPlatformPolicies(): Promise<void> {
   console.log("Validating initial platform policies...");
 
-  // Validation happens before any database writes.
   const validatedPolicies = validateInitialPolicies();
 
   console.log("Initial platform policy validation passed.");
@@ -162,7 +159,6 @@ export async function seedPlatformPolicies(): Promise<void> {
 
       const expectedValues = validatedPolicy.policy_values;
 
-      // Reuse an existing policy definition, or create it once.
       const existingPolicy = await tx.platformPolicy.findUnique({
         where: {
           policyCode: definition.policyCode,
@@ -179,7 +175,6 @@ export async function seedPlatformPolicies(): Promise<void> {
           },
         }));
 
-      // Version 1 is identified by the policy/version composite key.
       const existingVersion = await tx.policyVersion.findUnique({
         where: {
           policyId_versionNumber: {

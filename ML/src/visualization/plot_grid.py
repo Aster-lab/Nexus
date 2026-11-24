@@ -49,7 +49,6 @@ axes[0].set_ylabel("Grid Rows (M)")
 axes[0].set_aspect("equal")
 axes[0].grid(True, linestyle="--", alpha=0.3)
 
-#PCA gird overlay
 sample_idx = np.random.choice(len(X_pca), 4000, replace=False)
 axes[1].scatter(
     X_pca[sample_idx, 0],

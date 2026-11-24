@@ -88,7 +88,6 @@ export async function authenticateApiRequest(request: Request): Promise<ApiIdent
     const session = await getServerSession(authOptions);
     nextAuthUserId = session?.user?.id;
   } catch {
-    // Direct handler tests and non-NextAuth requests have no NextAuth request context.
   }
   if (!nextAuthUserId) throw unauthenticated();
   const user = await prisma.user.findFirst({

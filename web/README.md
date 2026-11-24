@@ -1,36 +1,20 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NEXUS Web Application
 
-## Getting Started
+The Next.js App Router application for NEXUS. It contains borrower, investor, and administrator workspaces, authenticated APIs, Prisma schema and migrations, and web tests.
 
-First, run the development server:
+For the full architecture, local setup, database safeguards, demo workflow, staging, deployment, and feature limitations, see the [repository README](../README.md).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Quick start
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Configure PostgreSQL and `web/.env` by following [`docs/LOCAL_POSTGRES_SETUP.md`](docs/LOCAL_POSTGRES_SETUP.md).
+2. Install dependencies with `npm.cmd install`.
+3. Apply migrations and seed platform reference data:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+   ```powershell
+   npm.cmd run db:deploy:dev
+   npm.cmd run db:seed:dev
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Start the application with `npm.cmd run dev` and open `http://localhost:3000`.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The application uses simulated THB balances and transactions only. Do not use demo or test setup commands against a hosted production database.

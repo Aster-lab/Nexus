@@ -10,10 +10,10 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request): Promise<Response> {
   try {
-    await requireInvestor(request);
+    const identity = await requireInvestor(request);
     const pagination = parsePagination(new URL(request.url).searchParams, { sortFields: ["createdAt", "fundingDeadline"] });
     const now = new Date();
-    const where = { status: "FUNDING" as const, fundingDeadline: { gt: now }, escrowAccount: { is: { status: "OPEN" as const } } };
+    const where = { status: "FUNDING" as const, fundingDeadline: { gt: now }, escrowAccount: { is: { status: "OPEN" as const } }, borrowerProfile: { is: { userId: { not: identity.userId } } } };
     const [loans, total] = await Promise.all([
       prisma.loan.findMany({ where, orderBy: pagination.sortBy === "fundingDeadline" ? { fundingDeadline: pagination.sortOrder } : { createdAt: pagination.sortOrder }, skip: pagination.offset, take: pagination.limit, select: { id: true, status: true, principalSatang: true, fundedSatang: true, annualInterestRate: true, termMonths: true, fundingDeadline: true, createdAt: true, application: { select: { currentVersion: { select: { submittedData: true } } } } } }),
       prisma.loan.count({ where }),
